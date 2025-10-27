@@ -18,24 +18,53 @@ export default function Login() {
     }
 
     setLoading(true);
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password 
-      });
 
-      if (error) {
-        Alert.alert('Login Error', error.message);
-      } else if (data.session) {
-        console.log('✅ Login successful');
-        router.replace('/(tabs)');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
-      console.error(error);
-    } finally {
+    // Step 1: Sign in with email and password
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
       setLoading(false);
+      Alert.alert('Login Error', error.message);
+      return;
     }
+
+    if (!data.session) {
+      setLoading(false);
+      Alert.alert('Error', 'Login failed. Please try again.');
+      return;
+    }
+
+    // Step 2: Check if user is verified
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('verified')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError) {
+      setLoading(false);
+      await supabase.auth.signOut();
+      Alert.alert('Error', 'Could not load profile. Please contact admin.');
+      return;
+    }
+
+    // Step 3: Block login if not verified
+    if (!profile.verified) {
+      setLoading(false);
+      await supabase.auth.signOut();
+      Alert.alert(
+        'Account Not Verified', 
+        'Your account is pending admin approval. You will receive an email once your TRN and photo are verified.'
+      );
+      return;
+    }
+
+    // Step 4: Allow login if verified
+    setLoading(false);
+    router.replace('/(tabs)');
   };
 
   return (
@@ -48,6 +77,7 @@ export default function Login() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        editable={!loading}
       />
       <TextInput
         className="border border-gray-300 p-3 mb-3 rounded-md"
@@ -55,10 +85,11 @@ export default function Login() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        editable={!loading}
       />
-      <TouchableOpacity 
+      <TouchableOpacity
         className={`bg-blue-500 p-4 rounded-md mb-3 ${loading ? 'opacity-50' : ''}`}
-        onPress={handleLogin} 
+        onPress={handleLogin}
         disabled={loading}
       >
         <Text className="text-white text-center font-bold">
@@ -66,8 +97,8 @@ export default function Login() {
         </Text>
       </TouchableOpacity>
       <Link href="/signup" asChild>
-        <TouchableOpacity className="p-3">
-          <Text className="text-center text-blue-500">Don't have an account? Sign up</Text>
+        <TouchableOpacity className="p-3" disabled={loading}>
+          <Text className="text-center text-blue-500">Dont have an account? Sign up</Text>
         </TouchableOpacity>
       </Link>
     </View>
