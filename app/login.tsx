@@ -1,7 +1,9 @@
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import LogoHeader from '../components/logoHeader';
+import ScreenWrapper from '../components/ScreenWrapper';
 import { supabase } from '../supabase';
 
 export default function Login() {
@@ -9,98 +11,110 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+
+  const isValidEmail = (emailStr: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+
+  const showToast = (type: 'success' | 'error', title: string, message: string) => {
+    Toast.show({ type, text1: title, text2: message });
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter email and password');
+      showToast('error', 'Missing Info', 'Please enter email and password');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      showToast('error', 'Invalid Email', 'Please enter a valid email');
       return;
     }
 
     setLoading(true);
 
-    // Step 1: Sign in with email and password
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
+    if (error || !data.session) {
       setLoading(false);
-      Alert.alert('Login Error', error.message);
+      showToast('error', 'Login Failed', error?.message || 'Login failed. Please try again.');
       return;
     }
 
-    if (!data.session) {
-      setLoading(false);
-      Alert.alert('Error', 'Login failed. Please try again.');
-      return;
-    }
-
-    // Step 2: Check if user is verified
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('teachers')
       .select('verified')
       .eq('id', data.user.id)
       .single();
 
-    if (profileError) {
+    if (profileError || !profile) {
       setLoading(false);
       await supabase.auth.signOut();
-      Alert.alert('Error', 'Could not load profile. Please contact admin.');
+      showToast('error', 'Profile Error', 'Could not load profile. Please contact admin.');
       return;
     }
 
-    // Step 3: Block login if not verified
     if (!profile.verified) {
       setLoading(false);
       await supabase.auth.signOut();
-      Alert.alert(
-        'Account Not Verified', 
-        'Your account is pending admin approval. You will receive an email once your TRN and photo are verified.'
-      );
+      showToast('error', 'Account Not Verified', 'Your account is pending admin approval.');
       return;
     }
 
-    // Step 4: Allow login if verified
     setLoading(false);
-    router.replace('/(tabs)');
+    showToast('success', 'Login Successful', 'Welcome back!');
+    setTimeout(() => {
+      router.replace('/(tabs)');
+    }, 1500);
   };
 
   return (
-    <View className="flex-1 justify-center p-5 bg-white" style={{ paddingTop: insets.top }}>
-      <Text className="text-2xl font-bold text-center mb-5">Login</Text>
-      <TextInput
-        className="border border-gray-300 p-3 mb-3 rounded-md"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        editable={!loading}
-      />
-      <TextInput
-        className="border border-gray-300 p-3 mb-3 rounded-md"
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        editable={!loading}
-      />
-      <TouchableOpacity
-        className={`bg-blue-500 p-4 rounded-md mb-3 ${loading ? 'opacity-50' : ''}`}
-        onPress={handleLogin}
-        disabled={loading}
-      >
-        <Text className="text-white text-center font-bold">
-          {loading ? 'Logging in...' : 'Login'}
-        </Text>
-      </TouchableOpacity>
-      <Link href="/signup" asChild>
-        <TouchableOpacity className="p-3" disabled={loading}>
-          <Text className="text-center text-blue-500">Dont have an account? Sign up</Text>
-        </TouchableOpacity>
-      </Link>
-    </View>
+    <ScreenWrapper>
+      <LogoHeader position="left" />
+
+      <View className="flex-1 justify-center items-center">
+        <View className="w-full max-w-md bg-neutral-900 p-6 rounded-xl shadow-lg">
+          <Text className="text-3xl font-bold text-center mb-6 text-cyan-400 tracking-wide">Login</Text>
+
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
+
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
+
+          <TouchableOpacity
+            className={`bg-cyan-600 hover:bg-cyan-700 p-4 rounded-xl mb-4 shadow-md active:scale-95 transition ${loading ? 'opacity-50' : ''}`}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            <Text className="text-white text-center font-semibold tracking-wide">
+              {loading ? 'Logging in...' : 'Login'}
+            </Text>
+          </TouchableOpacity>
+
+          <Link href="/signup" asChild>
+            <TouchableOpacity className="p-3" disabled={loading}>
+              <Text className="text-center text-cyan-400 underline">
+                Don’t have an account? Sign up
+              </Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
+      </View>
+
+      <Toast />
+    </ScreenWrapper>
   );
 }

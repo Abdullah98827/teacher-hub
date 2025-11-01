@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react'; // Added React for TS support
-import { ActivityIndicator, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Image, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '../supabase';
 
@@ -29,19 +29,34 @@ export default function Index() {
       router.replace('/login');
     });
 
-    return () => clearTimeout(timeoutId);
+    // ✅ Listen for logout events and redirect immediately
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        router.replace('/login');
+      }
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      subscription?.subscription.unsubscribe();
+
+    };
   }, [router]);
 
-  // Use isChecking to conditionally show loading (fixes ESLint)
   if (isChecking) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100" style={{ paddingTop: insets.top }}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text className="mt-4 text-lg text-gray-600">Loading...</Text>
+      <View
+        className="flex-1 justify-center items-center bg-neutral-950"
+        style={{ paddingTop: insets.top }}
+      >
+        <Image
+          source={require('../assets/images/logo.jpg')}
+          style={{ width: 120, height: 120, marginBottom: 16 }}
+        />
+        <Text className="text-cyan-400 text-lg">Loading Teacher Hub...</Text>
       </View>
     );
   }
 
-  // After check, return null to let routing take over (no blank screen)
   return null;
 }

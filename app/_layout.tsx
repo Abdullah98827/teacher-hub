@@ -11,24 +11,35 @@ export default function RootLayout() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
-      router.replace({ pathname: '/login' });
+      router.replace('/login');
     }, 5000);
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      clearTimeout(timeoutId);
-      setIsLoading(false);
-      if (session) {
-        router.replace({ pathname: '/(tabs)' });
-      } else {
-        router.replace({ pathname: '/login' });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        clearTimeout(timeoutId);
+        setIsLoading(false);
+        if (session) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/login');
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeoutId);
+        setIsLoading(false);
+        router.replace('/login');
+      });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        router.replace('/login');
       }
-    }).catch((err) => {
-      clearTimeout(timeoutId);
-      setIsLoading(false);
-      router.replace({ pathname: '/login' });
     });
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      subscription?.subscription.unsubscribe(); // ✅ correct cleanup
+    };
   }, [router]);
 
   return (
