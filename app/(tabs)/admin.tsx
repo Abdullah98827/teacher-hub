@@ -52,15 +52,13 @@ export default function AdminHub() {
     }
   }, [role, roleLoading, loadPendingUsers, checkAccess]);
 
-  const getPhotoUrl = (photoPath) => {
+  const getPhotoUrl = (photoPath: string | null) => {
     if (!photoPath) return null;
-    const { data } = supabase.storage
-      .from('teacher-passes')
-      .getPublicUrl(photoPath);
-    return data.publicUrl;
+    const { data } = supabase.storage.from('teacher-passes').getPublicUrl(photoPath);
+    return data?.publicUrl || null;
   };
 
-  const handleApprove = useCallback(async (userId, photoUrl) => {
+  const handleApprove = useCallback(async (userId: string, photoUrl: string | null) => {
     const { error } = await supabase
       .from('teachers')
       .update({ verified: true })
@@ -72,7 +70,11 @@ export default function AdminHub() {
     }
 
     if (photoUrl) {
-      await supabase.storage.from('teacher-passes').remove([photoUrl]);
+      const { error: deleteError } = await supabase.storage.from('teacher-passes').remove([photoUrl]);
+      if (deleteError) {
+        console.error('Photo delete failed:', deleteError.message);
+        showToast('error', 'Photo Delete Failed', deleteError.message);
+      }
     }
 
     showToast('success', 'Approved', 'Teacher verified successfully.');
@@ -86,7 +88,11 @@ export default function AdminHub() {
 
   const executeReject = useCallback(async () => {
     if (confirmDeletePhoto) {
-      await supabase.storage.from('teacher-passes').remove([confirmDeletePhoto]);
+      const { error: deleteError } = await supabase.storage.from('teacher-passes').remove([confirmDeletePhoto]);
+      if (deleteError) {
+        console.error('Photo delete failed:', deleteError.message);
+        showToast('error', 'Photo Delete Failed', deleteError.message);
+      }
     }
 
     const { error } = await supabase
@@ -105,40 +111,48 @@ export default function AdminHub() {
     setConfirmDeletePhoto(null);
   }, [confirmDeleteId, confirmDeletePhoto, loadPendingUsers]);
 
-  const renderUser = ({ item }) => (
-    <View className="bg-white p-5 rounded-xl mb-4 shadow-lg">
-      <Text className="text-xs text-gray-500">Email</Text>
-      <Text className="text-base font-semibold mb-3">{item.email || 'No email'}</Text>
-      <Text className="text-xs text-gray-500">TRN</Text>
-      <Text className="text-lg font-bold mb-3">{item.trn}</Text>
-      <Text className="text-xs text-gray-500">ID</Text>
-      <Text className="text-xs mb-3">{item.id}</Text>
-      {item.photo_url && (
-        <View className="mb-3">
-          <Text className="text-xs text-gray-500 mb-2">Photo</Text>
-          <Image
-            source={{ uri: getPhotoUrl(item.photo_url) }}
-            className="w-full h-48 rounded-lg bg-gray-200"
-            resizeMode="contain"
-          />
+  const renderUser = ({ item }) => {
+    const imageUrl = getPhotoUrl(item.photo_url);
+
+    return (
+      <View className="bg-white p-5 rounded-xl mb-4 shadow-lg">
+        <Text className="text-xs text-gray-500">Email</Text>
+        <Text className="text-base font-semibold mb-3">{item.email || 'No email'}</Text>
+        <Text className="text-xs text-gray-500">TRN</Text>
+        <Text className="text-lg font-bold mb-3">{item.trn}</Text>
+        <Text className="text-xs text-gray-500">ID</Text>
+        <Text className="text-xs mb-3">{item.id}</Text>
+
+        {imageUrl ? (
+          <View className="mb-3">
+            <Text className="text-xs text-gray-500 mb-2">Photo</Text>
+            <Image
+              source={{ uri: imageUrl }}
+              className="w-full h-48 rounded-lg bg-gray-200"
+              resizeMode="contain"
+            />
+          </View>
+        ) : (
+          <Text className="text-xs text-red-500 mb-3">No photo available</Text>
+        )}
+
+        <View className="flex-row gap-3">
+          <TouchableOpacity
+            className="flex-1 bg-red-500 p-3 rounded-lg"
+            onPress={() => confirmReject(item.id, item.photo_url)}
+          >
+            <Text className="text-white text-center font-bold">Reject</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-1 bg-green-600 p-3 rounded-lg"
+            onPress={() => handleApprove(item.id, item.photo_url)}
+          >
+            <Text className="text-white text-center font-bold">Approve</Text>
+          </TouchableOpacity>
         </View>
-      )}
-      <View className="flex-row gap-3">
-        <TouchableOpacity
-          className="flex-1 bg-red-500 p-3 rounded-lg"
-          onPress={() => confirmReject(item.id, item.photo_url)}
-        >
-          <Text className="text-white text-center font-bold">Reject</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="flex-1 bg-green-600 p-3 rounded-lg"
-          onPress={() => handleApprove(item.id, item.photo_url)}
-        >
-          <Text className="text-white text-center font-bold">Approve</Text>
-        </TouchableOpacity>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <ScreenWrapper>

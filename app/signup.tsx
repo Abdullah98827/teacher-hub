@@ -8,145 +8,158 @@ import ScreenWrapper from '../components/ScreenWrapper';
 import { supabase } from '../supabase';
 
 export default function Signup() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [trn, setTrn] = useState('');
+  const [formData, setFormData] = useState({
+    email: '', password: '', firstName: '', lastName: '', trn: ''
+  });
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const isValidEmail = (emailStr: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+  const showToast = (type: 'success' | 'error', title: string, msg: string) =>
+    Toast.show({ type, text1: title, text2: msg });
 
-  const showToast = (type: 'success' | 'error', title: string, message: string) => {
-    Toast.show({ type, text1: title, text2: message });
-  };
+  const updateField = (field: keyof typeof formData, value: string) =>
+    setFormData(prev => ({ ...prev, [field]: value }));
 
   const pickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
+      mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.5
     });
-    if (!result.canceled && result.assets.length > 0) {
-      setPhotoUri(result.assets[0].uri);
-    }
+    if (!result.canceled) setPhotoUri(result.assets[0].uri);
   };
 
-  const handleSignup = async () => {
-    if (!email || !password || !firstName || !lastName || !trn || !photoUri || !consent) {
-      showToast('error', 'Missing Info', 'Please fill all fields, upload photo and accept consent');
-      return;
-    }
-    if (!isValidEmail(email)) {
-      showToast('error', 'Invalid Email', 'Please enter a valid email');
-      return;
-    }
-    if (password.length < 6) {
-      showToast('error', 'Weak Password', 'Password must be at least 6 characters');
-      return;
-    }
+  const base64ToBuffer = (base64: string) => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  };
+
+  const uploadPhoto = (userId: string): Promise<string> => {
+    const fileName = `${formData.email.replace(/[@.]/g, '_')}_${userId}.jpg`;
+
+    return fetch(photoUri!)
+      .then(res => res.blob())
+      .then(blob => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            supabase.storage
+              .from('teacher-passes')
+              .upload(fileName, base64ToBuffer(base64), {
+                contentType: 'image/jpeg', upsert: true
+              })
+              .then(({ error }) => {
+                if (error) reject(error);
+                else resolve(fileName);
+              });
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      });
+  };
+
+  const handleSignup = () => {
+    const { email, password, firstName, lastName, trn } = formData;
+
+    if (!email || !password || !firstName || !lastName || !trn || !photoUri || !consent)
+      return showToast('error', 'Missing Info', 'Fill all fields, upload photo & accept consent');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return showToast('error', 'Invalid Email', 'Enter a valid email address');
+    if (password.length < 6)
+      return showToast('error', 'Weak Password', 'Password must be at least 6 characters');
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { verified: false } }
-    });
+    supabase.auth.signUp({
+      email, password, options: { data: { verified: false } }
+    }).then(({ data, error }) => {
+      if (error || !data.user?.id) throw new Error(error?.message || 'Signup failed');
 
-    if (error) {
-      setLoading(false);
-      showToast('error', 'Signup Failed', error.message);
-      return;
-    }
+      uploadPhoto(data.user.id).then(fileName => {
+        supabase.from('teachers').insert({
+          id: data.user.id, email, first_name: firstName, last_name: lastName,
+          trn, photo_url: fileName, verified: false
+        }).then(({ error: profileError }) => {
+          if (profileError) throw new Error(profileError.message);
 
-    const userId = data.user?.id;
-    if (!userId) {
-      setLoading(false);
-      showToast('error', 'Signup Failed', 'Could not create account. Try again.');
-      return;
-    }
-
-    const cleanEmail = email.replace(/[@.]/g, '_');
-    const fileName = `${cleanEmail}_TRN${trn}.jpg`;
-
-    try {
-      const response = await fetch(photoUri!);
-      const blob = await response.blob();
-
-      const { error: uploadError } = await supabase.storage
-        .from('teacher-passes')
-        .upload(fileName, blob, {
-          contentType: 'image/jpeg',
-          upsert: true,
+          supabase.from('user_roles').insert({ id: data.user.id, role: 'teacher' }).then(() => {
+            showToast('success', 'Success!', 'Admin will verify within 24–48 hours');
+            setTimeout(() => router.push('/login'), 1500);
+          });
         });
-
-      if (uploadError) {
-        setLoading(false);
-        showToast('error', 'Photo Upload Failed', `${uploadError.message}. Account created but needs photo—contact admin.`);
-        return;
-      }
-    } catch {
+      });
+    }).catch(err => {
+      showToast('error', 'Signup Failed', err.message || 'Please try again');
+    }).finally(() => {
       setLoading(false);
-      showToast('error', 'Upload Error', 'Could not process photo. Try again.');
-      return;
-    }
-
-    const profileData = {
-      id: userId,
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      trn,
-      photo_url: fileName,
-      verified: false
-    };
-
-    const { error: profileError } = await supabase
-      .from('teachers')
-      .insert(profileData);
-
-    if (profileError) {
-      setLoading(false);
-      showToast('error', 'Profile Error', `${profileError.message}. Hint: ${profileError.hint || 'Check TRN uniqueness'}`);
-      return;
-    }
-
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .insert({ id: userId, role: 'teacher' });
-
-    if (roleError) {
-      console.error('Role creation error:', roleError);
-    }
-
-    setLoading(false);
-    showToast('success', 'Signup Complete', 'Admin will verify your TRN and photo within 24–48 hours.');
-
-    setTimeout(() => {
-      router.push('/login');
-    }, 1500);
+    });
   };
 
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-
       <View className="flex-1 justify-center items-center">
         <View className="w-full max-w-md bg-neutral-900 p-6 rounded-xl shadow-lg">
-          <Text className="text-3xl font-bold text-center mb-6 text-cyan-400 tracking-wide">Sign Up</Text>
+          <Text className="text-3xl font-bold text-center mb-6 text-cyan-400">Sign Up</Text>
 
-          <TextInput className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl" placeholder="First Name" value={firstName} onChangeText={setFirstName} autoCapitalize="words" placeholderTextColor="#9CA3AF" />
-          <TextInput className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl" placeholder="Last Name" value={lastName} onChangeText={setLastName} autoCapitalize="words" placeholderTextColor="#9CA3AF" />
-          <TextInput className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl" placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" editable={!loading} placeholderTextColor="#9CA3AF" />
-          <TextInput className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl" placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry editable={!loading} placeholderTextColor="#9CA3AF" />
-          <TextInput className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl" placeholder="Teacher Reference Number (TRN)" value={trn} onChangeText={setTrn} keyboardType="number-pad" editable={!loading} placeholderTextColor="#9CA3AF" />
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            placeholder="First Name"
+            value={formData.firstName}
+            onChangeText={(val) => updateField('firstName', val)}
+            autoCapitalize="words"
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
 
-          <TouchableOpacity className="bg-cyan-600 hover:bg-cyan-700 p-4 mb-3 rounded-xl shadow-md active:scale-95 transition" onPress={pickPhoto}>
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            placeholder="Last Name"
+            value={formData.lastName}
+            onChangeText={(val) => updateField('lastName', val)}
+            autoCapitalize="words"
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
+
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            placeholder="Email"
+            value={formData.email}
+            onChangeText={(val) => updateField('email', val)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
+
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            placeholder="Password"
+            value={formData.password}
+            onChangeText={(val) => updateField('password', val)}
+            secureTextEntry
+            autoCapitalize="none"
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
+
+          <TextInput
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            placeholder="Teacher Reference Number (TRN)"
+            value={formData.trn}
+            onChangeText={(val) => updateField('trn', val)}
+            keyboardType="number-pad"
+            autoCapitalize="none"
+            editable={!loading}
+            placeholderTextColor="#9CA3AF"
+          />
+
+          <TouchableOpacity className="bg-cyan-600 p-4 mb-3 rounded-xl active:scale-95" onPress={pickPhoto}>
             <Text className="text-white text-center font-bold">Upload Teacher Pass Photo *</Text>
           </TouchableOpacity>
 
@@ -163,7 +176,7 @@ export default function Signup() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`p-4 rounded-xl mb-3 shadow-md active:scale-95 transition ${loading ? 'bg-gray-400' : 'bg-cyan-600 hover:bg-cyan-700'}`}
+            className={`p-4 rounded-xl mb-3 active:scale-95 ${loading ? 'bg-gray-400' : 'bg-cyan-600'}`}
             onPress={handleSignup}
             disabled={loading}
           >
@@ -179,7 +192,6 @@ export default function Signup() {
           </Link>
         </View>
       </View>
-
       <Toast />
     </ScreenWrapper>
   );
