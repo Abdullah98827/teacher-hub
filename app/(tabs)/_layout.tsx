@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Tabs } from "expo-router/tabs";
 import { useEffect, useState } from "react";
@@ -8,41 +9,51 @@ import { supabase } from "../../supabase";
 export default function TabLayout() {
   const router = useRouter();
   const [checkingAccess, setCheckingAccess] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const checkAccess = async () => {
+    const checkUserAccess = async () => {
+      // Checks if the user is logged in
       const {
         data: { user },
+        error: authError,
       } = await supabase.auth.getUser();
-      if (!user) return router.replace("/login");
 
-      const { data: adminMatch } = await supabase
-        .from("admins")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-
-      if (adminMatch) {
-        setIsAdmin(true);
-        setCheckingAccess(false);
+      if (authError || !user) {
+        router.replace("/login");
         return;
       }
 
-      const { data: membership } = await supabase
-        .from("memberships")
-        .select("active")
+      // Checks user's role if they're admin or teacher
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
         .eq("id", user.id)
         .single();
 
-      if (!membership?.active) {
-        router.replace("/membership");
-      } else {
-        setCheckingAccess(false);
+      if (roleError || !roleData?.role) {
+        router.replace("/login");
+        return;
       }
+
+      // Admins can access everything, teachers need active membership
+      if (roleData.role === "teacher") {
+        const { data: membership, error: membershipError } = await supabase
+          .from("memberships")
+          .select("active")
+          .eq("id", user.id)
+          .single();
+
+        if (membershipError || !membership?.active) {
+          router.replace("/membership"); // if no active membership, sends the user to membership page
+          return;
+        }
+      }
+
+      // if all checks are passed, it shows the main app
+      setCheckingAccess(false);
     };
 
-    checkAccess();
+    checkUserAccess();
   }, [router]);
 
   if (checkingAccess) {
@@ -54,25 +65,60 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs screenOptions={{ headerShown: true }}>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: "#22d3ee",
+        tabBarInactiveTintColor: "#9ca3af",
+        tabBarStyle: {
+          backgroundColor: "#0a0a0a",
+          borderTopColor: "#262626",
+          borderTopWidth: 1,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: "600",
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
-        options={{ title: "Home", tabBarLabel: "Home" }}
+        options={{
+          title: "Home",
+          tabBarLabel: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="explore"
-        options={{ title: "Explore", tabBarLabel: "Explore" }}
+        options={{
+          title: "Explore",
+          tabBarLabel: "Explore",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="compass" size={size} color={color} />
+          ),
+        }}
       />
       <Tabs.Screen
         name="dashboard"
-        options={{ title: "Dashboard", tabBarLabel: "Dashboard" }}
+        options={{
+          title: "Dashboard",
+          tabBarLabel: "Dashboard",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="grid" size={size} color={color} />
+          ),
+        }}
       />
       <Tabs.Screen
-        name="admin"
+        name="settings"
         options={{
-          title: "Admin Hub",
-          tabBarLabel: "Admin",
-          href: isAdmin ? "/(tabs)/admin" : null,
+          title: "Settings",
+          tabBarLabel: "Settings",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

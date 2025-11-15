@@ -28,11 +28,12 @@ export default function Membership() {
 
   const pricing = {
     single: "£9.99/month",
-    multi: "£16.99/month",
+    multi: "£17.99/month",
   };
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  // Load all available subjects when page opens
   useEffect(() => {
     const fetchSubjects = async () => {
       const { data, error } = await supabase
@@ -50,6 +51,7 @@ export default function Membership() {
     fetchSubjects();
   }, []);
 
+  // Fade in animation when tier is selected
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -62,9 +64,11 @@ export default function Membership() {
     Toast.show({ type, text1: title, text2: msg });
 
   const toggleSubject = (subjectId: string) => {
+    // If already selected, remove it
     if (selectedSubjectIds.includes(subjectId)) {
       setSelectedSubjectIds((prev) => prev.filter((id) => id !== subjectId));
     } else {
+      // On Single tier user can max choose 1 subject, and for Multi tier user can choose max 2 subjects
       if (tier === "single" && selectedSubjectIds.length >= 1) return;
       if (tier === "multi" && selectedSubjectIds.length >= 2) return;
       setSelectedSubjectIds((prev) => [...prev, subjectId]);
@@ -72,31 +76,34 @@ export default function Membership() {
   };
 
   const confirmMembership = async () => {
+    // Make sure user picked a tier and at least one subject
     if (!tier || selectedSubjectIds.length === 0) {
       return showToast("error", "Incomplete", "Select a tier and subject(s)");
     }
 
     setLoading(true);
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Saves the membership choice to database (starts as inactive until payment)
     const { error } = await supabase.from("memberships").upsert({
       id: user.id,
       tier,
       subject_ids: selectedSubjectIds,
-      active: false, // ✅ wait for payment
+      active: false, // Will be set to true after payment
     });
 
     if (error) {
       showToast("error", "Error", error.message);
+      setLoading(false);
     } else {
       showToast("success", "Membership Saved", "Proceeding to payment...");
-      setTimeout(() => router.push("../checkout"), 1500); // ✅ redirect to payment
+      setTimeout(() => router.push("../checkout"), 1500);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleLogout = async () => {
@@ -118,7 +125,7 @@ export default function Membership() {
             }`}
             onPress={() => {
               setTier("single");
-              setSelectedSubjectIds([]);
+              setSelectedSubjectIds([]); // Reset selections when changing tier
               fadeAnim.setValue(0);
             }}
           >
@@ -141,7 +148,7 @@ export default function Membership() {
             }`}
             onPress={() => {
               setTier("multi");
-              setSelectedSubjectIds([]);
+              setSelectedSubjectIds([]); // Reset selections when changing tier
               fadeAnim.setValue(0);
             }}
           >

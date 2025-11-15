@@ -9,7 +9,7 @@ export default function PendingApproval() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/login"); // ✅ push instead of replace
+    router.push("/login");
   };
 
   return (
@@ -29,7 +29,6 @@ export default function PendingApproval() {
           account is verified.
         </Text>
 
-        {/* Navigation Buttons */}
         <View className="flex-row justify-between w-full max-w-md">
           <TouchableOpacity
             className="flex-1 bg-cyan-600 p-3 rounded-xl mr-2 active:scale-95"

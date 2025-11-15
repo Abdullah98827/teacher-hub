@@ -1,39 +1,42 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '../../supabase';
+import { useEffect, useState } from "react";
+import { supabase } from "../../supabase";
 
-export type UserRole = 'admin' | 'teacher' | 'super_admin' | 'none';
+export type UserRole = "admin" | "teacher" | "super_admin" | "none";
 
 export const useUserRole = () => {
-  const [role, setRole] = useState<UserRole>('none');
+  const [role, setRole] = useState<UserRole>("none");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkRole = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get current logged-in user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        setRole('none');
+        setRole("none");
         setLoading(false);
         return;
       }
 
-      // Check user_roles table
+      // Checks what role they have in the database
       const { data: userRole } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('id', user.id)
+        .from("user_roles")
+        .select("role")
+        .eq("id", user.id)
         .single();
 
       if (userRole) {
-        // If admin or super_admin, set as admin
-        if (userRole.role === 'admin' || userRole.role === 'super_admin') {
-          setRole('admin');
+        // Both admin and super_admin get treated as 'admin'
+        if (userRole.role === "admin" || userRole.role === "super_admin") {
+          setRole("admin");
         } else {
-          setRole('teacher');
+          setRole("teacher");
         }
       } else {
-        setRole('none');
+        setRole("none");
       }
-      
+
       setLoading(false);
     };
 

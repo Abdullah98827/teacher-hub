@@ -12,6 +12,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Basic email validation using regex pattern
+  // Reference: https://www.w3resource.com/javascript/form/email-validation.php
   const isValidEmail = (emailStr: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
 
@@ -24,6 +26,7 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
+    // Basic validation
     if (!email || !password) {
       showToast("error", "Missing Info", "Please enter email and password");
       return;
@@ -35,6 +38,7 @@ export default function Login() {
 
     setLoading(true);
 
+    // Step 1: Sign in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -52,7 +56,7 @@ export default function Login() {
 
     const userId = data.user.id;
 
-    // ✅ Step 1: Check if user is an admin
+    // Step 2: Check if user is an admin (admins skip verification checks)
     const { data: admin } = await supabase
       .from("admins")
       .select("id")
@@ -66,7 +70,7 @@ export default function Login() {
       return;
     }
 
-    // ✅ Step 2: Check if teacher is verified
+    // Step 3: Check if teacher profile exists and is verified
     const { data: teacher, error: teacherError } = await supabase
       .from("teachers")
       .select("verified")
@@ -84,14 +88,15 @@ export default function Login() {
       return;
     }
 
+    // If not verified yet, send to pending page
     if (!teacher.verified) {
       setLoading(false);
-      showToast("info", "Pending Approval", "Redirecting to status page...");
+      showToast("info", "Pending Approval", "Redirecting to pending page...");
       setTimeout(() => router.replace("/pending"), 1000);
       return;
     }
 
-    // ✅ Step 3: Check membership status
+    // Step 4: Check if they have an active membership
     const { data: membership } = await supabase
       .from("memberships")
       .select("active")
@@ -101,6 +106,7 @@ export default function Login() {
     setLoading(false);
     showToast("success", "Login Successful", "Welcome back!");
 
+    // Sends the user to membership page if the membership is not active, otherwise to the main app
     setTimeout(() => {
       if (!membership || !membership.active) {
         router.replace("/membership");
@@ -121,7 +127,7 @@ export default function Login() {
           </Text>
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl"
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
@@ -132,7 +138,7 @@ export default function Login() {
           />
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500"
+            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl"
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
@@ -142,7 +148,7 @@ export default function Login() {
           />
 
           <TouchableOpacity
-            className={`bg-cyan-600 hover:bg-cyan-700 p-4 rounded-xl mb-4 shadow-md active:scale-95 transition ${loading ? "opacity-50" : ""}`}
+            className={`bg-cyan-600 p-4 rounded-xl mb-4 active:scale-95 ${loading ? "opacity-50" : ""}`}
             onPress={handleLogin}
             disabled={loading}
           >
@@ -154,7 +160,7 @@ export default function Login() {
           <Link href="/signup" asChild>
             <TouchableOpacity className="p-3" disabled={loading}>
               <Text className="text-center text-cyan-400 underline">
-                Don’t have an account? Sign up
+                Don`t have an account? Sign up
               </Text>
             </TouchableOpacity>
           </Link>

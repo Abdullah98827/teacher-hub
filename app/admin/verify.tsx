@@ -1,28 +1,49 @@
-import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Image, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
-import Toast from 'react-native-toast-message';
-import LogoHeader from '../../components/logoHeader';
-import ScreenWrapper from '../../components/ScreenWrapper';
-import { supabase } from '../../supabase';
-import { useUserRole } from '../hooks/useUserRole';
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+  FlatList,
+  Image,
+  RefreshControl,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Toast from "react-native-toast-message";
+import LogoHeader from "../../components/logoHeader";
+import ScreenWrapper from "../../components/ScreenWrapper";
+import { supabase } from "../../supabase";
+import { useUserRole } from "../hooks/useUserRole";
 
-export default function AdminHub() {
-  const [pendingUsers, setPendingUsers] = useState([]);
+interface PendingTeacher {
+  id: string;
+  email: string;
+  trn: string;
+  photo_url: string | null;
+  [key: string]: any;
+}
+
+export default function VerifyTeachersScreen() {
+  const [pendingUsers, setPendingUsers] = useState<PendingTeacher[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [confirmDeletePhoto, setConfirmDeletePhoto] = useState<string | null>(null);
+  const [confirmDeletePhoto, setConfirmDeletePhoto] = useState<string | null>(
+    null
+  );
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
 
-  const showToast = (type: 'success' | 'error', title: string, message: string) => {
+  const showToast = (
+    type: "success" | "error",
+    title: string,
+    message: string
+  ) => {
     Toast.show({ type, text1: title, text2: message });
   };
 
   const checkAccess = useCallback(() => {
-    if (role !== 'admin') {
-      showToast('error', 'Access Denied', 'You are not an admin');
-      router.replace('/(tabs)');
+    if (role !== "admin") {
+      showToast("error", "Access Denied", "You are not an admin");
+      router.replace("/(tabs)");
       return false;
     }
     return true;
@@ -30,13 +51,13 @@ export default function AdminHub() {
 
   const loadPendingUsers = useCallback(async () => {
     const { data, error } = await supabase
-      .from('teachers')
-      .select('*')
-      .eq('verified', false)
-      .order('created_at', { ascending: false });
+      .from("teachers")
+      .select("*")
+      .eq("verified", false)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      showToast('error', 'Load Failed', error.message);
+      showToast("error", "Load Failed", error.message);
       return;
     }
 
@@ -45,7 +66,7 @@ export default function AdminHub() {
 
   useEffect(() => {
     if (roleLoading) return;
-    if (role === 'admin') {
+    if (role === "admin") {
       loadPendingUsers();
     } else {
       checkAccess();
@@ -54,56 +75,68 @@ export default function AdminHub() {
 
   const getPhotoUrl = (photoPath: string | null) => {
     if (!photoPath) return null;
-    const { data } = supabase.storage.from('teacher-passes').getPublicUrl(photoPath);
+    const { data } = supabase.storage
+      .from("teacher-passes")
+      .getPublicUrl(photoPath);
     return data?.publicUrl || null;
   };
 
-  const handleApprove = useCallback(async (userId: string, photoUrl: string | null) => {
-    const { error } = await supabase
-      .from('teachers')
-      .update({ verified: true })
-      .eq('id', userId);
+  const handleApprove = useCallback(
+    async (userId: string, photoUrl: string | null) => {
+      const { error } = await supabase
+        .from("teachers")
+        .update({ verified: true })
+        .eq("id", userId);
 
-    if (error) {
-      showToast('error', 'Approval Failed', error.message);
-      return;
-    }
-
-    if (photoUrl) {
-      const { error: deleteError } = await supabase.storage.from('teacher-passes').remove([photoUrl]);
-      if (deleteError) {
-        console.error('Photo delete failed:', deleteError.message);
-        showToast('error', 'Photo Delete Failed', deleteError.message);
+      if (error) {
+        showToast("error", "Approval Failed", error.message);
+        return;
       }
-    }
 
-    showToast('success', 'Approved', 'Teacher verified successfully.');
-    loadPendingUsers();
-  }, [loadPendingUsers]);
+      if (photoUrl) {
+        const { error: deleteError } = await supabase.storage
+          .from("teacher-passes")
+          .remove([photoUrl]);
+        if (deleteError) {
+          console.error("Photo delete failed:", deleteError.message);
+          showToast("error", "Photo Delete Failed", deleteError.message);
+        }
+      }
 
-  const confirmReject = useCallback((userId: string, photoUrl: string | null) => {
-    setConfirmDeleteId(userId);
-    setConfirmDeletePhoto(photoUrl);
-  }, []);
+      showToast("success", "Approved", "Teacher verified successfully.");
+      loadPendingUsers();
+    },
+    [loadPendingUsers]
+  );
+
+  const confirmReject = useCallback(
+    (userId: string, photoUrl: string | null) => {
+      setConfirmDeleteId(userId);
+      setConfirmDeletePhoto(photoUrl);
+    },
+    []
+  );
 
   const executeReject = useCallback(async () => {
     if (confirmDeletePhoto) {
-      const { error: deleteError } = await supabase.storage.from('teacher-passes').remove([confirmDeletePhoto]);
+      const { error: deleteError } = await supabase.storage
+        .from("teacher-passes")
+        .remove([confirmDeletePhoto]);
       if (deleteError) {
-        console.error('Photo delete failed:', deleteError.message);
-        showToast('error', 'Photo Delete Failed', deleteError.message);
+        console.error("Photo delete failed:", deleteError.message);
+        showToast("error", "Photo Delete Failed", deleteError.message);
       }
     }
 
     const { error } = await supabase
-      .from('teachers')
+      .from("teachers")
       .delete()
-      .eq('id', confirmDeleteId);
+      .eq("id", confirmDeleteId);
 
     if (error) {
-      showToast('error', 'Deletion Failed', error.message);
+      showToast("error", "Deletion Failed", error.message);
     } else {
-      showToast('success', 'Account Deleted', 'Teacher account removed.');
+      showToast("success", "Account Deleted", "Teacher account removed.");
       loadPendingUsers();
     }
 
@@ -111,13 +144,15 @@ export default function AdminHub() {
     setConfirmDeletePhoto(null);
   }, [confirmDeleteId, confirmDeletePhoto, loadPendingUsers]);
 
-  const renderUser = ({ item }) => {
+  const renderUser = ({ item }: { item: PendingTeacher }) => {
     const imageUrl = getPhotoUrl(item.photo_url);
 
     return (
       <View className="bg-white p-5 rounded-xl mb-4 shadow-lg">
         <Text className="text-xs text-gray-500">Email</Text>
-        <Text className="text-base font-semibold mb-3">{item.email || 'No email'}</Text>
+        <Text className="text-base font-semibold mb-3">
+          {item.email || "No email"}
+        </Text>
         <Text className="text-xs text-gray-500">TRN</Text>
         <Text className="text-lg font-bold mb-3">{item.trn}</Text>
         <Text className="text-xs text-gray-500">ID</Text>
@@ -160,9 +195,12 @@ export default function AdminHub() {
 
       <View className="w-full max-w-3xl mx-auto">
         <View className="mb-6">
-          <Text className="text-3xl font-bold text-cyan-400 mb-2">Admin Hub</Text>
+          <Text className="text-3xl font-bold text-cyan-400 mb-2">
+            Verify Teachers
+          </Text>
           <Text className="text-gray-400">
-            {pendingUsers.length} pending verification{pendingUsers.length !== 1 ? 's' : ''}
+            {pendingUsers.length} pending verification
+            {pendingUsers.length !== 1 ? "s" : ""}
           </Text>
         </View>
 
@@ -173,7 +211,9 @@ export default function AdminHub() {
           contentContainerStyle={{ paddingBottom: 20 }}
           ListEmptyComponent={
             <View className="bg-white p-8 rounded-xl shadow-lg">
-              <Text className="text-center text-gray-500">No pending verifications</Text>
+              <Text className="text-center text-gray-500">
+                No pending verifications
+              </Text>
             </View>
           }
           refreshControl={
@@ -192,9 +232,12 @@ export default function AdminHub() {
       {confirmDeleteId && (
         <View className="absolute inset-0 bg-black/50 justify-center items-center z-50 px-5">
           <View className="bg-white rounded-xl p-5 w-full max-w-md">
-            <Text className="text-lg font-bold mb-3 text-red-600">Confirm Deletion</Text>
+            <Text className="text-lg font-bold mb-3 text-red-600">
+              Confirm Deletion
+            </Text>
             <Text className="text-gray-700 mb-4">
-              This will permanently delete the teacher’s account and photo. Are you sure?
+              This will permanently delete the teacher’s account and photo. Are
+              you sure?
             </Text>
             <View className="flex-row justify-end gap-3">
               <TouchableOpacity

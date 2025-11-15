@@ -19,20 +19,21 @@ export default function CheckoutScreen() {
   const [tier, setTier] = useState<string | null>(null);
   const [subjectNames, setSubjectNames] = useState<string[]>([]);
 
-  // Cardholder name
+  // Cardholder details
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  // Card info
+  // Card information
   const [cardNumber, setCardNumber] = useState("");
   const [expiry, setExpiry] = useState("");
   const [cvv, setCvv] = useState("");
 
-  // Billing info
+  // Billing address
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [postcode, setPostcode] = useState("");
 
+  // Loads membership details when page opens
   useEffect(() => {
     const fetchMembership = async () => {
       const {
@@ -50,6 +51,7 @@ export default function CheckoutScreen() {
 
       setTier(membership.tier);
 
+      // Get the names of selected subjects
       const { data: subjects } = await supabase
         .from("subjects")
         .select("id, name")
@@ -67,6 +69,7 @@ export default function CheckoutScreen() {
     Toast.show({ type, text1: title, text2: msg });
 
   const handleSimulatedPayment = async () => {
+    // Makes sure all payment fields are filled
     if (
       !firstName ||
       !lastName ||
@@ -91,6 +94,7 @@ export default function CheckoutScreen() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Activates the  membership after "payment" (this is simulated so therefore no real payment processing)
     await supabase
       .from("memberships")
       .update({ active: true })
@@ -99,6 +103,7 @@ export default function CheckoutScreen() {
     setLoading(false);
     showToast("success", "Payment Successful", "Membership activated!");
 
+    // Redirects to main app after successful payment
     setTimeout(() => {
       router.replace("/(tabs)");
     }, 2500);
@@ -117,7 +122,6 @@ export default function CheckoutScreen() {
           🔒 Secure Stripe-style Checkout
         </Text>
 
-        {/* Summary box */}
         <View className="bg-neutral-900 p-4 rounded-xl mb-6 border border-neutral-700">
           <Text className="text-cyan-400 text-lg font-semibold mb-2">
             Tier:{" "}
@@ -136,7 +140,6 @@ export default function CheckoutScreen() {
           </Text>
         </View>
 
-        {/* Cardholder Name */}
         <Text className="text-white text-lg font-semibold mb-2">
           Cardholder Name
         </Text>
@@ -155,7 +158,6 @@ export default function CheckoutScreen() {
           className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
         />
 
-        {/* Card Details */}
         <Text className="text-white text-lg font-semibold mb-2">
           Card Details
         </Text>
@@ -165,6 +167,7 @@ export default function CheckoutScreen() {
           value={cardNumber}
           keyboardType="numeric"
           onChangeText={(text) => {
+            // this only allow numbers, and max 16 digits
             const cleaned = text.replace(/\D/g, "").slice(0, 16);
             setCardNumber(cleaned);
           }}
@@ -190,7 +193,6 @@ export default function CheckoutScreen() {
           />
         </View>
 
-        {/* Billing Info */}
         <Text className="text-white text-lg font-semibold mb-2">
           Billing Address
         </Text>
@@ -216,7 +218,6 @@ export default function CheckoutScreen() {
           className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
         />
 
-        {/* Simulate payment */}
         <TouchableOpacity
           className={`mt-4 p-4 rounded-xl ${loading ? "bg-gray-400" : "bg-cyan-600"}`}
           onPress={handleSimulatedPayment}
@@ -231,7 +232,6 @@ export default function CheckoutScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Footer actions */}
         <View className="flex-row justify-between mt-6">
           <TouchableOpacity
             className="flex-1 bg-neutral-800 p-3 rounded-xl mr-2 active:scale-95"
@@ -250,7 +250,6 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Branding */}
         <Text className="text-center text-gray-500 text-xs mt-6">
           Powered by Teacher Hub
         </Text>
