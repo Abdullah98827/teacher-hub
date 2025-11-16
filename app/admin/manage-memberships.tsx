@@ -33,6 +33,7 @@ export default function ManageMembershipsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<"all" | "single" | "multi">("all");
 
+  // Loads all active memberships when page opens
   useEffect(() => {
     if (!roleLoading && role === "admin") {
       fetchMemberships();
@@ -74,6 +75,7 @@ export default function ManageMembershipsScreen() {
     });
   };
 
+  // Filters the memberships by tier (single/multi/all)
   const filteredMemberships = [...memberships].filter((m) => {
     if (filter === "all") return true;
     return m.tier === filter;
@@ -109,6 +111,7 @@ export default function ManageMembershipsScreen() {
             </Text>
           </View>
 
+          {/* Filter Button */}
           <TouchableOpacity
             className="p-2 rounded-full bg-neutral-800 active:scale-95"
             onPress={() => {

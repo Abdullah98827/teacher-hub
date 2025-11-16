@@ -43,6 +43,7 @@ export default function ManageContactRequestsScreen() {
   }, [role, roleLoading]);
 
   const fetchRequests = async () => {
+    // grabs all contact requests and teacher data
     const { data: rawRequests, error: requestError } = await supabase
       .from("manage_contact_requests")
       .select("*")
@@ -63,6 +64,7 @@ export default function ManageContactRequestsScreen() {
       return;
     }
 
+    // adds verified status to each request
     const enriched = rawRequests.map((req) => {
       const teacher = teachers.find((t) => t.id === req.user_id);
       return { ...req, verified: teacher?.verified ?? false };
@@ -125,6 +127,7 @@ export default function ManageContactRequestsScreen() {
   const pendingCount = requests.filter((r) => r.status === "pending").length;
   const resolvedCount = requests.filter((r) => r.status === "resolved").length;
 
+  // filters by status and email, then sort pending first
   const filteredRequests = [...requests]
     .filter((r) => {
       if (filter === "all") return true;

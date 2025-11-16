@@ -17,9 +17,10 @@ import { useUserRole } from "../hooks/useUserRole";
 interface PendingTeacher {
   id: string;
   email: string;
+  first_name: string;
+  last_name: string;
   trn: string;
   photo_url: string | null;
-  [key: string]: any;
 }
 
 export default function VerifyTeachersScreen() {
@@ -40,15 +41,7 @@ export default function VerifyTeachersScreen() {
     Toast.show({ type, text1: title, text2: message });
   };
 
-  const checkAccess = useCallback(() => {
-    if (role !== "admin") {
-      showToast("error", "Access Denied", "You are not an admin");
-      router.replace("/(tabs)");
-      return false;
-    }
-    return true;
-  }, [role, router]);
-
+  // Loads teachers waiting for verification
   const loadPendingUsers = useCallback(async () => {
     const { data, error } = await supabase
       .from("teachers")
@@ -69,10 +62,11 @@ export default function VerifyTeachersScreen() {
     if (role === "admin") {
       loadPendingUsers();
     } else {
-      checkAccess();
+      router.replace("/(tabs)");
     }
-  }, [role, roleLoading, loadPendingUsers, checkAccess]);
+  }, [role, roleLoading, loadPendingUsers, router]);
 
+  // Get photo URL from storage
   const getPhotoUrl = (photoPath: string | null) => {
     if (!photoPath) return null;
     const { data } = supabase.storage
@@ -81,6 +75,7 @@ export default function VerifyTeachersScreen() {
     return data?.publicUrl || null;
   };
 
+  // Approves the teacher and deletes their verification photo
   const handleApprove = useCallback(
     async (userId: string, photoUrl: string | null) => {
       const { error } = await supabase
@@ -93,22 +88,18 @@ export default function VerifyTeachersScreen() {
         return;
       }
 
+      // Deletes photo after approval (no longer needed)
       if (photoUrl) {
-        const { error: deleteError } = await supabase.storage
-          .from("teacher-passes")
-          .remove([photoUrl]);
-        if (deleteError) {
-          console.error("Photo delete failed:", deleteError.message);
-          showToast("error", "Photo Delete Failed", deleteError.message);
-        }
+        await supabase.storage.from("teacher-passes").remove([photoUrl]);
       }
 
-      showToast("success", "Approved", "Teacher verified successfully.");
+      showToast("success", "Approved", "Teacher verified successfully");
       loadPendingUsers();
     },
     [loadPendingUsers]
   );
 
+  // Shows confirmation modal before rejecting
   const confirmReject = useCallback(
     (userId: string, photoUrl: string | null) => {
       setConfirmDeleteId(userId);
@@ -117,15 +108,12 @@ export default function VerifyTeachersScreen() {
     []
   );
 
+  // Deletes the teachers account and photo
   const executeReject = useCallback(async () => {
     if (confirmDeletePhoto) {
-      const { error: deleteError } = await supabase.storage
+      await supabase.storage
         .from("teacher-passes")
         .remove([confirmDeletePhoto]);
-      if (deleteError) {
-        console.error("Photo delete failed:", deleteError.message);
-        showToast("error", "Photo Delete Failed", deleteError.message);
-      }
     }
 
     const { error } = await supabase
@@ -136,7 +124,7 @@ export default function VerifyTeachersScreen() {
     if (error) {
       showToast("error", "Deletion Failed", error.message);
     } else {
-      showToast("success", "Account Deleted", "Teacher account removed.");
+      showToast("success", "Account Deleted", "Teacher account removed");
       loadPendingUsers();
     }
 
@@ -150,17 +138,21 @@ export default function VerifyTeachersScreen() {
     return (
       <View className="bg-white p-5 rounded-xl mb-4 shadow-lg">
         <Text className="text-xs text-gray-500">Email</Text>
-        <Text className="text-base font-semibold mb-3">
-          {item.email || "No email"}
+        <Text className="text-base font-semibold mb-3">{item.email}</Text>
+
+        <Text className="text-xs text-gray-500">Name</Text>
+        <Text className="text-base mb-3">
+          {item.first_name} {item.last_name}
         </Text>
+
         <Text className="text-xs text-gray-500">TRN</Text>
         <Text className="text-lg font-bold mb-3">{item.trn}</Text>
-        <Text className="text-xs text-gray-500">ID</Text>
-        <Text className="text-xs mb-3">{item.id}</Text>
 
         {imageUrl ? (
           <View className="mb-3">
-            <Text className="text-xs text-gray-500 mb-2">Photo</Text>
+            <Text className="text-xs text-gray-500 mb-2">
+              Teacher Pass Photo
+            </Text>
             <Image
               source={{ uri: imageUrl }}
               className="w-full h-48 rounded-lg bg-gray-200"
@@ -168,7 +160,9 @@ export default function VerifyTeachersScreen() {
             />
           </View>
         ) : (
-          <Text className="text-xs text-red-500 mb-3">No photo available</Text>
+          <Text className="text-xs text-red-500 mb-3">
+            ⚠️ No photo available
+          </Text>
         )}
 
         <View className="flex-row gap-3">
@@ -212,7 +206,7 @@ export default function VerifyTeachersScreen() {
           ListEmptyComponent={
             <View className="bg-white p-8 rounded-xl shadow-lg">
               <Text className="text-center text-gray-500">
-                No pending verifications
+                ✓ No pending verifications
               </Text>
             </View>
           }
@@ -236,7 +230,7 @@ export default function VerifyTeachersScreen() {
               Confirm Deletion
             </Text>
             <Text className="text-gray-700 mb-4">
-              This will permanently delete the teacher’s account and photo. Are
+              This will permanently delete the teacher`s account and photo. Are
               you sure?
             </Text>
             <View className="flex-row justify-end gap-3">

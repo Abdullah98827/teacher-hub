@@ -5,16 +5,14 @@ import Toast from "react-native-toast-message";
 export default function AdminHub() {
   const router = useRouter();
 
+  // Admin navigation links
   const links = [
     { label: "Verify Teachers", route: "/admin/verify" },
     { label: "Manage Memberships", route: "/admin/manage-memberships" },
-    // { label: "Edit Subjects", route: "subjects" },
-    // { label: "Moderate Resources", route: "resources" },
     {
       label: "Manage Contact Requests",
       route: "/admin/manage-contact-requests",
     },
-    // { label: "Audit Logs", route: "logs" },
   ] as const;
 
   return (
@@ -33,14 +31,7 @@ export default function AdminHub() {
 
       <TouchableOpacity
         className="bg-neutral-700 p-4 rounded-xl mt-6 active:scale-95"
-        onPress={() => {
-          Toast.show({
-            type: "info",
-            text1: "Returning",
-            text2: "Back to main app",
-          });
-          router.replace("/(tabs)");
-        }}
+        onPress={() => router.replace("/(tabs)")}
       >
         <Text className="text-white text-center font-medium">Back to App</Text>
       </TouchableOpacity>

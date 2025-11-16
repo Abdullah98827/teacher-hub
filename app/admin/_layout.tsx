@@ -8,6 +8,7 @@ export default function AdminLayout() {
   const { role, loading } = useUserRole();
   const router = useRouter();
 
+  // Check if user is admin, redirects if not
   useEffect(() => {
     if (!loading && role !== "admin") {
       Toast.show({
@@ -46,13 +47,10 @@ export default function AdminLayout() {
         name="manage-memberships"
         options={{ title: "Manage Memberships" }}
       />
-      {/*<Stack.Screen name="subjects" options={{ title: "Edit Subjects" }} />
-      <Stack.Screen name="resources" options={{ title: "Moderate Resources" }}/>  */}
       <Stack.Screen
         name="manage-contact-requests"
         options={{ title: "Manage Contact Requests" }}
       />
-      {/* <Stack.Screen name="logs" options={{ title: "Audit Logs" }} />  */}
     </Stack>
   );
 }
