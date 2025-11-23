@@ -1,7 +1,8 @@
+// app/(tabs)/_layout.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Tabs } from "expo-router/tabs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "../../global.css";
 import { supabase } from "../../supabase";
@@ -10,51 +11,47 @@ export default function TabLayout() {
   const router = useRouter();
   const [checkingAccess, setCheckingAccess] = useState(true);
 
-  useEffect(() => {
-    const checkUserAccess = async () => {
-      // Checks if the user is logged in
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+  const checkUserAccess = useCallback(async () => {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-      if (authError || !user) {
-        router.replace("/login");
-        return;
-      }
+    if (authError || !user) {
+      router.replace("/login");
+      return;
+    }
 
-      // Checks user's role if they're admin or teacher
-      const { data: roleData, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
+    const { data: roleData, error: roleError } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (roleError || !roleData?.role) {
+      router.replace("/login");
+      return;
+    }
+
+    if (roleData.role === "teacher") {
+      const { data: membership, error: membershipError } = await supabase
+        .from("memberships")
+        .select("active")
         .eq("id", user.id)
         .single();
 
-      if (roleError || !roleData?.role) {
-        router.replace("/login");
+      if (membershipError || !membership?.active) {
+        router.replace("/membership");
         return;
       }
+    }
 
-      // Admins can access everything, teachers need active membership
-      if (roleData.role === "teacher") {
-        const { data: membership, error: membershipError } = await supabase
-          .from("memberships")
-          .select("active")
-          .eq("id", user.id)
-          .single();
-
-        if (membershipError || !membership?.active) {
-          router.replace("/membership"); // if no active membership, sends the user to membership page
-          return;
-        }
-      }
-
-      // if all checks are passed, it shows the main app
-      setCheckingAccess(false);
-    };
-
-    checkUserAccess();
+    setCheckingAccess(false);
   }, [router]);
+
+  useEffect(() => {
+    checkUserAccess();
+  }, [checkUserAccess]);
 
   if (checkingAccess) {
     return (
@@ -81,36 +78,43 @@ export default function TabLayout() {
         },
       }}
     >
+      {/* Dashboard Tab */}
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarLabel: "Home",
+          title: "Dashboard",
+          tabBarLabel: "Dashboard",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
+
+      {/* Library Tab (Resources) */}
       <Tabs.Screen
-        name="explore"
+        name="resources"
         options={{
-          title: "Explore",
-          tabBarLabel: "Explore",
+          title: "Library",
+          tabBarLabel: "Library",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="compass" size={size} color={color} />
+            <Ionicons name="library" size={size} color={color} />
           ),
         }}
       />
+
+      {/* Community Tab (Future Chat) */}
       <Tabs.Screen
-        name="dashboard"
+        name="community"
         options={{
-          title: "Dashboard",
-          tabBarLabel: "Dashboard",
+          title: "Community",
+          tabBarLabel: "Community",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid" size={size} color={color} />
+            <Ionicons name="people" size={size} color={color} />
           ),
         }}
       />
+
+      {/* Settings Tab */}
       <Tabs.Screen
         name="settings"
         options={{
@@ -121,6 +125,9 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Hide all other tabs */}
+      <Tabs.Screen name="upload-resource" options={{ href: null }} />
     </Tabs>
   );
 }

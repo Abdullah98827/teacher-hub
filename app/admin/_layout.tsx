@@ -51,6 +51,18 @@ export default function AdminLayout() {
         name="manage-contact-requests"
         options={{ title: "Manage Contact Requests" }}
       />
+      <Stack.Screen
+        name="manage-resources"
+        options={{ title: "Manage Resources" }}
+      />
+      <Stack.Screen
+        name="manage-reports"
+        options={{ title: "Manage Reports" }}
+      />
+      <Stack.Screen
+        name="manage-comments"
+        options={{ title: "Manage Comments" }}
+      />
     </Stack>
   );
 }

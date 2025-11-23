@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { AuthProvider } from "../contexts/AuthContext"; // ✅ added
 import { supabase } from "../supabase";
 
 export default function RootLayout() {
@@ -50,22 +51,25 @@ export default function RootLayout() {
   }, [router]);
 
   return (
-    <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
-        <Stack.Screen name="login" />
-        <Stack.Screen name="signup" />
-        <Stack.Screen name="auth-callback" />
-        <Stack.Screen name="logout" />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+    <AuthProvider>
+      {/* ✅ wrap everything inside AuthProvider */}
+      <SafeAreaProvider>
+        <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
+          <Stack.Screen name="login" />
+          <Stack.Screen name="signup" />
+          <Stack.Screen name="auth-callback" />
+          <Stack.Screen name="logout" />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
 
-      {/* Loading overlay shown while checking session */}
-      {isLoading && (
-        <View className="absolute inset-0 justify-center items-center bg-gray-100 z-50">
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text className="mt-4 text-lg text-gray-600">Loading app...</Text>
-        </View>
-      )}
-    </SafeAreaProvider>
+        {/* Loading overlay shown while checking session */}
+        {isLoading && (
+          <View className="absolute inset-0 justify-center items-center bg-gray-100 z-50">
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text className="mt-4 text-lg text-gray-600">Loading app...</Text>
+          </View>
+        )}
+      </SafeAreaProvider>
+    </AuthProvider>
   );
 }
