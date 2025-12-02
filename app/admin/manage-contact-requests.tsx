@@ -6,13 +6,14 @@ import {
   FlatList,
   RefreshControl,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import EmptyState from "../../components/EmptyState";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import SearchBar from "../../components/SearchBar";
 import { supabase } from "../../supabase";
 import { useUserRole } from "../hooks/useUserRole";
 
@@ -42,8 +43,9 @@ export default function ManageContactRequestsScreen() {
     }
   }, [role, roleLoading]);
 
+  // Fetch all contact requests and add verified status
   const fetchRequests = async () => {
-    // grabs all contact requests and teacher data
+    // Grabs all contact requests and teacher data
     const { data: rawRequests, error: requestError } = await supabase
       .from("manage_contact_requests")
       .select("*")
@@ -64,7 +66,7 @@ export default function ManageContactRequestsScreen() {
       return;
     }
 
-    // adds verified status to each request
+    // Add verified status to each request
     const enriched = rawRequests.map((req) => {
       const teacher = teachers.find((t) => t.id === req.user_id);
       return { ...req, verified: teacher?.verified ?? false };
@@ -75,6 +77,7 @@ export default function ManageContactRequestsScreen() {
     setRefreshing(false);
   };
 
+  // Mark a request as resolved
   const markAsResolved = async (id: string) => {
     const { error } = await supabase
       .from("manage_contact_requests")
@@ -99,7 +102,7 @@ export default function ManageContactRequestsScreen() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("en-GB", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -127,7 +130,7 @@ export default function ManageContactRequestsScreen() {
   const pendingCount = requests.filter((r) => r.status === "pending").length;
   const resolvedCount = requests.filter((r) => r.status === "resolved").length;
 
-  // filters by status and email, then sort pending first
+  // Filters by status and email, then sort pending first
   const filteredRequests = [...requests]
     .filter((r) => {
       if (filter === "all") return true;
@@ -155,6 +158,7 @@ export default function ManageContactRequestsScreen() {
             <Text className="text-3xl font-bold text-cyan-400 mb-2">
               Manage Contact Requests
             </Text>
+            {/* Status indicators */}
             <View className="flex-row items-center gap-4">
               <View className="flex-row items-center">
                 <View className="w-3 h-3 rounded-full bg-orange-500 mr-2" />
@@ -167,8 +171,9 @@ export default function ManageContactRequestsScreen() {
             </View>
           </View>
 
+          {/* Filter button */}
           <TouchableOpacity
-            className="p-2 rounded-full bg-neutral-800 active:scale-95"
+            className="p-2 rounded-full bg-neutral-800"
             onPress={() => {
               Alert.alert("Filter Requests", "Choose a filter", [
                 { text: "All", onPress: () => setFilter("all") },
@@ -182,21 +187,14 @@ export default function ManageContactRequestsScreen() {
           </TouchableOpacity>
         </View>
 
-        <TextInput
-          className="bg-neutral-800 text-white px-4 py-3 rounded-xl mb-4 border border-neutral-700"
-          placeholder="Search by email..."
-          placeholderTextColor="#9CA3AF"
+        <SearchBar
           value={searchEmail}
           onChangeText={setSearchEmail}
+          placeholder="Search by email..."
         />
 
         {filteredRequests.length === 0 ? (
-          <View className="bg-neutral-900 p-8 rounded-xl border border-neutral-800">
-            <Text className="text-center text-2xl mb-2">📭</Text>
-            <Text className="text-center text-gray-400">
-              No contact requests found
-            </Text>
-          </View>
+          <EmptyState message="No contact requests found" />
         ) : (
           <FlatList
             data={filteredRequests}
@@ -216,6 +214,7 @@ export default function ManageContactRequestsScreen() {
             renderItem={({ item }) => (
               <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
                 <View className="p-5">
+                  {/* Status badge and date */}
                   <View className="flex-row items-center justify-between mb-4">
                     <View
                       className={`px-3 py-1.5 rounded-full ${
@@ -241,6 +240,7 @@ export default function ManageContactRequestsScreen() {
                     </Text>
                   </View>
 
+                  {/* Email with verification status */}
                   <View className="mb-4">
                     <Text className="text-gray-500 text-xs mb-1">From</Text>
                     <View className="flex-row items-center gap-2">
@@ -253,6 +253,7 @@ export default function ManageContactRequestsScreen() {
                     </View>
                   </View>
 
+                  {/* Message content */}
                   <View className="bg-neutral-800 rounded-lg p-4 mb-4">
                     <Text className="text-gray-500 text-xs mb-2">Message</Text>
                     <Text className="text-gray-200 leading-6">
@@ -260,9 +261,10 @@ export default function ManageContactRequestsScreen() {
                     </Text>
                   </View>
 
+                  {/* Action button or resolved indicator */}
                   {item.status !== "resolved" ? (
                     <TouchableOpacity
-                      className="bg-green-600 p-4 rounded-lg active:scale-95"
+                      className="bg-green-600 p-4 rounded-lg"
                       onPress={() => markAsResolved(item.id)}
                     >
                       <Text className="text-white text-center font-bold">

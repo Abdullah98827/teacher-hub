@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "../contexts/AuthContext"; // ✅ added
+import { AuthProvider } from "../contexts/AuthContext";
 import { supabase } from "../supabase";
 
 export default function RootLayout() {
@@ -27,9 +27,9 @@ export default function RootLayout() {
       setIsLoading(false);
 
       if (error || !session) {
-        router.replace("/login"); // No session or error, goes to login
+        router.replace("/login"); // If no session or error, goes to login
       } else {
-        router.replace("/(tabs)"); // Has session, goes to main app
+        router.replace("/(tabs)"); //as session, goes to main app
       }
     };
 

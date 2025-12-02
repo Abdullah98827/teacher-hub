@@ -19,7 +19,7 @@ export default function CheckoutScreen() {
   const [tier, setTier] = useState<string | null>(null);
   const [subjectNames, setSubjectNames] = useState<string[]>([]);
 
-  // Cardholder details
+  // Cardholders details
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
@@ -94,7 +94,7 @@ export default function CheckoutScreen() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Activates the  membership after "payment" (this is simulated so therefore no real payment processing)
+    // Activates the membership after "payment" (this is simulated so therefore no real payment processing)
     await supabase
       .from("memberships")
       .update({ active: true })

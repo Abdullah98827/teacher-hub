@@ -9,7 +9,7 @@ export const useUserRole = () => {
 
   useEffect(() => {
     const checkRole = async () => {
-      // Get current logged-in user
+      // Gets the current logged-in user
       const {
         data: { user },
       } = await supabase.auth.getUser();

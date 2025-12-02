@@ -3,7 +3,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TextInput,
@@ -136,148 +138,170 @@ export default function ReportModal({
   return (
     <Modal
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       onRequestClose={handleClose}
     >
-      <View className="flex-1 bg-black/70 justify-end">
-        <View className="bg-neutral-900 rounded-t-3xl max-h-[90%] border-t border-neutral-800">
-          {/* Header */}
-          <View className="p-5 border-b border-neutral-800">
-            <View className="flex-row items-center justify-between mb-2">
-              <View className="flex-row items-center">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1"
+      >
+        <View className="flex-1 bg-black/80 justify-center items-center p-4">
+          <View
+            className="bg-neutral-900 rounded-2xl w-full max-w-md border-2 border-neutral-700"
+            style={{ maxHeight: "80%" }}
+          >
+            <View className="flex-row items-center justify-between p-4 border-b border-neutral-800">
+              <View className="flex-row items-center flex-1 pr-2">
                 <View className="bg-red-600/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="flag" size={20} color="#ef4444" />
                 </View>
-                <Text className="text-white font-bold text-xl">
-                  Report Resource
-                </Text>
+                <View className="flex-1">
+                  <Text className="text-white font-bold text-lg">
+                    Report Resource
+                  </Text>
+                  <Text
+                    className="text-gray-400 text-xs mt-1"
+                    numberOfLines={1}
+                  >
+                    {resourceTitle}
+                  </Text>
+                </View>
               </View>
-              <TouchableOpacity onPress={handleClose}>
-                <Ionicons name="close" size={24} color="#9CA3AF" />
+              <TouchableOpacity
+                onPress={handleClose}
+                className="bg-neutral-800 w-10 h-10 rounded-full items-center justify-center"
+              >
+                <Ionicons name="close" size={24} color="#ffffff" />
               </TouchableOpacity>
             </View>
-            <Text className="text-gray-400 text-sm" numberOfLines={2}>
-              {resourceTitle}
-            </Text>
-          </View>
 
-          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-            <View className="p-5">
-              {/* Info */}
-              <View className="bg-red-900/20 border border-red-800 rounded-xl p-4 mb-5">
-                <Text className="text-red-400 text-sm leading-5">
-                  Please select a reason for reporting this resource. Our team
-                  will review it and take appropriate action.
+            {/* Scrollable Content */}
+            <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
+              <View className="p-4">
+                {/* Info */}
+                <View className="bg-red-900/20 border border-red-800 rounded-xl p-3 mb-4">
+                  <Text className="text-red-400 text-xs leading-5">
+                    Please select a reason for reporting this resource. Our team
+                    will review it and take appropriate action.
+                  </Text>
+                </View>
+
+                {/* Reasons */}
+                <Text className="text-white font-semibold mb-3 text-sm">
+                  Select a reason:
                 </Text>
-              </View>
-
-              {/* Reasons */}
-              <Text className="text-white font-semibold mb-3">
-                Select a reason:
-              </Text>
-              <View className="gap-3 mb-5">
-                {REPORT_REASONS.map((reason) => (
-                  <TouchableOpacity
-                    key={reason.id}
-                    className={`bg-neutral-800 rounded-xl p-4 border-2 ${
-                      selectedReason === reason.id
-                        ? "border-red-600"
-                        : "border-transparent"
-                    }`}
-                    onPress={() => setSelectedReason(reason.id)}
-                  >
-                    <View className="flex-row items-start">
-                      <View
-                        className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
-                          selectedReason === reason.id
-                            ? "bg-red-600/20"
-                            : "bg-neutral-700"
-                        }`}
-                      >
-                        <Ionicons
-                          name={reason.icon as any}
-                          size={20}
-                          color={
-                            selectedReason === reason.id ? "#ef4444" : "#9CA3AF"
-                          }
-                        />
-                      </View>
-                      <View className="flex-1">
-                        <Text
-                          className={`font-semibold mb-1 ${
+                <View className="gap-2 mb-4">
+                  {REPORT_REASONS.map((reason) => (
+                    <TouchableOpacity
+                      key={reason.id}
+                      className={`bg-neutral-800 rounded-xl p-3 border-2 ${
+                        selectedReason === reason.id
+                          ? "border-red-600"
+                          : "border-transparent"
+                      }`}
+                      onPress={() => setSelectedReason(reason.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View className="flex-row items-start">
+                        <View
+                          className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
                             selectedReason === reason.id
-                              ? "text-red-400"
-                              : "text-white"
+                              ? "bg-red-600/20"
+                              : "bg-neutral-700"
                           }`}
                         >
-                          {reason.label}
-                        </Text>
-                        <Text className="text-gray-400 text-xs">
-                          {reason.description}
-                        </Text>
+                          <Ionicons
+                            name={reason.icon as any}
+                            size={18}
+                            color={
+                              selectedReason === reason.id
+                                ? "#ef4444"
+                                : "#9CA3AF"
+                            }
+                          />
+                        </View>
+                        <View className="flex-1">
+                          <Text
+                            className={`font-semibold mb-1 text-sm ${
+                              selectedReason === reason.id
+                                ? "text-red-400"
+                                : "text-white"
+                            }`}
+                          >
+                            {reason.label}
+                          </Text>
+                          <Text className="text-gray-400 text-xs">
+                            {reason.description}
+                          </Text>
+                        </View>
+                        {selectedReason === reason.id && (
+                          <Ionicons
+                            name="checkmark-circle"
+                            size={22}
+                            color="#ef4444"
+                          />
+                        )}
                       </View>
-                      {selectedReason === reason.id && (
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={24}
-                          color="#ef4444"
-                        />
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-              {/* Additional Details */}
-              <Text className="text-white font-semibold mb-3">
-                Additional details (optional):
-              </Text>
-              <TextInput
-                className="bg-neutral-800 text-white px-4 py-3 rounded-xl border border-neutral-700 mb-5"
-                placeholder="Provide more information..."
-                placeholderTextColor="#9CA3AF"
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-                maxLength={500}
-              />
+                {/* Additional Details */}
+                <Text className="text-white font-semibold mb-2 text-sm">
+                  Additional details (optional):
+                </Text>
+                <TextInput
+                  className="bg-neutral-800 text-white px-3 py-3 rounded-xl border border-neutral-700 mb-2 text-sm"
+                  placeholder="Provide more information..."
+                  placeholderTextColor="#9CA3AF"
+                  value={description}
+                  onChangeText={setDescription}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                  maxLength={500}
+                  style={{ minHeight: 80 }}
+                />
 
-              {/* Character count */}
-              <Text className="text-gray-500 text-xs text-right mb-5">
-                {description.length}/500
-              </Text>
+                {/* Character count */}
+                <Text className="text-gray-500 text-xs text-right mb-4">
+                  {description.length}/500
+                </Text>
 
-              {/* Submit Button */}
-              <TouchableOpacity
-                className={`bg-red-600 py-4 rounded-xl mb-3 ${
-                  submitting || !selectedReason ? "opacity-50" : ""
-                }`}
-                onPress={submitReport}
-                disabled={submitting || !selectedReason}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text className="text-white text-center font-bold text-lg">
-                    Submit Report
+                {/* Submit Button */}
+                <TouchableOpacity
+                  className={`bg-red-600 py-3 rounded-xl mb-2 ${
+                    submitting || !selectedReason ? "opacity-50" : ""
+                  }`}
+                  onPress={submitReport}
+                  disabled={submitting || !selectedReason}
+                  activeOpacity={0.8}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text className="text-white text-center font-bold text-base">
+                      Submit Report
+                    </Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="py-2"
+                  onPress={handleClose}
+                  disabled={submitting}
+                  activeOpacity={0.7}
+                >
+                  <Text className="text-gray-400 text-center text-sm">
+                    Cancel
                   </Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="py-3"
-                onPress={handleClose}
-                disabled={submitting}
-              >
-                <Text className="text-gray-400 text-center">Cancel</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
       <Toast />
     </Modal>
   );

@@ -40,7 +40,7 @@ export default function ChangePasswordScreen() {
       return;
     }
 
-    // this makes sure new passwords match
+    // this makes sure new passwords matches
     if (newPassword !== confirmPassword) {
       Toast.show({
         type: "error",

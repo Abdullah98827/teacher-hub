@@ -231,20 +231,6 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
         )}
-
-        <View className="bg-neutral-900 rounded-xl p-5 mb-6 border border-neutral-800">
-          <Text className="text-xl font-bold text-cyan-400 mb-4">About</Text>
-          <View className="mb-2">
-            <Text className="text-gray-400 text-sm">Application Name</Text>
-            <Text className="text-white text-base font-semibold">
-              Teacher-Hub
-            </Text>
-          </View>
-          <View>
-            <Text className="text-gray-400 text-sm">Version</Text>
-            <Text className="text-white text-base font-semibold">1.0.0</Text>
-          </View>
-        </View>
       </ScrollView>
 
       {/* Logout Confirmation Modal (Web Only) */}

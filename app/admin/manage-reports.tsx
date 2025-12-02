@@ -1,4 +1,3 @@
-// app/admin/manage-reports.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -11,6 +10,8 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import AdminHeader from "../../components/AdminHeader";
+import EmptyState from "../../components/EmptyState";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { supabase } from "../../supabase";
@@ -40,6 +41,7 @@ export default function ManageReportsScreen() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+  // Loads all reports with resources and detals of the person that reported
   const fetchReports = useCallback(async () => {
     const { data, error } = await supabase
       .from("resource_reports")
@@ -59,6 +61,7 @@ export default function ManageReportsScreen() {
       return;
     }
 
+    // Gets the resource title and name of the person reported
     const enriched = await Promise.all(
       (data || []).map(async (report) => {
         const { data: resource } = await supabase
@@ -90,6 +93,7 @@ export default function ManageReportsScreen() {
     fetchReports();
   }, [fetchReports]);
 
+  // Updates the report status to reviewed or resolved
   const updateReportStatus = async (
     reportId: string,
     status: "reviewed" | "resolved"
@@ -117,14 +121,16 @@ export default function ManageReportsScreen() {
     fetchReports();
   };
 
+  // Formats the date into readable format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("en-GB", {
       month: "short",
       day: "numeric",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -133,15 +139,18 @@ export default function ManageReportsScreen() {
       <ScreenWrapper>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
+          <Text className="text-gray-400 mt-4">Loading reports...</Text>
         </View>
       </ScreenWrapper>
     );
   }
 
+  // Filters the reports based on selected status
   const filteredReports = reports.filter((r) =>
     filter === "all" ? true : r.status === filter
   );
 
+  // This count reports by status for status cards
   const pendingCount = reports.filter((r) => r.status === "pending").length;
   const reviewedCount = reports.filter((r) => r.status === "reviewed").length;
   const resolvedCount = reports.filter((r) => r.status === "resolved").length;
@@ -150,11 +159,9 @@ export default function ManageReportsScreen() {
     <ScreenWrapper>
       <LogoHeader position="left" />
       <View className="flex-1 px-5">
-        <Text className="text-3xl font-bold text-cyan-400 mb-4">
-          Manage Reports
-        </Text>
+        <AdminHeader title="Manage Reports" showBack={false} />
 
-        {/* Stats */}
+        {/* Status cards showing count for each status */}
         <View className="flex-row gap-2 mb-4">
           <View className="flex-1 bg-orange-900/30 p-3 rounded-xl border border-orange-800">
             <Text className="text-orange-400 text-2xl font-bold">
@@ -197,12 +204,8 @@ export default function ManageReportsScreen() {
           ))}
         </View>
 
-        {/* Reports list */}
         {filteredReports.length === 0 ? (
-          <View className="flex-1 items-center justify-center">
-            <Text className="text-6xl mb-4">🚩</Text>
-            <Text className="text-gray-400">No {filter} reports</Text>
-          </View>
+          <EmptyState icon="🚩" message={`No ${filter} reports`} />
         ) : (
           <FlatList
             data={filteredReports}
@@ -226,6 +229,7 @@ export default function ManageReportsScreen() {
                   setShowDetailModal(true);
                 }}
               >
+                {/* Status badge and arrow */}
                 <View className="flex-row items-center justify-between mb-2">
                   <View
                     className={`px-3 py-1 rounded-full ${
@@ -251,10 +255,13 @@ export default function ManageReportsScreen() {
                   <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
                 </View>
 
+                {/* Report reason and resource */}
                 <Text className="text-white font-bold mb-1">{item.reason}</Text>
                 <Text className="text-gray-400 text-sm mb-2">
                   Resource: {item.resource.title}
                 </Text>
+
+                {/* Reporters name and date */}
                 <View className="flex-row items-center justify-between">
                   <Text className="text-gray-500 text-xs">
                     By {item.reporter.first_name} {item.reporter.last_name}
@@ -278,6 +285,7 @@ export default function ManageReportsScreen() {
       >
         <View className="flex-1 bg-black/70 justify-center items-center px-5">
           <View className="bg-neutral-900 rounded-2xl w-full max-w-md border border-neutral-800">
+            {/* Modal header */}
             <View className="p-5 border-b border-neutral-800">
               <View className="flex-row items-center justify-between">
                 <Text className="text-white font-bold text-xl">
@@ -291,6 +299,7 @@ export default function ManageReportsScreen() {
 
             {selectedReport && (
               <View className="p-5">
+                {/* Report information */}
                 <View className="mb-4">
                   <Text className="text-gray-400 text-xs mb-1">Reason</Text>
                   <Text className="text-white font-semibold">
@@ -333,6 +342,7 @@ export default function ManageReportsScreen() {
                   </Text>
                 </View>
 
+                {/* Action buttons based on status */}
                 {selectedReport.status === "pending" && (
                   <View className="gap-3">
                     <TouchableOpacity

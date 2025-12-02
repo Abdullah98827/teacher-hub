@@ -66,7 +66,7 @@ export default function EditProfileScreen() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    // only update first_name and last_name (email and TRN are locked for security)
+    // only update first name and last name (email and TRN are locked for security)
     const { error } = await supabase
       .from("teachers")
       .update({

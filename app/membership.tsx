@@ -33,7 +33,7 @@ export default function Membership() {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Load all available subjects when page opens
+  // Loads all available subjects when page opens
   useEffect(() => {
     const fetchSubjects = async () => {
       const { data, error } = await supabase
@@ -51,7 +51,7 @@ export default function Membership() {
     fetchSubjects();
   }, []);
 
-  // Fade in animation when tier is selected
+  // Fade in animation when a tier is selected
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -76,7 +76,7 @@ export default function Membership() {
   };
 
   const confirmMembership = async () => {
-    // Make sure user picked a tier and at least one subject
+    // Makes sure user picked a tier and at least one subject
     if (!tier || selectedSubjectIds.length === 0) {
       return showToast("error", "Incomplete", "Select a tier and subject(s)");
     }

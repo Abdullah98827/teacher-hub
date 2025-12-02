@@ -207,7 +207,7 @@ export default function ResourceCard({
               onPress={onComment}
             >
               <Ionicons name="chatbubble-outline" size={18} color="#22d3ee" />
-              <Text className="text-cyan-400 text-xs ml-1 font-semibold">
+              <Text className="text-gray-400 text-xs ml-1 font-semibold">
                 Comment
               </Text>
             </TouchableOpacity>
@@ -220,7 +220,7 @@ export default function ResourceCard({
               onPress={onRate}
             >
               <Ionicons name="star-outline" size={18} color="#fbbf24" />
-              <Text className="text-yellow-400 text-xs ml-1 font-semibold">
+              <Text className="text-gray-400 text-xs ml-1 font-semibold">
                 Rate
               </Text>
             </TouchableOpacity>

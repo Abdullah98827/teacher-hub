@@ -38,7 +38,7 @@ export default function Login() {
 
     setLoading(true);
 
-    // Step 1: Sign in with Supabase
+    // Step 1: Signs in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -56,7 +56,7 @@ export default function Login() {
 
     const userId = data.user.id;
 
-    // Step 2: Check if user is an admin (admins skip verification checks)
+    // Step 2: Checks if the user is an admin (admins skip verification checks)
     const { data: admin } = await supabase
       .from("admins")
       .select("id")
@@ -70,7 +70,7 @@ export default function Login() {
       return;
     }
 
-    // Step 3: Check if teacher profile exists and is verified
+    // Step 3: Checks if the teacher profile exists and is verified
     const { data: teacher, error: teacherError } = await supabase
       .from("teachers")
       .select("verified")
@@ -88,7 +88,7 @@ export default function Login() {
       return;
     }
 
-    // If not verified yet, send to pending page
+    // If not verified yet, sends the user to pending page
     if (!teacher.verified) {
       setLoading(false);
       showToast("info", "Pending Approval", "Redirecting to pending page...");
@@ -96,7 +96,7 @@ export default function Login() {
       return;
     }
 
-    // Step 4: Check if they have an active membership
+    // Step 4: Checks if they have an active membership
     const { data: membership } = await supabase
       .from("memberships")
       .select("active")

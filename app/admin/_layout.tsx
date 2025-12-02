@@ -8,7 +8,7 @@ export default function AdminLayout() {
   const { role, loading } = useUserRole();
   const router = useRouter();
 
-  // Check if user is admin, redirects if not
+  // Checks if user is admin, redirects if not
   useEffect(() => {
     if (!loading && role !== "admin") {
       Toast.show({

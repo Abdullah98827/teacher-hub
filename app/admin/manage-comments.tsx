@@ -1,18 +1,19 @@
-// app/admin/manage-comments.tsx
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   RefreshControl,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import AdminHeader from "../../components/AdminHeader";
+import ConfirmModal from "../../components/ConfirmModal";
+import EmptyState from "../../components/EmptyState";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import SearchBar from "../../components/SearchBar";
 import { supabase } from "../../supabase";
 
 interface Comment {
@@ -29,6 +30,7 @@ interface Comment {
 }
 
 export default function ManageCommentsScreen() {
+  // State for comments list and UI controls
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,6 +43,7 @@ export default function ManageCommentsScreen() {
   );
   const [processing, setProcessing] = useState(false);
 
+  // Loads all comments from database with user and resource info
   const fetchComments = useCallback(async () => {
     const { data: commentsData, error } = await supabase
       .from("resource_comments")
@@ -60,6 +63,7 @@ export default function ManageCommentsScreen() {
       return;
     }
 
+    // Gets the users name and resource titles for each comment
     const enrichedComments = await Promise.all(
       (commentsData || []).map(async (comment) => {
         const { data: userData } = await supabase
@@ -92,6 +96,7 @@ export default function ManageCommentsScreen() {
     fetchComments();
   }, [fetchComments]);
 
+  // Restore a deleted comment back to visible
   const restoreComment = async () => {
     if (!selectedCommentId) return;
     setProcessing(true);
@@ -117,6 +122,7 @@ export default function ManageCommentsScreen() {
     setProcessing(false);
   };
 
+  // Permanently delete a comment from database
   const permanentlyDeleteComment = async () => {
     if (!selectedCommentId) return;
     setProcessing(true);
@@ -142,9 +148,10 @@ export default function ManageCommentsScreen() {
     setProcessing(false);
   };
 
+  // Format timestamp into readable date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString("en-GB", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -154,6 +161,7 @@ export default function ManageCommentsScreen() {
     });
   };
 
+  // Filter comments based on search and deleted status
   const filteredComments = comments.filter((c) => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -170,6 +178,7 @@ export default function ManageCommentsScreen() {
     return true;
   });
 
+  // Show loading spinner while fetching data
   if (loading) {
     return (
       <ScreenWrapper>
@@ -184,21 +193,16 @@ export default function ManageCommentsScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-
       <View className="flex-1 px-5">
-        <Text className="text-3xl font-bold text-cyan-400 mb-4">
-          Manage Comments
-        </Text>
+        <AdminHeader title="Manage Comments" />
 
-        {/* Search + Filter */}
-        <TextInput
-          className="bg-neutral-800 text-white px-4 py-3 rounded-xl mb-4 border border-neutral-700"
-          placeholder="Search comments, users, or resources..."
-          placeholderTextColor="#9CA3AF"
+        <SearchBar
           value={searchQuery}
           onChangeText={setSearchQuery}
+          placeholder="Search comments, users, or resources..."
         />
 
+        {/* Toggle to show only deleted comments */}
         <TouchableOpacity
           className={`px-4 py-2 rounded-xl mb-4 ${
             showDeletedOnly
@@ -215,14 +219,14 @@ export default function ManageCommentsScreen() {
         </TouchableOpacity>
 
         {filteredComments.length === 0 ? (
-          <View className="bg-neutral-900 p-8 rounded-xl border border-neutral-800">
-            <Text className="text-center text-2xl mb-2">💬</Text>
-            <Text className="text-center text-gray-400">
-              {showDeletedOnly
+          <EmptyState
+            icon="💬"
+            message={
+              showDeletedOnly
                 ? "No deleted comments found"
-                : "No comments found"}
-            </Text>
-          </View>
+                : "No comments found"
+            }
+          />
         ) : (
           <FlatList
             data={filteredComments}
@@ -241,6 +245,7 @@ export default function ManageCommentsScreen() {
             renderItem={({ item }) => (
               <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
                 <View className="p-5">
+                  {/* Comment header with user name and date */}
                   <View className="flex-row items-center justify-between mb-3">
                     <Text className="text-white font-semibold">
                       {item.first_name} {item.last_name}
@@ -250,18 +255,21 @@ export default function ManageCommentsScreen() {
                     </Text>
                   </View>
 
+                  {/* Comment text */}
                   <Text className="text-gray-300 mb-3 leading-5">
                     {item.comment_text}
                   </Text>
 
+                  {/* Resource title */}
                   <Text className="text-gray-500 text-xs mb-3">
                     Resource: {item.resource_title}
                   </Text>
 
+                  {/* Action buttons - different for deleted vs active comments */}
                   {item.is_deleted ? (
                     <View className="flex-row gap-2">
                       <TouchableOpacity
-                        className="flex-1 bg-cyan-600 p-3 rounded-lg active:scale-95"
+                        className="flex-1 bg-cyan-600 p-3 rounded-lg"
                         onPress={() => {
                           setSelectedCommentId(item.id);
                           setShowRestoreConfirm(true);
@@ -272,7 +280,7 @@ export default function ManageCommentsScreen() {
                         </Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        className="flex-1 bg-red-600 p-3 rounded-lg active:scale-95"
+                        className="flex-1 bg-red-600 p-3 rounded-lg"
                         onPress={() => {
                           setSelectedCommentId(item.id);
                           setShowDeleteConfirm(true);
@@ -285,7 +293,7 @@ export default function ManageCommentsScreen() {
                     </View>
                   ) : (
                     <TouchableOpacity
-                      className="bg-red-600 p-3 rounded-lg active:scale-95"
+                      className="bg-red-600 p-3 rounded-lg"
                       onPress={() => {
                         setSelectedCommentId(item.id);
                         setShowDeleteConfirm(true);
@@ -302,104 +310,36 @@ export default function ManageCommentsScreen() {
           />
         )}
 
-        {/* Restore Modal */}
-        <Modal
+        {/* Restore confirmation modal */}
+        <ConfirmModal
           visible={showRestoreConfirm}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowRestoreConfirm(false)}
-        >
-          <View className="flex-1 bg-black/50 justify-center items-center p-5">
-            <View className="bg-neutral-900 rounded-2xl p-6 w-full max-w-sm border border-neutral-800">
-              <Text className="text-white text-xl font-bold mb-2">
-                Restore Comment?
-              </Text>
-              <Text className="text-gray-400 mb-6">
-                This will make the comment visible to users again.
-              </Text>
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  className="flex-1 bg-neutral-800 py-3 rounded-xl"
-                  onPress={() => {
-                    setShowRestoreConfirm(false);
-                    setSelectedCommentId(null);
-                  }}
-                  disabled={processing}
-                >
-                  <Text className="text-white text-center font-bold">
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className={`flex-1 bg-cyan-600 py-3 rounded-xl ${
-                    processing ? "opacity-50" : ""
-                  }`}
-                  onPress={restoreComment}
-                  disabled={processing}
-                >
-                  {processing ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text className="text-white text-center font-bold">
-                      Restore
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          title="Restore Comment?"
+          message="This will make the comment visible to users again."
+          confirmText="Restore"
+          confirmColor="bg-cyan-600"
+          onConfirm={restoreComment}
+          onCancel={() => {
+            setShowRestoreConfirm(false);
+            setSelectedCommentId(null);
+          }}
+          isProcessing={processing}
+        />
 
-        {/* Delete Modal */}
-        <Modal
+        {/* Delete confirmation modal */}
+        <ConfirmModal
           visible={showDeleteConfirm}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowDeleteConfirm(false)}
-        >
-          <View className="flex-1 bg-black/50 justify-center items-center p-5">
-            <View className="bg-neutral-900 rounded-2xl p-6 w-full max-w-sm border border-neutral-800">
-              <Text className="text-white text-xl font-bold mb-2">
-                Delete Comment?
-              </Text>
-              <Text className="text-gray-400 mb-6">
-                This will permanently delete the comment. This action cannot be
-                undone.
-              </Text>
-              <View className="flex-row gap-3">
-                <TouchableOpacity
-                  className="flex-1 bg-neutral-800 py-3 rounded-xl"
-                  onPress={() => {
-                    setShowDeleteConfirm(false);
-                    setSelectedCommentId(null);
-                  }}
-                  disabled={processing}
-                >
-                  <Text className="text-white text-center font-bold">
-                    Cancel
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className={`flex-1 bg-red-600 py-3 rounded-xl ${
-                    processing ? "opacity-50" : ""
-                  }`}
-                  onPress={permanentlyDeleteComment}
-                  disabled={processing}
-                >
-                  {processing ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text className="text-white text-center font-bold">
-                      Delete
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
+          title="Delete Comment?"
+          message="This will permanently delete the comment. This action cannot be undone."
+          confirmText="Delete"
+          confirmColor="bg-red-600"
+          onConfirm={permanentlyDeleteComment}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setSelectedCommentId(null);
+          }}
+          isProcessing={processing}
+        />
       </View>
-
       <Toast />
     </ScreenWrapper>
   );

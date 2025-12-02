@@ -49,7 +49,7 @@ export default function Signup() {
   const uploadPhoto = async (userId: string) => {
     const fileName = `${formData.email.replace(/[@.]/g, "_")}_${userId}.jpg`;
 
-    // Read the image file
+    // Reads the image file
     const response = await fetch(photoUri!);
     const blob = await response.blob();
 
@@ -109,7 +109,7 @@ export default function Signup() {
 
     setLoading(true);
 
-    // Step 1: Create user account
+    // Step 1: Creates the user account
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -128,7 +128,7 @@ export default function Signup() {
 
     const userId = data.user.id;
 
-    // Step 2: Upload teacher pass photo
+    // Step 2: Uploads the teacher pass photo
     const fileName = await uploadPhoto(userId);
 
     if (!fileName) {
@@ -137,7 +137,7 @@ export default function Signup() {
       return;
     }
 
-    // Step 3: Save teacher profile to database
+    // Step 3: Saves the teacher profile to database
     const { error: profileError } = await supabase.from("teachers").insert({
       id: userId,
       email,
@@ -145,7 +145,7 @@ export default function Signup() {
       last_name: lastName,
       trn,
       photo_url: fileName,
-      verified: false, // Admin needs to verify this
+      verified: false, // Admin will have to verify this
     });
 
     if (profileError) {
@@ -154,7 +154,7 @@ export default function Signup() {
       return;
     }
 
-    // Step 4: Assign teacher role
+    // Step 4: Assigns teacher role
     await supabase.from("user_roles").insert({
       id: userId,
       role: "teacher",

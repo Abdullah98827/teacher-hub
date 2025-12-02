@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import EmptyState from "../../components/EmptyState";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { supabase } from "../../supabase";
@@ -42,6 +43,7 @@ export default function ManageMembershipsScreen() {
     }
   }, [role, roleLoading]);
 
+  // Fetch all memberships from database view
   const fetchMemberships = async () => {
     const { data, error } = await supabase
       .from("active_memberships_view")
@@ -63,6 +65,7 @@ export default function ManageMembershipsScreen() {
     setRefreshing(false);
   };
 
+  // Format date with time
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -111,9 +114,9 @@ export default function ManageMembershipsScreen() {
             </Text>
           </View>
 
-          {/* Filter Button */}
+          {/* Filter button to switch between all/single/multi */}
           <TouchableOpacity
-            className="p-2 rounded-full bg-neutral-800 active:scale-95"
+            className="p-2 rounded-full bg-neutral-800"
             onPress={() => {
               Alert.alert("Filter Memberships", "Choose a tier", [
                 { text: "All", onPress: () => setFilter("all") },
@@ -128,12 +131,7 @@ export default function ManageMembershipsScreen() {
         </View>
 
         {filteredMemberships.length === 0 ? (
-          <View className="bg-neutral-900 p-8 rounded-xl border border-neutral-800">
-            <Text className="text-center text-2xl mb-2">📭</Text>
-            <Text className="text-center text-gray-400">
-              No memberships found
-            </Text>
-          </View>
+          <EmptyState message="No memberships found" />
         ) : (
           <FlatList
             data={filteredMemberships}
@@ -153,6 +151,7 @@ export default function ManageMembershipsScreen() {
             renderItem={({ item }) => (
               <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
                 <View className="p-5">
+                  {/* Email and date */}
                   <View className="flex-row justify-between items-center mb-4">
                     <Text className="text-white font-bold text-base">
                       {item.email}
@@ -162,6 +161,7 @@ export default function ManageMembershipsScreen() {
                     </Text>
                   </View>
 
+                  {/* Approval status */}
                   <View className="flex-row items-center gap-2 mb-2">
                     <Text className="text-gray-500 text-xs">Approved:</Text>
                     <Text className="text-sm">
@@ -169,6 +169,7 @@ export default function ManageMembershipsScreen() {
                     </Text>
                   </View>
 
+                  {/* Tier type */}
                   <View className="mb-2">
                     <Text className="text-gray-500 text-xs">Tier</Text>
                     <Text className="text-white text-base capitalize">
@@ -178,6 +179,7 @@ export default function ManageMembershipsScreen() {
                     </Text>
                   </View>
 
+                  {/* List of subjects */}
                   <View className="mb-2">
                     <Text className="text-gray-500 text-xs">Subjects</Text>
                     <Text className="text-gray-200 leading-6">
@@ -187,6 +189,7 @@ export default function ManageMembershipsScreen() {
                     </Text>
                   </View>
 
+                  {/* Active status */}
                   <View>
                     <Text className="text-gray-500 text-xs">Status</Text>
                     <Text className="text-green-400 font-semibold text-base">

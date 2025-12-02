@@ -5,7 +5,7 @@ import Toast from "react-native-toast-message";
 export default function AdminHub() {
   const router = useRouter();
 
-  // Admin navigation links
+  // Admins navigation links
   const links = [
     { label: "Verify Teachers", route: "/admin/verify" },
     { label: "Manage Memberships", route: "/admin/manage-memberships" },

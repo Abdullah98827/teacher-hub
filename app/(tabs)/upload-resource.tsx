@@ -15,7 +15,7 @@ import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
-import { uploadFile } from "../../utils/storage"; // ✅ centralized helper
+import { uploadFile } from "../../utils/storage";
 
 interface Subject {
   id: string;

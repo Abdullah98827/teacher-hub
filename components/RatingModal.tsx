@@ -182,7 +182,7 @@ export default function RatingModal({
                     <Ionicons
                       name={selectedRating >= star ? "star" : "star-outline"}
                       size={40}
-                      color={selectedRating >= star ? "#fbbf24" : "#6b7280"}
+                      color={selectedRating >= star ? "#fcd34d" : "#9ca3af"}
                     />
                   </TouchableOpacity>
                 ))}
@@ -190,8 +190,8 @@ export default function RatingModal({
 
               {/* Rating Label */}
               {selectedRating > 0 && (
-                <View className="bg-yellow-500/20 border border-yellow-500 rounded-xl p-4 mb-6">
-                  <Text className="text-yellow-300 text-center font-bold text-lg">
+                <View className="bg-yellow-400/30 border-2 border-yellow-400 rounded-xl p-4 mb-6">
+                  <Text className="text-white text-center font-bold text-xl">
                     {ratingLabels[selectedRating - 1]}
                   </Text>
                 </View>
