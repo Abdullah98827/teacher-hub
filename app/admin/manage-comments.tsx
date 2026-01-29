@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,11 +10,11 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
+import CommentCard from "../../components/CommentCard";
 import ConfirmModal from "../../components/ConfirmModal";
-import EmptyState from "../../components/EmptyState";
-import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
+import StatsSummary from "../../components/StatsSummary";
 import { supabase } from "../../supabase";
 
 interface Comment {
@@ -30,7 +31,6 @@ interface Comment {
 }
 
 export default function ManageCommentsScreen() {
-  // State for comments list and UI controls
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,125 +43,111 @@ export default function ManageCommentsScreen() {
   );
   const [processing, setProcessing] = useState(false);
 
-  // Loads all comments from database with user and resource info
   const fetchComments = useCallback(async () => {
-    const { data: commentsData, error } = await supabase
-      .from("resource_comments")
-      .select(
-        "id, comment_text, created_at, deleted_at, is_deleted, resource_id, user_id"
-      )
-      .order("created_at", { ascending: false });
+    try {
+      const { data: commentsData, error } = await supabase
+        .from("resource_comments")
+        .select(
+          "id, comment_text, created_at, deleted_at, is_deleted, resource_id, user_id"
+        )
+        .order("created_at", { ascending: false });
 
-    if (error) {
+      if (error) throw error;
+
+      const enrichedComments = await Promise.all(
+        (commentsData || []).map(async (comment) => {
+          const { data: userData } = await supabase
+            .from("teachers")
+            .select("first_name, last_name")
+            .eq("id", comment.user_id)
+            .single();
+
+          const { data: resourceData } = await supabase
+            .from("resources")
+            .select("title")
+            .eq("id", comment.resource_id)
+            .single();
+
+          return {
+            ...comment,
+            first_name: userData?.first_name || "Unknown",
+            last_name: userData?.last_name || "",
+            resource_title: resourceData?.title || "Unknown Resource",
+          };
+        })
+      );
+
+      setComments(enrichedComments);
+    } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Failed to load comments",
         text2: error.message,
       });
+    } finally {
       setLoading(false);
       setRefreshing(false);
-      return;
     }
-
-    // Gets the users name and resource titles for each comment
-    const enrichedComments = await Promise.all(
-      (commentsData || []).map(async (comment) => {
-        const { data: userData } = await supabase
-          .from("teachers")
-          .select("first_name, last_name")
-          .eq("id", comment.user_id)
-          .single();
-
-        const { data: resourceData } = await supabase
-          .from("resources")
-          .select("title")
-          .eq("id", comment.resource_id)
-          .single();
-
-        return {
-          ...comment,
-          first_name: userData?.first_name || "Unknown",
-          last_name: userData?.last_name || "",
-          resource_title: resourceData?.title || "Unknown Resource",
-        };
-      })
-    );
-
-    setComments(enrichedComments);
-    setLoading(false);
-    setRefreshing(false);
   }, []);
 
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
-  // Restore a deleted comment back to visible
   const restoreComment = async () => {
     if (!selectedCommentId) return;
     setProcessing(true);
 
-    const { error } = await supabase
-      .from("resource_comments")
-      .update({ is_deleted: false, deleted_at: null })
-      .eq("id", selectedCommentId);
+    try {
+      const { error } = await supabase
+        .from("resource_comments")
+        .update({ is_deleted: false, deleted_at: null })
+        .eq("id", selectedCommentId);
 
-    if (error) {
+      if (error) throw error;
+
+      Toast.show({ type: "success", text1: "Comment restored" });
+      fetchComments();
+    } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Failed to restore comment",
         text2: error.message,
       });
-    } else {
-      Toast.show({ type: "success", text1: "Comment restored" });
-      fetchComments();
+    } finally {
+      setShowRestoreConfirm(false);
+      setSelectedCommentId(null);
+      setProcessing(false);
     }
-
-    setShowRestoreConfirm(false);
-    setSelectedCommentId(null);
-    setProcessing(false);
   };
 
-  // Permanently delete a comment from database
   const permanentlyDeleteComment = async () => {
     if (!selectedCommentId) return;
     setProcessing(true);
 
-    const { error } = await supabase
-      .from("resource_comments")
-      .delete()
-      .eq("id", selectedCommentId);
+    try {
+      const { error } = await supabase
+        .from("resource_comments")
+        .delete()
+        .eq("id", selectedCommentId);
 
-    if (error) {
+      if (error) throw error;
+
+      Toast.show({ type: "success", text1: "Comment permanently deleted" });
+      fetchComments();
+    } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Failed to delete comment",
         text2: error.message,
       });
-    } else {
-      Toast.show({ type: "success", text1: "Comment permanently deleted" });
-      fetchComments();
+    } finally {
+      setShowDeleteConfirm(false);
+      setSelectedCommentId(null);
+      setProcessing(false);
     }
-
-    setShowDeleteConfirm(false);
-    setSelectedCommentId(null);
-    setProcessing(false);
   };
 
-  // Format timestamp into readable date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  // Filter comments based on search and deleted status
   const filteredComments = comments.filter((c) => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -178,23 +164,34 @@ export default function ManageCommentsScreen() {
     return true;
   });
 
-  // Show loading spinner while fetching data
   if (loading) {
     return (
       <ScreenWrapper>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
-          <Text className="text-gray-400 mt-4">Loading comments...</Text>
         </View>
       </ScreenWrapper>
     );
   }
 
+  const activeCount = comments.filter((c) => !c.is_deleted).length;
+  const deletedCount = comments.filter((c) => c.is_deleted).length;
+
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
-      <View className="flex-1 px-5">
-        <AdminHeader title="Manage Comments" />
+      <View className="flex-1 px-5 pt-4">
+        <AdminHeader
+          title="Manage Comments"
+          subtitle={`${comments.length} total comment${comments.length !== 1 ? "s" : ""}`}
+        />
+
+        <StatsSummary
+          stats={[
+            { label: "Total", value: comments.length, color: "cyan" },
+            { label: "Active", value: activeCount, color: "green" },
+            { label: "Deleted", value: deletedCount, color: "red" },
+          ]}
+        />
 
         <SearchBar
           value={searchQuery}
@@ -202,31 +199,42 @@ export default function ManageCommentsScreen() {
           placeholder="Search comments, users, or resources..."
         />
 
-        {/* Toggle to show only deleted comments */}
         <TouchableOpacity
-          className={`px-4 py-2 rounded-xl mb-4 ${
+          className={`flex-row items-center justify-center px-4 py-3 rounded-xl mb-4 ${
             showDeletedOnly
-              ? "bg-red-900/30 border border-red-600"
+              ? "bg-red-500/20 border-2 border-red-500"
               : "bg-neutral-800"
           }`}
           onPress={() => setShowDeletedOnly(!showDeletedOnly)}
         >
+          <Ionicons
+            name={showDeletedOnly ? "eye-off" : "eye"}
+            size={18}
+            color={showDeletedOnly ? "#ef4444" : "#9CA3AF"}
+          />
           <Text
-            className={`font-semibold ${showDeletedOnly ? "text-red-400" : "text-gray-400"}`}
+            className={`font-semibold ml-2 ${
+              showDeletedOnly ? "text-red-400" : "text-gray-400"
+            }`}
           >
             {showDeletedOnly ? "Showing Deleted Only" : "Show Deleted Only"}
           </Text>
         </TouchableOpacity>
 
         {filteredComments.length === 0 ? (
-          <EmptyState
-            icon="💬"
-            message={
-              showDeletedOnly
+          <View className="flex-1 items-center justify-center">
+            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons name="chatbubble-outline" size={40} color="#22d3ee" />
+            </View>
+            <Text className="text-white text-xl font-bold mb-2">
+              No Comments
+            </Text>
+            <Text className="text-gray-400 text-center">
+              {showDeletedOnly
                 ? "No deleted comments found"
-                : "No comments found"
-            }
-          />
+                : "No comments match your search"}
+            </Text>
+          </View>
         ) : (
           <FlatList
             data={filteredComments}
@@ -243,103 +251,54 @@ export default function ManageCommentsScreen() {
               />
             }
             renderItem={({ item }) => (
-              <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
-                <View className="p-5">
-                  {/* Comment header with user name and date */}
-                  <View className="flex-row items-center justify-between mb-3">
-                    <Text className="text-white font-semibold">
-                      {item.first_name} {item.last_name}
-                    </Text>
-                    <Text className="text-gray-500 text-xs">
-                      {formatDate(item.created_at)}
-                    </Text>
-                  </View>
-
-                  {/* Comment text */}
-                  <Text className="text-gray-300 mb-3 leading-5">
-                    {item.comment_text}
-                  </Text>
-
-                  {/* Resource title */}
-                  <Text className="text-gray-500 text-xs mb-3">
-                    Resource: {item.resource_title}
-                  </Text>
-
-                  {/* Action buttons - different for deleted vs active comments */}
-                  {item.is_deleted ? (
-                    <View className="flex-row gap-2">
-                      <TouchableOpacity
-                        className="flex-1 bg-cyan-600 p-3 rounded-lg"
-                        onPress={() => {
-                          setSelectedCommentId(item.id);
-                          setShowRestoreConfirm(true);
-                        }}
-                      >
-                        <Text className="text-white text-center font-bold">
-                          Restore
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        className="flex-1 bg-red-600 p-3 rounded-lg"
-                        onPress={() => {
-                          setSelectedCommentId(item.id);
-                          setShowDeleteConfirm(true);
-                        }}
-                      >
-                        <Text className="text-white text-center font-bold">
-                          Delete Forever
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <TouchableOpacity
-                      className="bg-red-600 p-3 rounded-lg"
-                      onPress={() => {
+              <CommentCard
+                comment={item}
+                onRestore={
+                  item.is_deleted
+                    ? () => {
                         setSelectedCommentId(item.id);
-                        setShowDeleteConfirm(true);
-                      }}
-                    >
-                      <Text className="text-white text-center font-bold">
-                        Delete
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              </View>
+                        setShowRestoreConfirm(true);
+                      }
+                    : undefined
+                }
+                onDelete={() => {
+                  setSelectedCommentId(item.id);
+                  setShowDeleteConfirm(true);
+                }}
+              />
             )}
           />
         )}
-
-        {/* Restore confirmation modal */}
-        <ConfirmModal
-          visible={showRestoreConfirm}
-          title="Restore Comment?"
-          message="This will make the comment visible to users again."
-          confirmText="Restore"
-          confirmColor="bg-cyan-600"
-          onConfirm={restoreComment}
-          onCancel={() => {
-            setShowRestoreConfirm(false);
-            setSelectedCommentId(null);
-          }}
-          isProcessing={processing}
-        />
-
-        {/* Delete confirmation modal */}
-        <ConfirmModal
-          visible={showDeleteConfirm}
-          title="Delete Comment?"
-          message="This will permanently delete the comment. This action cannot be undone."
-          confirmText="Delete"
-          confirmColor="bg-red-600"
-          onConfirm={permanentlyDeleteComment}
-          onCancel={() => {
-            setShowDeleteConfirm(false);
-            setSelectedCommentId(null);
-          }}
-          isProcessing={processing}
-        />
       </View>
+
+      <ConfirmModal
+        visible={showRestoreConfirm}
+        title="Restore Comment?"
+        message="This will make the comment visible to users again."
+        confirmText="Restore"
+        confirmColor="bg-cyan-500"
+        onConfirm={restoreComment}
+        onCancel={() => {
+          setShowRestoreConfirm(false);
+          setSelectedCommentId(null);
+        }}
+        isProcessing={processing}
+      />
+
+      <ConfirmModal
+        visible={showDeleteConfirm}
+        title="Delete Comment?"
+        message="This will permanently delete the comment. This action cannot be undone."
+        confirmText="Delete"
+        confirmColor="bg-red-500"
+        onConfirm={permanentlyDeleteComment}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+          setSelectedCommentId(null);
+        }}
+        isProcessing={processing}
+      />
+
       <Toast />
     </ScreenWrapper>
   );

@@ -52,7 +52,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      {/* ✅ wrap everything inside AuthProvider */}
+      {/* wrasp everything inside AuthProvider */}
       <SafeAreaProvider>
         <Stack screenOptions={{ headerShown: false }} initialRouteName="login">
           <Stack.Screen name="login" />

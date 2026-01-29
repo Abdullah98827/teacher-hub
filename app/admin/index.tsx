@@ -16,6 +16,7 @@ export default function AdminHub() {
     { label: "Manage Resources", route: "/admin/manage-resources" },
     { label: "Manage Reports", route: "/admin/manage-reports" },
     { label: "Manage Comments", route: "/admin/manage-comments" },
+    { label: "Manage Subjects", route: "/admin/manage-subjects" },
   ] as const;
 
   return (

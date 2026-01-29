@@ -1,4 +1,3 @@
-// components/EmptyState.tsx
 import { Text, View } from "react-native";
 
 interface EmptyStateProps {

@@ -41,27 +41,37 @@ export default function AdminLayout() {
         headerBackTitle: "Back",
       }}
     >
-      <Stack.Screen name="index" options={{ title: "Admin Hub" }} />
-      <Stack.Screen name="verify" options={{ title: "Verify Teachers" }} />
+      <Stack.Screen
+        name="index"
+        options={{ title: "Admin Hub", headerShown: false }}
+      />
+      <Stack.Screen
+        name="verify"
+        options={{ title: "Verify Teachers", headerShown: false }}
+      />
       <Stack.Screen
         name="manage-memberships"
-        options={{ title: "Manage Memberships" }}
+        options={{ title: "Manage Memberships", headerShown: false }}
       />
       <Stack.Screen
         name="manage-contact-requests"
-        options={{ title: "Manage Contact Requests" }}
+        options={{ title: "Manage Contact Requests", headerShown: false }}
       />
       <Stack.Screen
         name="manage-resources"
-        options={{ title: "Manage Resources" }}
+        options={{ title: "Manage Resources", headerShown: false }}
       />
       <Stack.Screen
         name="manage-reports"
-        options={{ title: "Manage Reports" }}
+        options={{ title: "Manage Reports", headerShown: false }}
       />
       <Stack.Screen
         name="manage-comments"
-        options={{ title: "Manage Comments" }}
+        options={{ title: "Manage Comments", headerShown: false }}
+      />
+      <Stack.Screen
+        name="manage-subjects"
+        options={{ title: "Manage Subjects", headerShown: false }}
       />
     </Stack>
   );

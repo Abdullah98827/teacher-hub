@@ -1,19 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import EmptyState from "../../components/EmptyState";
-import LogoHeader from "../../components/logoHeader";
+import AdminHeader from "../../components/AdminHeader";
+import ContactRequestCard from "../../components/ContactRequestCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
+import StatsSummary from "../../components/StatsSummary";
+import TabFilter from "../../components/TabFilter";
+import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
 import { useUserRole } from "../hooks/useUserRole";
 
@@ -28,116 +30,95 @@ interface ManageContactRequest {
 }
 
 export default function ManageContactRequestsScreen() {
+  const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const router = useRouter();
   const [requests, setRequests] = useState<ManageContactRequest[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<"all" | "pending" | "resolved">("all");
-  const [searchEmail, setSearchEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const isAdmin = role === "admin";
 
   useEffect(() => {
-    if (!roleLoading && role === "admin") {
-      fetchRequests();
-    } else if (!roleLoading && role !== "admin") {
-      setFetching(false);
-    }
-  }, [role, roleLoading]);
-
-  // Fetch all contact requests and add verified status
-  const fetchRequests = async () => {
-    // Grabs all contact requests and teacher data
-    const { data: rawRequests, error: requestError } = await supabase
-      .from("manage_contact_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    const { data: teachers, error: teacherError } = await supabase
-      .from("teachers")
-      .select("id, verified");
-
-    if (requestError || teacherError) {
+    if (!roleLoading && !isAdmin) {
       Toast.show({
         type: "error",
-        text1: "Fetch Failed",
-        text2: requestError?.message || teacherError?.message,
+        text1: "Access Denied",
+        text2: "Admin privileges required",
       });
-      setRequests([]);
-      setFetching(false);
-      return;
+      router.back();
     }
+  }, [isAdmin, roleLoading, router]);
 
-    // Add verified status to each request
-    const enriched = rawRequests.map((req) => {
-      const teacher = teachers.find((t) => t.id === req.user_id);
-      return { ...req, verified: teacher?.verified ?? false };
-    });
+  const fetchRequests = async () => {
+    try {
+      const { data: rawRequests, error: requestError } = await supabase
+        .from("manage_contact_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    setRequests(enriched);
-    setFetching(false);
-    setRefreshing(false);
-  };
+      const { data: teachers, error: teacherError } = await supabase
+        .from("teachers")
+        .select("id, verified");
 
-  // Mark a request as resolved
-  const markAsResolved = async (id: string) => {
-    const { error } = await supabase
-      .from("manage_contact_requests")
-      .update({ status: "resolved" })
-      .eq("id", id);
+      if (requestError || teacherError) throw requestError || teacherError;
 
-    if (error) {
+      const enriched = (rawRequests || []).map((req) => {
+        const teacher = teachers?.find((t) => t.id === req.user_id);
+        return { ...req, verified: teacher?.verified ?? false };
+      });
+
+      setRequests(enriched);
+    } catch (error: any) {
       Toast.show({
         type: "error",
-        text1: "Update Failed",
+        text1: "Failed to load requests",
         text2: error.message,
       });
-    } else {
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Marked as resolved",
-      });
-      fetchRequests();
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+  useEffect(() => {
+    if (!roleLoading && isAdmin) {
+      fetchRequests();
+    }
+  }, [isAdmin, roleLoading]);
+
+  const markAsResolved = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("manage_contact_requests")
+        .update({ status: "resolved" })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      Toast.show({
+        type: "success",
+        text1: "Request resolved",
+      });
+      fetchRequests();
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to update",
+        text2: error.message,
+      });
+    }
   };
 
-  if (roleLoading || fetching) {
-    return (
-      <ScreenWrapper>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#22d3ee" />
-          <Text className="text-gray-400 mt-4">Loading requests...</Text>
-        </View>
-      </ScreenWrapper>
-    );
-  }
-
-  if (role !== "admin") {
-    return null;
-  }
-
-  const pendingCount = requests.filter((r) => r.status === "pending").length;
-  const resolvedCount = requests.filter((r) => r.status === "resolved").length;
-
-  // Filters by status and email, then sort pending first
   const filteredRequests = [...requests]
     .filter((r) => {
       if (filter === "all") return true;
       return r.status === filter;
     })
     .filter((r) =>
-      r.email.toLowerCase().includes(searchEmail.toLowerCase().trim())
+      r.email.toLowerCase().includes(searchQuery.toLowerCase().trim())
     )
     .sort((a, b) => {
       if (a.status === b.status) {
@@ -148,58 +129,69 @@ export default function ManageContactRequestsScreen() {
       return a.status === "pending" ? -1 : 1;
     });
 
+  if (loading || roleLoading) {
+    return (
+      <ScreenWrapper>
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#22d3ee" />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  if (!isAdmin) return null;
+
+  const pendingCount = requests.filter((r) => r.status === "pending").length;
+  const resolvedCount = requests.filter((r) => r.status === "resolved").length;
+
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
+      <View className="flex-1 px-5 pt-4">
+        <AdminHeader
+          title="Contact Requests"
+          subtitle={`${requests.length} total request${requests.length !== 1 ? "s" : ""}`}
+        />
 
-      <View className="flex-1 px-5">
-        <View className="flex-row justify-between items-center mb-6">
-          <View>
-            <Text className="text-3xl font-bold text-cyan-400 mb-2">
-              Manage Contact Requests
-            </Text>
-            {/* Status indicators */}
-            <View className="flex-row items-center gap-4">
-              <View className="flex-row items-center">
-                <View className="w-3 h-3 rounded-full bg-orange-500 mr-2" />
-                <Text className="text-gray-400">{pendingCount} Pending</Text>
-              </View>
-              <View className="flex-row items-center">
-                <View className="w-3 h-3 rounded-full bg-green-500 mr-2" />
-                <Text className="text-gray-400">{resolvedCount} Resolved</Text>
-              </View>
-            </View>
-          </View>
+        <StatsSummary
+          stats={[
+            { label: "Total", value: requests.length, color: "cyan" },
+            { label: "Pending", value: pendingCount, color: "orange" },
+            { label: "Resolved", value: resolvedCount, color: "green" },
+          ]}
+        />
 
-          {/* Filter button */}
-          <TouchableOpacity
-            className="p-2 rounded-full bg-neutral-800"
-            onPress={() => {
-              Alert.alert("Filter Requests", "Choose a filter", [
-                { text: "All", onPress: () => setFilter("all") },
-                { text: "Pending", onPress: () => setFilter("pending") },
-                { text: "Resolved", onPress: () => setFilter("resolved") },
-                { text: "Cancel", style: "cancel" },
-              ]);
-            }}
-          >
-            <Ionicons name="filter" size={20} color="#22d3ee" />
-          </TouchableOpacity>
-        </View>
+        <TabFilter
+          tabs={[
+            { key: "all", label: "All", count: requests.length },
+            { key: "pending", label: "Pending", count: pendingCount },
+            { key: "resolved", label: "Resolved", count: resolvedCount },
+          ]}
+          activeTab={filter}
+          onTabChange={(key) => setFilter(key as any)}
+        />
 
         <SearchBar
-          value={searchEmail}
-          onChangeText={setSearchEmail}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
           placeholder="Search by email..."
         />
 
         {filteredRequests.length === 0 ? (
-          <EmptyState message="No contact requests found" />
+          <View className="flex-1 items-center justify-center">
+            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons name="mail-outline" size={40} color="#22d3ee" />
+            </View>
+            <Text className="text-white text-xl font-bold mb-2">
+              No Requests
+            </Text>
+            <Text className="text-gray-400 text-center">
+              No contact requests match your filter
+            </Text>
+          </View>
         ) : (
           <FlatList
             data={filteredRequests}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -212,74 +204,10 @@ export default function ManageContactRequestsScreen() {
               />
             }
             renderItem={({ item }) => (
-              <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
-                <View className="p-5">
-                  {/* Status badge and date */}
-                  <View className="flex-row items-center justify-between mb-4">
-                    <View
-                      className={`px-3 py-1.5 rounded-full ${
-                        item.status === "resolved"
-                          ? "bg-green-900"
-                          : "bg-orange-900"
-                      }`}
-                    >
-                      <Text
-                        className={`text-xs font-bold ${
-                          item.status === "resolved"
-                            ? "text-green-400"
-                            : "text-orange-400"
-                        }`}
-                      >
-                        {item.status === "resolved"
-                          ? "✓ RESOLVED"
-                          : "• PENDING"}
-                      </Text>
-                    </View>
-                    <Text className="text-gray-500 text-xs">
-                      {formatDate(item.created_at)}
-                    </Text>
-                  </View>
-
-                  {/* Email with verification status */}
-                  <View className="mb-4">
-                    <Text className="text-gray-500 text-xs mb-1">From</Text>
-                    <View className="flex-row items-center gap-2">
-                      <Text className="text-white text-base font-semibold">
-                        {item.email}
-                      </Text>
-                      <Text className="text-sm">
-                        {item.verified ? "✅" : "❌"}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Message content */}
-                  <View className="bg-neutral-800 rounded-lg p-4 mb-4">
-                    <Text className="text-gray-500 text-xs mb-2">Message</Text>
-                    <Text className="text-gray-200 leading-6">
-                      {item.message}
-                    </Text>
-                  </View>
-
-                  {/* Action button or resolved indicator */}
-                  {item.status !== "resolved" ? (
-                    <TouchableOpacity
-                      className="bg-green-600 p-4 rounded-lg"
-                      onPress={() => markAsResolved(item.id)}
-                    >
-                      <Text className="text-white text-center font-bold">
-                        ✓ Mark as Resolved
-                      </Text>
-                    </TouchableOpacity>
-                  ) : (
-                    <View className="bg-green-900/30 p-4 rounded-lg border border-green-800">
-                      <Text className="text-green-400 text-center font-semibold">
-                        ✓ This request has been resolved
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
+              <ContactRequestCard
+                request={item}
+                onMarkResolved={() => markAsResolved(item.id)}
+              />
             )}
           />
         )}

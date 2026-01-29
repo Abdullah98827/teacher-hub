@@ -92,9 +92,9 @@ export default function Membership() {
     const { error } = await supabase.from("memberships").upsert({
       id: user.id,
       tier,
-      subject_ids: selectedSubjectIds,
-      active: false, // Will be set to true after payment
-    });
+      subject_ids: selectedSubjectIds.map((id) => id),
+      active: false,
+    }); // Will be set to true after payment
 
     if (error) {
       showToast("error", "Error", error.message);

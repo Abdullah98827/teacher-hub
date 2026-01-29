@@ -1,24 +1,20 @@
-// app/admin/verify.tsx
-// Screen where admins approve or reject teacher verification requests
-// Teachers need to upload their teacher ID to get verified
-
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   RefreshControl,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
 import ConfirmModal from "../../components/ConfirmModal";
-import EmptyState from "../../components/EmptyState";
-import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import StatsSummary from "../../components/StatsSummary";
+import TeacherVerificationCard from "../../components/TeacherVerificationCard";
+import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
 import { useUserRole } from "../hooks/useUserRole";
 
@@ -32,7 +28,11 @@ interface PendingTeacher {
 }
 
 export default function VerifyTeachersScreen() {
+  const { user } = useAuth();
+  const { role, loading: roleLoading } = useUserRole();
+  const router = useRouter();
   const [pendingUsers, setPendingUsers] = useState<PendingTeacher[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmDeletePhoto, setConfirmDeletePhoto] = useState<string | null>(
@@ -40,40 +40,49 @@ export default function VerifyTeachersScreen() {
   );
   const [processing, setProcessing] = useState(false);
   const [imageUrls, setImageUrls] = useState<Map<string, string>>(new Map());
-  const { role, loading: roleLoading } = useUserRole();
-  const router = useRouter();
 
-  // Fetch all teachers waiting for verification
-  const loadPendingUsers = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("teachers")
-      .select("*")
-      .eq("verified", false)
-      .order("created_at", { ascending: false });
+  const isAdmin = role === "admin";
 
-    if (error) {
+  useEffect(() => {
+    if (!roleLoading && !isAdmin) {
       Toast.show({
         type: "error",
-        text1: "Load Failed",
+        text1: "Access Denied",
+        text2: "Admin privileges required",
+      });
+      router.back();
+    }
+  }, [isAdmin, roleLoading, router]);
+
+  const loadPendingUsers = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("*")
+        .eq("verified", false)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setPendingUsers(data || []);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to load teachers",
         text2: error.message,
       });
-      return;
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    setPendingUsers(data || []);
   }, []);
 
-  // Check if user is admin, redirect if not
   useEffect(() => {
-    if (roleLoading) return;
-    if (role === "admin") {
+    if (!roleLoading && isAdmin) {
       loadPendingUsers();
-    } else {
-      router.replace("/(tabs)");
     }
-  }, [role, roleLoading, loadPendingUsers, router]);
+  }, [isAdmin, roleLoading, loadPendingUsers]);
 
-  // Load signed URLs for all photos when users change
   useEffect(() => {
     const loadImageUrls = async () => {
       const urls = new Map<string, string>();
@@ -82,7 +91,7 @@ export default function VerifyTeachersScreen() {
         if (user.photo_url) {
           const { data, error } = await supabase.storage
             .from("teacher-passes")
-            .createSignedUrl(user.photo_url, 3600); // Valid for 1 hour
+            .createSignedUrl(user.photo_url, 3600);
 
           if (!error && data?.signedUrl) {
             urls.set(user.id, data.signedUrl);
@@ -98,145 +107,77 @@ export default function VerifyTeachersScreen() {
     }
   }, [pendingUsers]);
 
-  // Approves teacher and delete their uploaded ID photo
   const handleApprove = useCallback(
     async (userId: string, photoUrl: string | null) => {
       setProcessing(true);
 
-      const { error } = await supabase
-        .from("teachers")
-        .update({ verified: true })
-        .eq("id", userId);
+      try {
+        const { error } = await supabase
+          .from("teachers")
+          .update({ verified: true })
+          .eq("id", userId);
 
-      if (error) {
+        if (error) throw error;
+
+        if (photoUrl) {
+          await supabase.storage.from("teacher-passes").remove([photoUrl]);
+        }
+
+        Toast.show({
+          type: "success",
+          text1: "Teacher verified successfully",
+        });
+        loadPendingUsers();
+      } catch (error: any) {
         Toast.show({
           type: "error",
-          text1: "Approval Failed",
+          text1: "Approval failed",
           text2: error.message,
         });
+      } finally {
         setProcessing(false);
-        return;
       }
-
-      // Deletes the photo after approval since we don't need it anymore
-      if (photoUrl) {
-        await supabase.storage.from("teacher-passes").remove([photoUrl]);
-      }
-
-      Toast.show({
-        type: "success",
-        text1: "Approved",
-        text2: "Teacher verified successfully",
-      });
-      setProcessing(false);
-      loadPendingUsers();
     },
     [loadPendingUsers]
   );
 
-  // Reject teacher deletes their account and photo permanently
   const executeReject = async () => {
     setProcessing(true);
 
-    if (confirmDeletePhoto) {
-      await supabase.storage
-        .from("teacher-passes")
-        .remove([confirmDeletePhoto]);
-    }
+    try {
+      if (confirmDeletePhoto) {
+        await supabase.storage
+          .from("teacher-passes")
+          .remove([confirmDeletePhoto]);
+      }
 
-    const { error } = await supabase
-      .from("teachers")
-      .delete()
-      .eq("id", confirmDeleteId);
+      const { error } = await supabase
+        .from("teachers")
+        .delete()
+        .eq("id", confirmDeleteId);
 
-    if (error) {
+      if (error) throw error;
+
+      Toast.show({
+        type: "success",
+        text1: "Teacher account removed",
+      });
+
+      loadPendingUsers();
+    } catch (error: any) {
       Toast.show({
         type: "error",
-        text1: "Deletion Failed",
+        text1: "Deletion failed",
         text2: error.message,
       });
+    } finally {
+      setConfirmDeleteId(null);
+      setConfirmDeletePhoto(null);
       setProcessing(false);
-      return;
     }
-
-    Toast.show({
-      type: "success",
-      text1: "Account Deleted",
-      text2: "Teacher account removed",
-    });
-
-    setConfirmDeleteId(null);
-    setConfirmDeletePhoto(null);
-    setProcessing(false);
-    loadPendingUsers();
   };
 
-  // Render each teacher verification card
-  const renderUser = ({ item }: { item: PendingTeacher }) => {
-    const imageUrl = imageUrls.get(item.id);
-
-    return (
-      <View className="bg-neutral-900 rounded-xl p-5 mb-4 border border-neutral-800">
-        <Text className="text-xs text-gray-500">Email</Text>
-        <Text className="text-base font-semibold text-white mb-3">
-          {item.email}
-        </Text>
-
-        <Text className="text-xs text-gray-500">Name</Text>
-        <Text className="text-base text-white mb-3">
-          {item.first_name} {item.last_name}
-        </Text>
-
-        <Text className="text-xs text-gray-500">TRN</Text>
-        <Text className="text-lg font-bold text-white mb-3">{item.trn}</Text>
-
-        {/* Teacher pass photo if uploaded */}
-        {imageUrl ? (
-          <View className="mb-3">
-            <Text className="text-xs text-gray-500 mb-2">
-              Teacher Pass Photo
-            </Text>
-            <Image
-              source={{ uri: imageUrl }}
-              className="w-full h-48 rounded-lg bg-gray-200"
-              resizeMode="contain"
-            />
-          </View>
-        ) : (
-          <Text className="text-xs text-red-500 mb-3">
-            ⚠️ No photo available
-          </Text>
-        )}
-
-        {/* Approve/Reject buttons */}
-        <View className="flex-row gap-3">
-          <TouchableOpacity
-            className={`flex-1 bg-red-600 p-3 rounded-lg ${processing ? "opacity-50" : ""}`}
-            onPress={() => {
-              setConfirmDeleteId(item.id);
-              setConfirmDeletePhoto(item.photo_url);
-            }}
-            disabled={processing}
-          >
-            <Text className="text-white text-center font-bold">Reject</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 bg-green-600 p-3 rounded-lg ${processing ? "opacity-50" : ""}`}
-            onPress={() => handleApprove(item.id, item.photo_url)}
-            disabled={processing}
-          >
-            {processing ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text className="text-white text-center font-bold">Approve</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
-  if (roleLoading) {
+  if (loading || roleLoading) {
     return (
       <ScreenWrapper>
         <View className="flex-1 items-center justify-center">
@@ -246,48 +187,71 @@ export default function VerifyTeachersScreen() {
     );
   }
 
+  if (!isAdmin) return null;
+
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
-
-      <View className="flex-1 px-5">
+      <View className="flex-1 px-5 pt-4">
         <AdminHeader
           title="Verify Teachers"
           subtitle={`${pendingUsers.length} pending verification${pendingUsers.length !== 1 ? "s" : ""}`}
-          showBack={false}
+        />
+
+        <StatsSummary
+          stats={[
+            { label: "Pending", value: pendingUsers.length, color: "orange" },
+          ]}
         />
 
         {pendingUsers.length === 0 ? (
-          <EmptyState icon="✓" message="No pending verifications" />
+          <View className="flex-1 items-center justify-center">
+            <View className="bg-green-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons name="checkmark-circle" size={40} color="#22c55e" />
+            </View>
+            <Text className="text-white text-xl font-bold mb-2">
+              All Clear!
+            </Text>
+            <Text className="text-gray-400 text-center">
+              No pending teacher verifications
+            </Text>
+          </View>
         ) : (
           <FlatList
             data={pendingUsers}
-            renderItem={renderUser}
             keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
-                onRefresh={async () => {
+                onRefresh={() => {
                   setRefreshing(true);
-                  await loadPendingUsers();
-                  setRefreshing(false);
+                  loadPendingUsers();
                 }}
                 tintColor="#22d3ee"
               />
             }
+            renderItem={({ item }) => (
+              <TeacherVerificationCard
+                teacher={item}
+                imageUrl={imageUrls.get(item.id)}
+                onApprove={() => handleApprove(item.id, item.photo_url)}
+                onReject={() => {
+                  setConfirmDeleteId(item.id);
+                  setConfirmDeletePhoto(item.photo_url);
+                }}
+                processing={processing}
+              />
+            )}
           />
         )}
       </View>
 
-      {/* Delete confirmation modal */}
       <ConfirmModal
         visible={confirmDeleteId !== null}
-        title="Confirm Deletion"
-        message="This will permanently delete the teacher's account and photo. Are you sure?"
-        confirmText="Delete"
-        confirmColor="bg-red-600"
+        title="Reject Teacher?"
+        message="This will permanently delete the teacher's account and photo. This action cannot be undone."
+        confirmText="Reject & Delete"
+        confirmColor="bg-red-500"
         onConfirm={executeReject}
         onCancel={() => {
           setConfirmDeleteId(null);

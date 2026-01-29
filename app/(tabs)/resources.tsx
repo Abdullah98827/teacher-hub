@@ -1,4 +1,3 @@
-// app/(tabs)/resources.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -43,14 +42,16 @@ interface Resource {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   downloads_count: number;
-  subject: { name: string };
+  subject: {
+    name: string;
+    is_public: boolean;
+  };
   uploader: { first_name: string; last_name: string };
 }
 
 export default function ResourcesScreen() {
   const { user } = useAuth();
   const router = useRouter();
-
   const [resources, setResources] = useState<Resource[]>([]);
   const [myResources, setMyResources] = useState<Resource[]>([]);
   const [savedResources, setSavedResources] = useState<Resource[]>([]);
@@ -67,7 +68,6 @@ export default function ResourcesScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteResourceId, setDeleteResourceId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -75,7 +75,6 @@ export default function ResourcesScreen() {
     "newest"
   );
   const [showFilters, setShowFilters] = useState(false);
-
   // Modal states
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(
     null
@@ -85,7 +84,6 @@ export default function ResourcesScreen() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-
   // Stats and bookmarks
   const [resourceStats, setResourceStats] = useState<Map<string, any>>(
     new Map()
@@ -107,13 +105,18 @@ export default function ResourcesScreen() {
     let approvedData;
 
     if (isAdmin) {
+      // Admins see all approved resources
       const { data } = await supabase
         .from("resources")
-        .select("*, subject:subjects(name)")
+        .select("*, subject:subjects(name, is_public)")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       approvedData = data;
     } else {
+      // Teachers see:
+      // 1. Resources for their subscribed subjects
+      // 2. Resources for public subjects
+
       const { data: membershipData } = await supabase
         .from("memberships")
         .select("subject_ids")
@@ -123,18 +126,39 @@ export default function ResourcesScreen() {
 
       const subscribedSubjectIds = membershipData?.subject_ids || [];
 
+      // Get public subject IDs
+      const { data: publicSubjects } = await supabase
+        .from("subjects")
+        .select("id")
+        .eq("is_public", true);
+
+      const publicSubjectIds = (publicSubjects || []).map((s) => s.id);
+
+      // Combine subscribed and public subject IDs
+      const allAccessibleSubjectIds = [
+        ...new Set([...subscribedSubjectIds, ...publicSubjectIds]),
+      ];
+
+      if (allAccessibleSubjectIds.length === 0) {
+        setResources([]);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+
       const { data } = await supabase
         .from("resources")
-        .select("*, subject:subjects(name)")
+        .select("*, subject:subjects(name, is_public)")
         .eq("status", "approved")
-        .in("subject_id", subscribedSubjectIds)
+        .in("subject_id", allAccessibleSubjectIds)
         .order("created_at", { ascending: false });
       approvedData = data;
     }
 
+    // Fetch user's own resources
     const { data: myData } = await supabase
       .from("resources")
-      .select("*, subject:subjects(name)")
+      .select("*, subject:subjects(name, is_public)")
       .eq("uploaded_by", user.id)
       .order("created_at", { ascending: false });
 
@@ -175,7 +199,6 @@ export default function ResourcesScreen() {
       allResources.map(async (resource) => {
         const stats = await getResourceStats(resource.id);
         statsMap.set(resource.id, stats);
-
         const isBookmarked = await checkBookmark(resource.id, user.id);
         if (isBookmarked) {
           bookmarkSet.add(resource.id);
@@ -213,14 +236,11 @@ export default function ResourcesScreen() {
   }, [fetchResources]);
 
   const openPreview = async (resource: Resource) => {
-    // Track view
     if (user?.id) {
       await trackResourceView(resource.id, user.id);
       const stats = await getResourceStats(resource.id);
       setResourceStats((prev) => new Map(prev).set(resource.id, stats));
     }
-
-    // Use longer expiry (10 minutes instead of 60 seconds)
     const url = await getSignedUrl(resource.file_url, 600);
     if (!url) {
       Toast.show({
@@ -230,7 +250,6 @@ export default function ResourcesScreen() {
       });
       return;
     }
-
     if (Platform.OS === "web") {
       window.open(url, "_blank");
     } else {
@@ -245,8 +264,6 @@ export default function ResourcesScreen() {
       .from("resources")
       .update({ downloads_count: resource.downloads_count + 1 })
       .eq("id", resource.id);
-
-    // Use longer expiry for download
     const url = await getSignedUrl(resource.file_url, 600);
     if (!url) {
       Toast.show({
@@ -256,19 +273,15 @@ export default function ResourcesScreen() {
       });
       return;
     }
-
     await Linking.openURL(url);
     Toast.show({ type: "success", text1: "Downloading resource..." });
-
     setShowPreview(false);
     fetchResources();
   };
 
   const deleteResource = async (resourceId: string) => {
     if (isDeleting) return;
-
     setIsDeleting(true);
-
     const resourceToDelete = myResources.find((r) => r.id === resourceId);
     if (!resourceToDelete) {
       Toast.show({
@@ -278,18 +291,15 @@ export default function ResourcesScreen() {
       setIsDeleting(false);
       return;
     }
-
     const fileDeleted = await deleteFile(resourceToDelete.file_url);
     if (!fileDeleted) {
       setIsDeleting(false);
       return;
     }
-
     const { error } = await supabase
       .from("resources")
       .delete()
       .eq("id", resourceId);
-
     if (error) {
       Toast.show({
         type: "error",
@@ -299,7 +309,6 @@ export default function ResourcesScreen() {
       setIsDeleting(false);
       return;
     }
-
     Toast.show({ type: "success", text1: "Resource deleted" });
     setIsDeleting(false);
     fetchResources();
@@ -320,7 +329,6 @@ export default function ResourcesScreen() {
 
   const handleBookmark = async (resourceId: string) => {
     if (!user?.id) return;
-
     const result = await toggleBookmark(resourceId, user.id);
     if (result.success) {
       if (result.isBookmarked) {
@@ -334,7 +342,6 @@ export default function ResourcesScreen() {
         });
         Toast.show({ type: "success", text1: "Resource removed" });
       }
-      // Refresh saved resources
       fetchResources();
     }
   };
@@ -470,12 +477,15 @@ export default function ResourcesScreen() {
             <Text className="text-white font-bold ml-2">Upload Resource</Text>
           </TouchableOpacity>
         </View>
-
         {displayResources.length === 0 ? (
           <View className="flex-1 items-center justify-center">
-            <Text className="text-6xl mb-4">
-              {activeTab === "saved" ? "🔖" : "📚"}
-            </Text>
+            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons
+                name={activeTab === "saved" ? "bookmark" : "folder-open"}
+                size={40}
+                color="#22d3ee"
+              />
+            </View>
             <Text className="text-gray-400 text-center">
               {activeTab === "browse"
                 ? "No resources available yet"
@@ -502,7 +512,6 @@ export default function ResourcesScreen() {
                 color="#9CA3AF"
               />
             </TouchableOpacity>
-
             {showFilters && (
               <View className="bg-neutral-900 p-4 rounded-xl mb-3">
                 <View className="mb-3">
@@ -527,7 +536,6 @@ export default function ResourcesScreen() {
                     )}
                   </View>
                 </View>
-
                 <View className="mb-3">
                   <Text className="text-white font-semibold mb-2">
                     Category
@@ -564,7 +572,6 @@ export default function ResourcesScreen() {
                     )}
                   </View>
                 </View>
-
                 <View>
                   <Text className="text-white font-semibold mb-2">Sort By</Text>
                   <View className="flex-row gap-2">
@@ -595,7 +602,6 @@ export default function ResourcesScreen() {
                     ))}
                   </View>
                 </View>
-
                 <TouchableOpacity
                   className="bg-red-600/20 border border-red-600 p-3 rounded-xl mt-3"
                   onPress={() => {
@@ -610,15 +616,15 @@ export default function ResourcesScreen() {
                 </TouchableOpacity>
               </View>
             )}
-
             <Text className="text-gray-400 mb-3">
               Showing {filteredResources.length} of {displayResources.length}{" "}
               resources
             </Text>
-
             {filteredResources.length === 0 ? (
               <View className="flex-1 items-center justify-center py-10">
-                <Text className="text-6xl mb-4">🔍</Text>
+                <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+                  <Ionicons name="search" size={40} color="#22d3ee" />
+                </View>
                 <Text className="text-gray-400 text-center">
                   No resources match your filters
                 </Text>
@@ -650,64 +656,77 @@ export default function ResourcesScreen() {
                   />
                 }
                 renderItem={({ item }) => (
-                  <ResourceCard
-                    title={item.title}
-                    description={item.description}
-                    category={item.category}
-                    status={activeTab === "mine" ? item.status : undefined}
-                    subjectName={item.subject.name}
-                    uploadedBy={
-                      item.uploader
-                        ? `${item.uploader.first_name} ${item.uploader.last_name}`
-                        : "Unknown"
-                    }
-                    createdAt={formatDate(item.created_at)}
-                    downloads={item.downloads_count}
-                    views={resourceStats.get(item.id)?.viewCount || 0}
-                    averageRating={
-                      resourceStats.get(item.id)?.averageRating || 0
-                    }
-                    ratingCount={resourceStats.get(item.id)?.ratingCount || 0}
-                    commentCount={resourceStats.get(item.id)?.commentCount || 0}
-                    isBookmarked={bookmarks.has(item.id)}
-                    onPress={() => openPreview(item)}
-                    onComment={() => {
-                      setSelectedResourceId(item.id);
-                      setSelectedResourceTitle(item.title);
-                      setShowCommentsModal(true);
-                    }}
-                    onRate={() => {
-                      setSelectedResourceId(item.id);
-                      setSelectedResourceTitle(item.title);
-                      setShowRatingModal(true);
-                    }}
-                    onReport={() => {
-                      setSelectedResourceId(item.id);
-                      setSelectedResourceTitle(item.title);
-                      setShowReportModal(true);
-                    }}
-                    onBookmark={() => handleBookmark(item.id)}
-                    onShare={() => {
-                      setSelectedResourceId(item.id);
-                      setSelectedResourceTitle(item.title);
-                      setShowShareModal(true);
-                    }}
-                    showActions={
-                      activeTab === "mine" && item.status === "pending"
-                    }
-                    onDelete={
-                      activeTab === "mine" && item.status === "pending"
-                        ? () => handleDeletePress(item.id)
-                        : undefined
-                    }
-                  />
+                  <View className="mb-3">
+                    {item.subject.is_public && (
+                      <View className="bg-green-500/20 px-3 py-1 rounded-t-xl border-b border-green-500/30">
+                        <View className="flex-row items-center justify-center">
+                          <Ionicons name="globe" size={14} color="#22c55e" />
+                          <Text className="text-green-400 text-xs font-bold ml-1">
+                            PUBLIC RESOURCE
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    <ResourceCard
+                      title={item.title}
+                      description={item.description}
+                      category={item.category}
+                      status={activeTab === "mine" ? item.status : undefined}
+                      subjectName={item.subject.name}
+                      uploadedBy={
+                        item.uploader
+                          ? `${item.uploader.first_name} ${item.uploader.last_name}`
+                          : "Unknown"
+                      }
+                      createdAt={formatDate(item.created_at)}
+                      downloads={item.downloads_count}
+                      views={resourceStats.get(item.id)?.viewCount || 0}
+                      averageRating={
+                        resourceStats.get(item.id)?.averageRating || 0
+                      }
+                      ratingCount={resourceStats.get(item.id)?.ratingCount || 0}
+                      commentCount={
+                        resourceStats.get(item.id)?.commentCount || 0
+                      }
+                      isBookmarked={bookmarks.has(item.id)}
+                      onPress={() => openPreview(item)}
+                      onComment={() => {
+                        setSelectedResourceId(item.id);
+                        setSelectedResourceTitle(item.title);
+                        setShowCommentsModal(true);
+                      }}
+                      onRate={() => {
+                        setSelectedResourceId(item.id);
+                        setSelectedResourceTitle(item.title);
+                        setShowRatingModal(true);
+                      }}
+                      onReport={() => {
+                        setSelectedResourceId(item.id);
+                        setSelectedResourceTitle(item.title);
+                        setShowReportModal(true);
+                      }}
+                      onBookmark={() => handleBookmark(item.id)}
+                      onShare={() => {
+                        setSelectedResourceId(item.id);
+                        setSelectedResourceTitle(item.title);
+                        setShowShareModal(true);
+                      }}
+                      showActions={
+                        activeTab === "mine" && item.status === "pending"
+                      }
+                      onDelete={
+                        activeTab === "mine" && item.status === "pending"
+                          ? () => handleDeletePress(item.id)
+                          : undefined
+                      }
+                    />
+                  </View>
                 )}
               />
             )}
           </View>
         )}
       </View>
-
       {/* Preview Modal */}
       <Modal
         visible={showPreview}
@@ -755,7 +774,6 @@ export default function ResourcesScreen() {
           )}
         </View>
       </Modal>
-
       {/* Delete Confirmation Modal */}
       <Modal
         visible={showDeleteConfirm}
@@ -801,7 +819,6 @@ export default function ResourcesScreen() {
           </View>
         </View>
       </Modal>
-
       {/* Feature Modals */}
       {selectedResourceId && (
         <>
@@ -811,7 +828,6 @@ export default function ResourcesScreen() {
             resourceTitle={selectedResourceTitle}
             onClose={() => setShowCommentsModal(false)}
           />
-
           <RatingModal
             visible={showRatingModal}
             resourceId={selectedResourceId}
@@ -819,14 +835,12 @@ export default function ResourcesScreen() {
             onClose={() => setShowRatingModal(false)}
             onRatingSubmitted={handleRatingSubmitted}
           />
-
           <ReportModal
             visible={showReportModal}
             resourceId={selectedResourceId}
             resourceTitle={selectedResourceTitle}
             onClose={() => setShowReportModal(false)}
           />
-
           <ShareModal
             visible={showShareModal}
             resourceId={selectedResourceId}
@@ -835,7 +849,6 @@ export default function ResourcesScreen() {
           />
         </>
       )}
-
       <Toast />
     </ScreenWrapper>
   );

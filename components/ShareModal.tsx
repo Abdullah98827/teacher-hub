@@ -1,4 +1,3 @@
-// components/ShareModal.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
@@ -17,8 +16,8 @@ export default function ShareModal({
   onClose,
 }: ShareModalProps) {
   const handleCopyLink = () => {
-    // For now, just show a message
-    // When you implement chat, this will copy a shareable link
+    // For now, just showing a message
+    // When i implement the chat, this will copy a shareable link
     Toast.show({
       type: "info",
       text1: "Coming Soon!",

@@ -1,7 +1,7 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Animated, Text, TouchableOpacity, View } from "react-native";
 import { useUserRole } from "../app/hooks/useUserRole";
 import { supabase } from "../supabase";
 
@@ -16,7 +16,6 @@ export default function LogoHeader({
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Fade in animation
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
@@ -26,7 +25,6 @@ export default function LogoHeader({
     checkVerification();
   }, []);
 
-  // Check if teacher is verified by admin
   const checkVerification = async () => {
     const {
       data: { user },
@@ -45,15 +43,28 @@ export default function LogoHeader({
   };
 
   const handleLogoClick = () => {
-    // Admins go to admin hub
     if (role === "admin") {
       router.push("/admin");
-    }
-    // Verified teachers go to main app
-    else if (role === "teacher" && isVerified) {
+    } else if (role === "teacher" && isVerified) {
       router.push("/(tabs)");
     }
-    // For unverified teachers logo does nothing
+  };
+
+  const handleSignOut = () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Sign Out",
+        style: "destructive",
+        onPress: async () => {
+          await supabase.auth.signOut();
+          router.replace("/login");
+        },
+      },
+    ]);
   };
 
   const iconName = role === "admin" ? "shield-check" : "school-outline";
@@ -61,11 +72,8 @@ export default function LogoHeader({
   const isClickable = role === "admin" || (role === "teacher" && isVerified);
 
   return (
-    <View
-      className={`w-full px-5 py-4 ${
-        position === "right" ? "items-end" : "items-start"
-      }`}
-    >
+    <View className="w-full px-5 py-4 flex-row items-center justify-between">
+      {/* Logo */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <TouchableOpacity
           activeOpacity={isClickable ? 0.8 : 1}
@@ -84,6 +92,17 @@ export default function LogoHeader({
               <Text className="text-purple-400">-Hub</Text>
             </Text>
           )}
+        </TouchableOpacity>
+      </Animated.View>
+
+      {/* Sign Out Button */}
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <TouchableOpacity
+          onPress={handleSignOut}
+          className="w-10 h-10 rounded-full bg-red-500/20 items-center justify-center"
+          activeOpacity={0.7}
+        >
+          <Ionicons name="log-out-outline" size={22} color="#ef4444" />
         </TouchableOpacity>
       </Animated.View>
     </View>

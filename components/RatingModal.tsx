@@ -1,4 +1,3 @@
-// components/RatingModal.tsx
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {

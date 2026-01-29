@@ -1,18 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   RefreshControl,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
-import EmptyState from "../../components/EmptyState";
-import LogoHeader from "../../components/logoHeader";
+import AdminHeader from "../../components/AdminHeader";
+import MembershipCard from "../../components/MembershipCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import StatsSummary from "../../components/StatsSummary";
+import TabFilter from "../../components/TabFilter";
+import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
 import { useUserRole } from "../hooks/useUserRole";
 
@@ -28,115 +30,119 @@ interface ActiveMembership {
 }
 
 export default function ManageMembershipsScreen() {
+  const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const router = useRouter();
   const [memberships, setMemberships] = useState<ActiveMembership[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<"all" | "single" | "multi">("all");
 
-  // Loads all active memberships when page opens
+  const isAdmin = role === "admin";
+
   useEffect(() => {
-    if (!roleLoading && role === "admin") {
-      fetchMemberships();
-    } else if (!roleLoading && role !== "admin") {
-      setFetching(false);
-    }
-  }, [role, roleLoading]);
-
-  // Fetch all memberships from database view
-  const fetchMemberships = async () => {
-    const { data, error } = await supabase
-      .from("active_memberships_view")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
+    if (!roleLoading && !isAdmin) {
       Toast.show({
         type: "error",
-        text1: "Fetch Failed",
+        text1: "Access Denied",
+        text2: "Admin privileges required",
+      });
+      router.back();
+    }
+  }, [isAdmin, roleLoading, router]);
+
+  const fetchMemberships = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("active_memberships_view")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      setMemberships(data || []);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to load memberships",
         text2: error.message,
       });
-      setMemberships([]);
-    } else {
-      setMemberships(data || []);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-
-    setFetching(false);
-    setRefreshing(false);
   };
 
-  // Format date with time
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  useEffect(() => {
+    if (!roleLoading && isAdmin) {
+      fetchMemberships();
+    }
+  }, [isAdmin, roleLoading]);
 
-  // Filters the memberships by tier (single/multi/all)
-  const filteredMemberships = [...memberships].filter((m) => {
+  const filteredMemberships = memberships.filter((m) => {
     if (filter === "all") return true;
     return m.tier === filter;
   });
 
-  if (roleLoading || fetching) {
+  if (loading || roleLoading) {
     return (
       <ScreenWrapper>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
-          <Text className="text-gray-400 mt-4">Loading memberships...</Text>
         </View>
       </ScreenWrapper>
     );
   }
 
-  if (role !== "admin") {
-    return null;
-  }
+  if (!isAdmin) return null;
+
+  const singleCount = memberships.filter((m) => m.tier === "single").length;
+  const multiCount = memberships.filter((m) => m.tier === "multi").length;
+  const approvedCount = memberships.filter((m) => m.approved).length;
 
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
+      <View className="flex-1 px-5 pt-4">
+        <AdminHeader
+          title="Memberships"
+          subtitle={`${memberships.length} active membership${memberships.length !== 1 ? "s" : ""}`}
+        />
 
-      <View className="flex-1 px-5">
-        <View className="flex-row justify-between items-center mb-6">
-          <View>
-            <Text className="text-3xl font-bold text-cyan-400 mb-2">
-              Manage Memberships
-            </Text>
-            <Text className="text-gray-400">
-              View active teacher memberships
-            </Text>
-          </View>
+        <StatsSummary
+          stats={[
+            { label: "Total", value: memberships.length, color: "cyan" },
+            { label: "Single", value: singleCount, color: "cyan" },
+            { label: "Multi", value: multiCount, color: "purple" },
+            { label: "Approved", value: approvedCount, color: "green" },
+          ]}
+        />
 
-          {/* Filter button to switch between all/single/multi */}
-          <TouchableOpacity
-            className="p-2 rounded-full bg-neutral-800"
-            onPress={() => {
-              Alert.alert("Filter Memberships", "Choose a tier", [
-                { text: "All", onPress: () => setFilter("all") },
-                { text: "Single", onPress: () => setFilter("single") },
-                { text: "Multi", onPress: () => setFilter("multi") },
-                { text: "Cancel", style: "cancel" },
-              ]);
-            }}
-          >
-            <Ionicons name="filter" size={20} color="#22d3ee" />
-          </TouchableOpacity>
-        </View>
+        <TabFilter
+          tabs={[
+            { key: "all", label: "All", count: memberships.length },
+            { key: "single", label: "Single", count: singleCount },
+            { key: "multi", label: "Multi", count: multiCount },
+          ]}
+          activeTab={filter}
+          onTabChange={(key) => setFilter(key as any)}
+        />
 
         {filteredMemberships.length === 0 ? (
-          <EmptyState message="No memberships found" />
+          <View className="flex-1 items-center justify-center">
+            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons name="card-outline" size={40} color="#22d3ee" />
+            </View>
+            <Text className="text-white text-xl font-bold mb-2">
+              No Memberships
+            </Text>
+            <Text className="text-gray-400 text-center">
+              No memberships match your filter
+            </Text>
+          </View>
         ) : (
           <FlatList
             data={filteredMemberships}
             keyExtractor={(item) => item.teacher_id}
-            contentContainerStyle={{ paddingBottom: 20 }}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl
@@ -148,57 +154,7 @@ export default function ManageMembershipsScreen() {
                 tintColor="#22d3ee"
               />
             }
-            renderItem={({ item }) => (
-              <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
-                <View className="p-5">
-                  {/* Email and date */}
-                  <View className="flex-row justify-between items-center mb-4">
-                    <Text className="text-white font-bold text-base">
-                      {item.email}
-                    </Text>
-                    <Text className="text-gray-500 text-xs">
-                      {formatDate(item.created_at)}
-                    </Text>
-                  </View>
-
-                  {/* Approval status */}
-                  <View className="flex-row items-center gap-2 mb-2">
-                    <Text className="text-gray-500 text-xs">Approved:</Text>
-                    <Text className="text-sm">
-                      {item.approved ? "✅" : "❌"}
-                    </Text>
-                  </View>
-
-                  {/* Tier type */}
-                  <View className="mb-2">
-                    <Text className="text-gray-500 text-xs">Tier</Text>
-                    <Text className="text-white text-base capitalize">
-                      {item.tier === "multi"
-                        ? "Multi Subject"
-                        : "Single Subject"}
-                    </Text>
-                  </View>
-
-                  {/* List of subjects */}
-                  <View className="mb-2">
-                    <Text className="text-gray-500 text-xs">Subjects</Text>
-                    <Text className="text-gray-200 leading-6">
-                      {item.subject_names?.length > 0
-                        ? item.subject_names.join(", ")
-                        : "None selected"}
-                    </Text>
-                  </View>
-
-                  {/* Active status */}
-                  <View>
-                    <Text className="text-gray-500 text-xs">Status</Text>
-                    <Text className="text-green-400 font-semibold text-base">
-                      ✅ Active
-                    </Text>
-                  </View>
-                </View>
-              </View>
-            )}
+            renderItem={({ item }) => <MembershipCard membership={item} />}
           />
         )}
       </View>

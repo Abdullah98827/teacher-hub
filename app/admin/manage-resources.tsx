@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,13 +13,15 @@ import {
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
 import ConfirmModal from "../../components/ConfirmModal";
-import EmptyState from "../../components/EmptyState";
-import LogoHeader from "../../components/logoHeader";
 import ResourceCard from "../../components/ResourceCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
+import StatsSummary from "../../components/StatsSummary";
+import TabFilter from "../../components/TabFilter";
+import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
 import { deleteFile } from "../../utils/storage";
+import { useUserRole } from "../hooks/useUserRole";
 
 interface Resource {
   id: string;
@@ -34,6 +37,9 @@ interface Resource {
 }
 
 export default function AdminResourcesScreen() {
+  const { user } = useAuth();
+  const { role, loading: roleLoading } = useUserRole();
+  const router = useRouter();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,7 +53,7 @@ export default function AdminResourcesScreen() {
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Filter states for advanced search
+  // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
@@ -56,149 +62,148 @@ export default function AdminResourcesScreen() {
   );
   const [showFilters, setShowFilters] = useState(false);
 
+  const isAdmin = role === "admin";
+
   useEffect(() => {
-    fetchResources();
-  }, []);
+    if (!roleLoading && !isAdmin) {
+      Toast.show({
+        type: "error",
+        text1: "Access Denied",
+        text2: "Admin privileges required",
+      });
+      router.back();
+    }
+  }, [isAdmin, roleLoading, router]);
 
-  // Loads all resources with subject and uploader's info
   const fetchResources = async () => {
-    const { data, error } = await supabase
-      .from("resources")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("resources")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
+      if (error) throw error;
+
+      const enriched = await Promise.all(
+        (data || []).map(async (resource) => {
+          const { data: subject } = await supabase
+            .from("subjects")
+            .select("name")
+            .eq("id", resource.subject_id)
+            .single();
+
+          const { data: teacher } = await supabase
+            .from("teachers")
+            .select("first_name, last_name")
+            .eq("id", resource.uploaded_by)
+            .single();
+
+          return {
+            ...resource,
+            subject: subject || { name: "Unknown" },
+            uploader: teacher,
+          };
+        })
+      );
+
+      setResources(enriched as any);
+    } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Failed to load resources",
         text2: error.message,
       });
+    } finally {
       setLoading(false);
       setRefreshing(false);
-      return;
     }
-
-    // Gets subject names and teacher names for each resource
-    const enriched = await Promise.all(
-      (data || []).map(async (resource) => {
-        const { data: subject } = await supabase
-          .from("subjects")
-          .select("name")
-          .eq("id", resource.subject_id)
-          .single();
-
-        const { data: teacher } = await supabase
-          .from("teachers")
-          .select("first_name, last_name")
-          .eq("id", resource.uploaded_by)
-          .single();
-
-        return {
-          ...resource,
-          subject: subject || { name: "Unknown" },
-          uploader: teacher,
-        };
-      })
-    );
-
-    setResources(enriched as any);
-    setLoading(false);
-    setRefreshing(false);
   };
 
-  // Admin has to approve the resource to make it visible to teachers
+  useEffect(() => {
+    if (!roleLoading && isAdmin) {
+      fetchResources();
+    }
+  }, [isAdmin, roleLoading]);
+
   const approveResource = async (resourceId: string) => {
     if (isProcessing) return;
-
     setIsProcessing(true);
 
-    const { error } = await supabase
-      .from("resources")
-      .update({ status: "approved" })
-      .eq("id", resourceId);
+    try {
+      const { error } = await supabase
+        .from("resources")
+        .update({ status: "approved" })
+        .eq("id", resourceId);
 
-    if (error) {
+      if (error) throw error;
+
+      Toast.show({
+        type: "success",
+        text1: "Resource approved",
+      });
+      fetchResources();
+    } catch (error: any) {
       Toast.show({
         type: "error",
         text1: "Failed to approve",
         text2: error.message,
       });
+    } finally {
       setIsProcessing(false);
-      return;
     }
-
-    Toast.show({
-      type: "success",
-      text1: "Resource approved!",
-    });
-
-    setIsProcessing(false);
-    fetchResources();
   };
 
-  // Handles reject or delete action after confirmation
   const handleConfirmAction = async () => {
     if (!confirmAction || isProcessing) return;
-
     setIsProcessing(true);
 
-    if (confirmAction.type === "reject") {
-      // Just marks as rejected, don't delete file
-      const { error } = await supabase
-        .from("resources")
-        .update({
-          status: "rejected",
-          rejection_reason: "Not approved by admin",
-        })
-        .eq("id", confirmAction.resourceId);
+    try {
+      if (confirmAction.type === "reject") {
+        const { error } = await supabase
+          .from("resources")
+          .update({
+            status: "rejected",
+            rejection_reason: "Not approved by admin",
+          })
+          .eq("id", confirmAction.resourceId);
 
-      if (error) {
+        if (error) throw error;
+
         Toast.show({
-          type: "error",
-          text1: "Failed to reject",
-          text2: error.message,
+          type: "success",
+          text1: "Resource rejected",
         });
-        setIsProcessing(false);
-        return;
-      }
+      } else if (confirmAction.type === "delete") {
+        const fileDeleted = await deleteFile(confirmAction.filePath);
+        if (!fileDeleted) {
+          setIsProcessing(false);
+          return;
+        }
 
-      Toast.show({
-        type: "success",
-        text1: "Resource rejected",
-      });
-    } else if (confirmAction.type === "delete") {
-      // Deletes the file from storage bucket first
-      const fileDeleted = await deleteFile(confirmAction.filePath);
-      if (!fileDeleted) {
-        setIsProcessing(false);
-        return;
-      }
+        const { error } = await supabase
+          .from("resources")
+          .delete()
+          .eq("id", confirmAction.resourceId);
 
-      // Then deletes from database
-      const { error } = await supabase
-        .from("resources")
-        .delete()
-        .eq("id", confirmAction.resourceId);
+        if (error) throw error;
 
-      if (error) {
         Toast.show({
-          type: "error",
-          text1: "Failed to delete",
-          text2: error.message,
+          type: "success",
+          text1: "Resource deleted",
         });
-        setIsProcessing(false);
-        return;
       }
 
+      fetchResources();
+    } catch (error: any) {
       Toast.show({
-        type: "success",
-        text1: "Resource deleted",
+        type: "error",
+        text1: "Operation failed",
+        text2: error.message,
       });
+    } finally {
+      setConfirmAction(null);
+      setIsProcessing(false);
     }
-
-    setConfirmAction(null);
-    setIsProcessing(false);
-    fetchResources();
   };
 
   const formatDate = (dateString: string) => {
@@ -210,23 +215,22 @@ export default function AdminResourcesScreen() {
     });
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <ScreenWrapper>
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
-          <Text className="text-gray-400 mt-4">Loading resources...</Text>
         </View>
       </ScreenWrapper>
     );
   }
 
-  // Filter by status first
+  if (!isAdmin) return null;
+
   const filteredResources = resources.filter((r) =>
     filter === "all" ? true : r.status === filter
   );
 
-  // Apply additional filters (search, category, subject) and sorting
   const finalFilteredResources = filteredResources
     .filter((item) => {
       if (
@@ -260,7 +264,6 @@ export default function AdminResourcesScreen() {
       return 0;
     });
 
-  // Get unique subject names for filter dropdown
   const uniqueSubjects = Array.from(
     new Set(resources.map((r) => r.subject.name))
   ).sort();
@@ -271,67 +274,58 @@ export default function AdminResourcesScreen() {
 
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
+      <View className="flex-1 px-5 pt-4">
+        <AdminHeader
+          title="Manage Resources"
+          subtitle={`${resources.length} total resource${resources.length !== 1 ? "s" : ""}`}
+        />
 
-      <View className="flex-1 px-5">
-        <AdminHeader title="Manage Resources" showBack={false} />
+        <StatsSummary
+          stats={[
+            { label: "Pending", value: pendingCount, color: "orange" },
+            { label: "Approved", value: approvedCount, color: "green" },
+            { label: "Rejected", value: rejectedCount, color: "red" },
+          ]}
+        />
 
-        {/* Status cards */}
-        <View className="flex-row gap-2 mb-4">
-          <View className="flex-1 bg-orange-900/30 p-3 rounded-xl border border-orange-800">
-            <Text className="text-orange-400 text-2xl font-bold">
-              {pendingCount}
-            </Text>
-            <Text className="text-orange-400 text-xs">Pending</Text>
-          </View>
-          <View className="flex-1 bg-green-900/30 p-3 rounded-xl border border-green-800">
-            <Text className="text-green-400 text-2xl font-bold">
-              {approvedCount}
-            </Text>
-            <Text className="text-green-400 text-xs">Approved</Text>
-          </View>
-          <View className="flex-1 bg-red-900/30 p-3 rounded-xl border border-red-800">
-            <Text className="text-red-400 text-2xl font-bold">
-              {rejectedCount}
-            </Text>
-            <Text className="text-red-400 text-xs">Rejected</Text>
-          </View>
-        </View>
-
-        {/* Status filter tabs */}
-        <View className="flex-row gap-2 mb-4">
-          {["pending", "approved", "rejected", "all"].map((status) => (
-            <TouchableOpacity
-              key={status}
-              className={`px-4 py-2 rounded-xl ${
-                filter === status ? "bg-cyan-500" : "bg-neutral-800"
-              }`}
-              onPress={() => setFilter(status as any)}
-            >
-              <Text
-                className={`font-semibold ${
-                  filter === status ? "text-white" : "text-gray-400"
-                }`}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <TabFilter
+          tabs={[
+            { key: "pending", label: "Pending", count: pendingCount },
+            { key: "approved", label: "Approved", count: approvedCount },
+            { key: "rejected", label: "Rejected", count: rejectedCount },
+            { key: "all", label: "All", count: resources.length },
+          ]}
+          activeTab={filter}
+          onTabChange={(key) => setFilter(key as any)}
+        />
 
         {filteredResources.length === 0 ? (
-          <EmptyState icon="📚" message={`No ${filter} resources`} />
+          <View className="flex-1 items-center justify-center">
+            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons
+                name="document-text-outline"
+                size={40}
+                color="#22d3ee"
+              />
+            </View>
+            <Text className="text-white text-xl font-bold mb-2">
+              No Resources
+            </Text>
+            <Text className="text-gray-400 text-center">
+              No {filter !== "all" ? filter : ""} resources found
+            </Text>
+          </View>
         ) : (
           <>
-            {/* Toggle for advanced filters */}
+            {/* Advanced filters toggle */}
             <TouchableOpacity
               className="bg-neutral-800 p-3 rounded-xl mb-3 flex-row items-center justify-between"
               onPress={() => setShowFilters(!showFilters)}
             >
               <View className="flex-row items-center">
-                <Ionicons name="filter" size={20} color="#22d3ee" />
+                <Ionicons name="options" size={20} color="#22d3ee" />
                 <Text className="text-white font-semibold ml-2">
-                  Filters & Sort
+                  Advanced Filters
                 </Text>
               </View>
               <Ionicons
@@ -343,12 +337,11 @@ export default function AdminResourcesScreen() {
 
             {/* Advanced filters panel */}
             {showFilters && (
-              <View className="bg-neutral-900 p-4 rounded-xl mb-3">
+              <View className="bg-neutral-900 p-4 rounded-xl mb-3 border border-neutral-800">
                 <SearchBar
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   placeholder="Search by title..."
-                  label="Search"
                 />
 
                 {/* Category filter */}
@@ -369,7 +362,7 @@ export default function AdminResourcesScreen() {
                           onPress={() => setSelectedCategory(cat)}
                         >
                           <Text
-                            className={`font-semibold ${
+                            className={`font-semibold text-sm ${
                               selectedCategory === cat
                                 ? "text-white"
                                 : "text-gray-400"
@@ -403,7 +396,7 @@ export default function AdminResourcesScreen() {
                         onPress={() => setSelectedSubject("all")}
                       >
                         <Text
-                          className={`font-semibold ${
+                          className={`font-semibold text-sm ${
                             selectedSubject === "all"
                               ? "text-white"
                               : "text-gray-400"
@@ -423,7 +416,7 @@ export default function AdminResourcesScreen() {
                           onPress={() => setSelectedSubject(subject)}
                         >
                           <Text
-                            className={`font-semibold ${
+                            className={`font-semibold text-sm ${
                               selectedSubject === subject
                                 ? "text-white"
                                 : "text-gray-400"
@@ -456,7 +449,7 @@ export default function AdminResourcesScreen() {
                         onPress={() => setSortBy(sort.value as any)}
                       >
                         <Text
-                          className={`font-semibold ${
+                          className={`font-semibold text-sm ${
                             sortBy === sort.value
                               ? "text-white"
                               : "text-gray-400"
@@ -469,9 +462,9 @@ export default function AdminResourcesScreen() {
                   </View>
                 </View>
 
-                {/* Clear all filters button */}
+                {/* Clear filters */}
                 <TouchableOpacity
-                  className="bg-red-600/20 border border-red-600 p-3 rounded-xl"
+                  className="bg-red-500/20 border border-red-500/30 p-3 rounded-xl flex-row items-center justify-center"
                   onPress={() => {
                     setSearchQuery("");
                     setSelectedCategory("all");
@@ -479,7 +472,8 @@ export default function AdminResourcesScreen() {
                     setSortBy("newest");
                   }}
                 >
-                  <Text className="text-red-400 text-center font-semibold">
+                  <Ionicons name="close-circle" size={16} color="#ef4444" />
+                  <Text className="text-red-400 font-semibold ml-2">
                     Clear All Filters
                   </Text>
                 </TouchableOpacity>
@@ -487,19 +481,24 @@ export default function AdminResourcesScreen() {
             )}
 
             {/* Results count */}
-            <Text className="text-gray-400 mb-3">
+            <Text className="text-gray-400 text-sm mb-3">
               Showing {finalFilteredResources.length} of{" "}
               {filteredResources.length} resources
             </Text>
 
             {finalFilteredResources.length === 0 ? (
               <View className="flex-1 items-center justify-center py-10">
-                <EmptyState
-                  icon="🔍"
-                  message="No resources match your filters"
-                />
+                <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
+                  <Ionicons name="search" size={32} color="#22d3ee" />
+                </View>
+                <Text className="text-white text-lg font-bold mb-2">
+                  No Matches
+                </Text>
+                <Text className="text-gray-400 text-center mb-4">
+                  No resources match your filters
+                </Text>
                 <TouchableOpacity
-                  className="mt-4 bg-cyan-500 px-4 py-2 rounded-lg"
+                  className="bg-cyan-500 px-4 py-2 rounded-lg"
                   onPress={() => {
                     setSearchQuery("");
                     setSelectedCategory("all");
@@ -548,7 +547,7 @@ export default function AdminResourcesScreen() {
                       {item.status === "pending" && (
                         <>
                           <TouchableOpacity
-                            className={`flex-1 bg-green-600 py-3 rounded-xl flex-row items-center justify-center ${
+                            className={`flex-1 bg-green-500 py-3 rounded-lg flex-row items-center justify-center ${
                               isProcessing ? "opacity-50" : ""
                             }`}
                             onPress={() => approveResource(item.id)}
@@ -560,7 +559,7 @@ export default function AdminResourcesScreen() {
                               <>
                                 <Ionicons
                                   name="checkmark-circle"
-                                  size={20}
+                                  size={18}
                                   color="#fff"
                                 />
                                 <Text className="text-white font-bold ml-2">
@@ -570,7 +569,7 @@ export default function AdminResourcesScreen() {
                             )}
                           </TouchableOpacity>
                           <TouchableOpacity
-                            className={`flex-1 bg-red-600 py-3 rounded-xl flex-row items-center justify-center ${
+                            className={`flex-1 bg-red-500 py-3 rounded-lg flex-row items-center justify-center ${
                               isProcessing ? "opacity-50" : ""
                             }`}
                             onPress={() =>
@@ -584,7 +583,7 @@ export default function AdminResourcesScreen() {
                           >
                             <Ionicons
                               name="close-circle"
-                              size={20}
+                              size={18}
                               color="#fff"
                             />
                             <Text className="text-white font-bold ml-2">
@@ -594,7 +593,7 @@ export default function AdminResourcesScreen() {
                         </>
                       )}
                       <TouchableOpacity
-                        className={`bg-neutral-800 py-3 px-4 rounded-xl ${
+                        className={`bg-neutral-800 py-3 px-4 rounded-lg ${
                           isProcessing ? "opacity-50" : ""
                         }`}
                         onPress={() =>
@@ -617,25 +616,23 @@ export default function AdminResourcesScreen() {
         )}
       </View>
 
-      {/* Reject confirmation modal */}
       <ConfirmModal
         visible={confirmAction !== null && confirmAction?.type === "reject"}
         title="Reject Resource?"
         message="This resource will be marked as rejected."
         confirmText="Reject"
-        confirmColor="bg-red-600"
+        confirmColor="bg-red-500"
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmAction(null)}
         isProcessing={isProcessing}
       />
 
-      {/* Delete confirmation modal */}
       <ConfirmModal
         visible={confirmAction !== null && confirmAction?.type === "delete"}
         title="Delete Resource?"
-        message="This will permanently delete the file from storage and database."
-        confirmText="Delete"
-        confirmColor="bg-red-700"
+        message="This will permanently delete the file from storage and database. This action cannot be undone."
+        confirmText="Delete Forever"
+        confirmColor="bg-red-600"
         onConfirm={handleConfirmAction}
         onCancel={() => setConfirmAction(null)}
         isProcessing={isProcessing}
