@@ -234,7 +234,7 @@ export default function UploadResourceScreen() {
           Upload Resource
         </Text>
         <Text className="text-gray-400 mb-6">
-          Share your materials. Get 20% off after 10 approved uploads! 🎉
+          Share your materials. Get 20% off after 10 approved uploads!
         </Text>
 
         {/* Title */}

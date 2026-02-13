@@ -1,3 +1,4 @@
+import LogoHeader from "@/components/logoHeader";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -15,8 +16,8 @@ import {
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { useUserRole } from "../hooks/useUserRole";
 
 interface Message {
   id: string;
@@ -348,6 +349,7 @@ export default function GroupChatScreen() {
 
   return (
     <ScreenWrapper>
+      <LogoHeader position="left" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"

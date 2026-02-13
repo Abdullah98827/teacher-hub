@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -12,9 +13,11 @@ import {
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import TrendingResources from "../../components/TrendingResources";
+import WeeklyLeaderboard from "../../components/WeeklyLeaderboard";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { useUserRole } from "../hooks/useUserRole";
 
 interface GroupChat {
   id: string;
@@ -40,6 +43,9 @@ export default function CommunityScreen() {
   const [groupChats, setGroupChats] = useState<GroupChat[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "chats" | "trending" | "leaderboard"
+  >("chats");
 
   const isAdmin = role === "admin";
 
@@ -50,7 +56,6 @@ export default function CommunityScreen() {
       let chats;
 
       if (isAdmin) {
-        // Admins can see ALL group chats
         const { data, error } = await supabase
           .from("group_chats")
           .select(
@@ -61,11 +66,6 @@ export default function CommunityScreen() {
         if (error) throw error;
         chats = data;
       } else {
-        // Teachers see group chats based on TWO conditions:
-        // 1. Group chat is public (anyone can see)
-        // 2. OR they're subscribed to the subject (even if chat is private)
-
-        // Get user's subscribed subjects
         const { data: membership } = await supabase
           .from("memberships")
           .select("subject_ids")
@@ -75,7 +75,6 @@ export default function CommunityScreen() {
 
         const subjectIds = membership?.subject_ids || [];
 
-        // Fetch ALL group chats first
         const { data: allChats, error: chatsError } = await supabase
           .from("group_chats")
           .select(
@@ -84,22 +83,15 @@ export default function CommunityScreen() {
 
         if (chatsError) throw chatsError;
 
-        // Filter chats based on access rules
         const accessibleChats = (allChats || []).filter((chat) => {
-          // Show if chat is public
           if (chat.is_public) return true;
-
-          // Show if user is subscribed to the subject
           if (subjectIds.includes(chat.subject_id)) return true;
-
-          // Otherwise don't show
           return false;
         });
 
         chats = accessibleChats.sort((a, b) => a.name.localeCompare(b.name));
       }
 
-      // Fetch last message for each group
       const chatsWithLastMessage = await Promise.all(
         (chats || []).map(async (chat) => {
           const { data: lastMsg } = await supabase
@@ -139,6 +131,15 @@ export default function CommunityScreen() {
       fetchGroupChats();
     }
   }, [fetchGroupChats, roleLoading]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    if (activeTab === "chats") {
+      fetchGroupChats();
+    } else {
+      setTimeout(() => setRefreshing(false), 1000);
+    }
+  }, [activeTab, fetchGroupChats]);
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -233,67 +234,171 @@ export default function CommunityScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      <View className="flex-1 px-5">
-        <View className="flex-row items-center justify-between mb-4">
-          <View>
-            <View className="flex-row items-center gap-2">
-              <Text className="text-3xl font-bold text-cyan-400">
-                Community
+
+      <View className="flex-1">
+        <View className="px-5 pt-4 pb-2">
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-1">
+              <View className="flex-row items-center gap-2">
+                <Text className="text-3xl font-bold text-cyan-400">
+                  Community
+                </Text>
+                {isAdmin && (
+                  <View className="bg-purple-500/20 px-2 py-1 rounded-full">
+                    <Text className="text-purple-400 text-xs font-bold">
+                      ADMIN
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <Text className="text-gray-400">
+                Connect with fellow teachers
               </Text>
-              {isAdmin && (
-                <View className="bg-purple-500/20 px-2 py-1 rounded-full">
-                  <Text className="text-purple-400 text-xs font-bold">
-                    ADMIN
-                  </Text>
-                </View>
-              )}
             </View>
-            <Text className="text-gray-400">
-              {groupChats.length} group{groupChats.length !== 1 ? "s" : ""}{" "}
-              {isAdmin ? "total" : "available"}
-            </Text>
+            <TouchableOpacity
+              className="bg-cyan-500 w-12 h-12 rounded-full items-center justify-center"
+              onPress={() => router.push("/direct-messages")}
+            >
+              <Ionicons name="chatbubble-ellipses" size={24} color="#fff" />
+            </TouchableOpacity>
           </View>
+
           <TouchableOpacity
-            className="bg-cyan-500 w-12 h-12 rounded-full items-center justify-center"
-            onPress={() => router.push("/direct-messages")}
+            className="bg-gradient-to-r from-cyan-900/40 to-purple-900/40 rounded-xl p-4 mb-4 border border-cyan-500/30"
+            onPress={() => router.push("/suggested-users")}
+            activeOpacity={0.7}
           >
-            <Ionicons name="chatbubble-ellipses" size={24} color="#fff" />
+            <View className="flex-row items-center">
+              <View className="bg-cyan-500 w-14 h-14 rounded-full items-center justify-center mr-4">
+                <Ionicons name="people" size={28} color="#fff" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-white font-bold text-lg">
+                  Discover Teachers
+                </Text>
+                <Text className="text-cyan-200 text-sm">
+                  Find teachers in your subjects
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={24} color="#22d3ee" />
+            </View>
           </TouchableOpacity>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mb-4"
+          >
+            <View className="flex-row gap-2">
+              <TouchableOpacity
+                className={`py-3 px-4 rounded-xl ${activeTab === "chats" ? "bg-cyan-500" : "bg-neutral-800"}`}
+                onPress={() => setActiveTab("chats")}
+              >
+                <Text
+                  className={`font-bold ${activeTab === "chats" ? "text-white" : "text-gray-400"}`}
+                >
+                  Group Chats ({groupChats.length})
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className={`py-3 px-4 rounded-xl ${activeTab === "trending" ? "bg-cyan-500" : "bg-neutral-800"}`}
+                onPress={() => setActiveTab("trending")}
+              >
+                <Text
+                  className={`font-bold ${activeTab === "trending" ? "text-white" : "text-gray-400"}`}
+                >
+                  Trending
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className={`py-3 px-4 rounded-xl ${activeTab === "leaderboard" ? "bg-cyan-500" : "bg-neutral-800"}`}
+                onPress={() => setActiveTab("leaderboard")}
+              >
+                <Text
+                  className={`font-bold ${activeTab === "leaderboard" ? "text-white" : "text-gray-400"}`}
+                >
+                  Leaderboard
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
 
-        {groupChats.length === 0 ? (
-          <View className="flex-1 items-center justify-center">
-            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
-              <Ionicons name="chatbubbles" size={40} color="#22d3ee" />
+        <View className="flex-1">
+          {activeTab === "chats" && (
+            <View className="flex-1 px-5">
+              {groupChats.length === 0 ? (
+                <View className="flex-1 items-center justify-center">
+                  <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+                    <Ionicons name="chatbubbles" size={40} color="#22d3ee" />
+                  </View>
+                  <Text className="text-white text-xl font-bold mb-2">
+                    No Group Chats
+                  </Text>
+                  <Text className="text-gray-400 text-center">
+                    {isAdmin
+                      ? "No group chats have been created yet"
+                      : "Subscribe to subjects or check public chats"}
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={groupChats}
+                  renderItem={renderGroupChat}
+                  keyExtractor={(item) => item.id}
+                  showsVerticalScrollIndicator={false}
+                  refreshControl={
+                    <RefreshControl
+                      refreshing={refreshing}
+                      onRefresh={onRefresh}
+                      tintColor="#22d3ee"
+                    />
+                  }
+                />
+              )}
             </View>
-            <Text className="text-white text-xl font-bold mb-2">
-              No Group Chats
-            </Text>
-            <Text className="text-gray-400 text-center">
-              {isAdmin
-                ? "No group chats have been created yet"
-                : "Subscribe to subjects or check public chats"}
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={groupChats}
-            renderItem={renderGroupChat}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={() => {
-                  setRefreshing(true);
-                  fetchGroupChats();
-                }}
-                tintColor="#22d3ee"
-              />
-            }
-          />
-        )}
+          )}
+
+          {activeTab === "trending" && (
+            <ScrollView
+              className="flex-1 px-5"
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#22d3ee"
+                />
+              }
+              showsVerticalScrollIndicator={false}
+            >
+              <View className="pb-6">
+                <TrendingResources />
+              </View>
+            </ScrollView>
+          )}
+
+          {activeTab === "leaderboard" && (
+            <ScrollView
+              className="flex-1 px-5"
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={onRefresh}
+                  tintColor="#22d3ee"
+                />
+              }
+              showsVerticalScrollIndicator={false}
+            >
+              <View className="pb-6">
+                <WeeklyLeaderboard />
+              </View>
+            </ScrollView>
+          )}
+        </View>
       </View>
+
       <Toast />
     </ScreenWrapper>
   );

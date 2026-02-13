@@ -2,7 +2,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Animated, Text, TouchableOpacity, View } from "react-native";
-import { useUserRole } from "../app/hooks/useUserRole";
+import { useUserRole } from "../hooks/useUserRole";
 import { supabase } from "../supabase";
 
 export default function LogoHeader({

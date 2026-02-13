@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../../supabase";
+import { supabase } from "../supabase";
 
 export type UserRole = "admin" | "teacher" | "super_admin" | "none";
 

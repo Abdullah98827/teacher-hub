@@ -127,6 +127,9 @@ export default function TabLayout() {
 
       {/* Hide all other tabs */}
       <Tabs.Screen name="upload-resource" options={{ href: null }} />
+      <Tabs.Screen name="followers/[id]" options={{ href: null }} />
+      <Tabs.Screen name="following/[id]" options={{ href: null }} />
+      <Tabs.Screen name="suggested-users" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -16,8 +16,8 @@ import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { useUserRole } from "../hooks/useUserRole";
 
 interface ManageContactRequest {
   id: string;

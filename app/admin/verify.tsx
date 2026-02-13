@@ -15,8 +15,8 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TeacherVerificationCard from "../../components/TeacherVerificationCard";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { useUserRole } from "../hooks/useUserRole";
 
 interface PendingTeacher {
   id: string;

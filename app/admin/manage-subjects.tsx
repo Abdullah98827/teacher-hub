@@ -20,8 +20,8 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import SubjectCard from "../../components/SubjectCard";
 import SubscribersModal from "../../components/SubscribersModal";
 import { useAuth } from "../../contexts/AuthContext";
+import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { useUserRole } from "../hooks/useUserRole";
 
 interface SubjectWithGroupChat {
   id: string;

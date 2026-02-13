@@ -1,3 +1,4 @@
+import LogoHeader from "@/components/logoHeader";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -208,7 +209,8 @@ export default function DirectMessagesScreen() {
 
   return (
     <ScreenWrapper>
-      <View className="flex-1 px-5 pt-12">
+      <LogoHeader position="left" />
+      <View className="flex-1 px-5 pt-6">
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center flex-1">

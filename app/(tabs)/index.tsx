@@ -119,7 +119,7 @@ export default function DashboardScreen() {
         {/* Welcome Card */}
         <View className="bg-gradient-to-br from-cyan-900/30 to-purple-900/30 rounded-2xl p-6 mb-6 border border-cyan-800/50">
           <Text className="text-3xl font-bold text-cyan-400 mb-2">
-            Hello {userProfile.firstName}! 👋
+            Hello {userProfile.firstName}!
           </Text>
           <Text className="text-base text-gray-300">
             Welcome back to Teacher-Hub

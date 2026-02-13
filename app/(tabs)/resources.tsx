@@ -23,6 +23,7 @@ import ReportModal from "../../components/ReportModal";
 import ResourceCard from "../../components/ResourceCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import ShareModal from "../../components/ShareModal";
+import UserProfileModal from "../../components/UserProfileModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
 import {
@@ -42,6 +43,7 @@ interface Resource {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   downloads_count: number;
+  uploaded_by: string;
   subject: {
     name: string;
     is_public: boolean;
@@ -52,18 +54,22 @@ interface Resource {
 export default function ResourcesScreen() {
   const { user } = useAuth();
   const router = useRouter();
+
   const [resources, setResources] = useState<Resource[]>([]);
   const [myResources, setMyResources] = useState<Resource[]>([]);
+  const [followingResources, setFollowingResources] = useState<Resource[]>([]); // ADDED
   const [savedResources, setSavedResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<"browse" | "mine" | "saved">(
-    "browse"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "browse" | "mine" | "saved" | "following" // UPDATED
+  >("browse");
   const [selectedResource, setSelectedResource] = useState<Resource | null>(
     null
   );
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteResourceId, setDeleteResourceId] = useState<string | null>(null);
@@ -103,12 +109,11 @@ export default function ResourcesScreen() {
       roleData?.role === "admin" || roleData?.role === "super_admin";
 
     let approvedData;
-
     if (isAdmin) {
       // Admins see all approved resources
       const { data } = await supabase
         .from("resources")
-        .select("*, subject:subjects(name, is_public)")
+        .select("*, uploaded_by, subject:subjects(name, is_public)")
         .eq("status", "approved")
         .order("created_at", { ascending: false });
       approvedData = data;
@@ -116,7 +121,6 @@ export default function ResourcesScreen() {
       // Teachers see:
       // 1. Resources for their subscribed subjects
       // 2. Resources for public subjects
-
       const { data: membershipData } = await supabase
         .from("memberships")
         .select("subject_ids")
@@ -148,17 +152,17 @@ export default function ResourcesScreen() {
 
       const { data } = await supabase
         .from("resources")
-        .select("*, subject:subjects(name, is_public)")
+        .select("*, uploaded_by, subject:subjects(name, is_public)")
         .eq("status", "approved")
         .in("subject_id", allAccessibleSubjectIds)
         .order("created_at", { ascending: false });
       approvedData = data;
     }
 
-    // Fetch user's own resources
+    // Fetch user's own resources - FIXED: Added uploaded_by
     const { data: myData } = await supabase
       .from("resources")
-      .select("*, subject:subjects(name, is_public)")
+      .select("*, uploaded_by, subject:subjects(name, is_public)")
       .eq("uploaded_by", user.id)
       .order("created_at", { ascending: false });
 
@@ -231,9 +235,75 @@ export default function ResourcesScreen() {
     setRefreshing(false);
   }, [user?.id]);
 
+  // ADDED: fetchFollowingResources function
+  const fetchFollowingResources = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    // Get list of users you follow
+    const { data: followingData } = await supabase
+      .from("follows")
+      .select("following_id")
+      .eq("follower_id", user.id);
+
+    if (!followingData || followingData.length === 0) {
+      setFollowingResources([]);
+      setLoading(false);
+      return;
+    }
+
+    const followingIds = followingData.map((f) => f.following_id);
+
+    // Get resources from people you follow
+    const { data } = await supabase
+      .from("resources")
+      .select("*, uploaded_by, subject:subjects(name, is_public)")
+      .eq("status", "approved")
+      .in("uploaded_by", followingIds)
+      .order("created_at", { ascending: false });
+
+    // Enrich with uploader details
+    const enriched = await Promise.all(
+      (data || []).map(async (resource) => {
+        const { data: teacher } = await supabase
+          .from("teachers")
+          .select("first_name, last_name")
+          .eq("id", resource.uploaded_by)
+          .single();
+        return {
+          ...resource,
+          uploader: teacher || { first_name: "Unknown", last_name: "" },
+        };
+      })
+    );
+
+    // Fetch stats and bookmarks
+    const statsMap = new Map();
+    const bookmarkSet = new Set<string>();
+
+    await Promise.all(
+      enriched.map(async (resource) => {
+        const stats = await getResourceStats(resource.id);
+        statsMap.set(resource.id, stats);
+        const isBookmarked = await checkBookmark(resource.id, user.id);
+        if (isBookmarked) {
+          bookmarkSet.add(resource.id);
+        }
+      })
+    );
+
+    setResourceStats((prev) => new Map([...prev, ...statsMap]));
+    setBookmarks((prev) => new Set([...prev, ...bookmarkSet]));
+    setFollowingResources(enriched as any);
+    setLoading(false);
+  };
+
   useEffect(() => {
     fetchResources();
-  }, [fetchResources]);
+    if (activeTab === "following") {
+      fetchFollowingResources();
+    }
+  }, [fetchResources, activeTab]);
 
   const openPreview = async (resource: Resource) => {
     if (user?.id) {
@@ -241,6 +311,7 @@ export default function ResourcesScreen() {
       const stats = await getResourceStats(resource.id);
       setResourceStats((prev) => new Map(prev).set(resource.id, stats));
     }
+
     const url = await getSignedUrl(resource.file_url, 600);
     if (!url) {
       Toast.show({
@@ -250,6 +321,7 @@ export default function ResourcesScreen() {
       });
       return;
     }
+
     if (Platform.OS === "web") {
       window.open(url, "_blank");
     } else {
@@ -264,6 +336,7 @@ export default function ResourcesScreen() {
       .from("resources")
       .update({ downloads_count: resource.downloads_count + 1 })
       .eq("id", resource.id);
+
     const url = await getSignedUrl(resource.file_url, 600);
     if (!url) {
       Toast.show({
@@ -273,6 +346,7 @@ export default function ResourcesScreen() {
       });
       return;
     }
+
     await Linking.openURL(url);
     Toast.show({ type: "success", text1: "Downloading resource..." });
     setShowPreview(false);
@@ -282,6 +356,7 @@ export default function ResourcesScreen() {
   const deleteResource = async (resourceId: string) => {
     if (isDeleting) return;
     setIsDeleting(true);
+
     const resourceToDelete = myResources.find((r) => r.id === resourceId);
     if (!resourceToDelete) {
       Toast.show({
@@ -291,15 +366,18 @@ export default function ResourcesScreen() {
       setIsDeleting(false);
       return;
     }
+
     const fileDeleted = await deleteFile(resourceToDelete.file_url);
     if (!fileDeleted) {
       setIsDeleting(false);
       return;
     }
+
     const { error } = await supabase
       .from("resources")
       .delete()
       .eq("id", resourceId);
+
     if (error) {
       Toast.show({
         type: "error",
@@ -309,6 +387,7 @@ export default function ResourcesScreen() {
       setIsDeleting(false);
       return;
     }
+
     Toast.show({ type: "success", text1: "Resource deleted" });
     setIsDeleting(false);
     fetchResources();
@@ -353,6 +432,11 @@ export default function ResourcesScreen() {
     }
   };
 
+  const handleViewProfile = (uploaderId: string) => {
+    setProfileUserId(uploaderId);
+    setShowProfileModal(true);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -379,7 +463,9 @@ export default function ResourcesScreen() {
       ? resources
       : activeTab === "mine"
         ? myResources
-        : savedResources;
+        : activeTab === "saved"
+          ? savedResources
+          : followingResources; // UPDATED
 
   const filteredResources = displayResources
     .filter((item) => {
@@ -467,6 +553,21 @@ export default function ResourcesScreen() {
                   My Uploads ({myResources.length})
                 </Text>
               </TouchableOpacity>
+              {/* ADDED: Following tab button */}
+              <TouchableOpacity
+                className={`py-3 px-4 rounded-xl ${
+                  activeTab === "following" ? "bg-cyan-500" : "bg-neutral-800"
+                }`}
+                onPress={() => setActiveTab("following")}
+              >
+                <Text
+                  className={`text-center font-bold ${
+                    activeTab === "following" ? "text-white" : "text-gray-400"
+                  }`}
+                >
+                  Following ({followingResources.length})
+                </Text>
+              </TouchableOpacity>
             </View>
           </ScrollView>
           <TouchableOpacity
@@ -477,6 +578,7 @@ export default function ResourcesScreen() {
             <Text className="text-white font-bold ml-2">Upload Resource</Text>
           </TouchableOpacity>
         </View>
+
         {displayResources.length === 0 ? (
           <View className="flex-1 items-center justify-center">
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
@@ -491,8 +593,21 @@ export default function ResourcesScreen() {
                 ? "No resources available yet"
                 : activeTab === "saved"
                   ? "No saved resources yet"
-                  : "You haven't uploaded any resources"}
+                  : activeTab === "following"
+                    ? "No resources from teachers you follow"
+                    : "You haven't uploaded any resources"}
             </Text>
+            {/* ADDED: Discover Teachers button for empty following state */}
+            {activeTab === "following" && displayResources.length === 0 && (
+              <TouchableOpacity
+                className="bg-cyan-600 px-6 py-3 rounded-lg mt-4"
+                onPress={() => router.push("/suggested-users")}
+              >
+                <Text className="text-white font-semibold">
+                  Find Teachers to Follow
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : (
           <View className="flex-1">
@@ -512,6 +627,7 @@ export default function ResourcesScreen() {
                 color="#9CA3AF"
               />
             </TouchableOpacity>
+
             {showFilters && (
               <View className="bg-neutral-900 p-4 rounded-xl mb-3">
                 <View className="mb-3">
@@ -536,6 +652,7 @@ export default function ResourcesScreen() {
                     )}
                   </View>
                 </View>
+
                 <View className="mb-3">
                   <Text className="text-white font-semibold mb-2">
                     Category
@@ -572,6 +689,7 @@ export default function ResourcesScreen() {
                     )}
                   </View>
                 </View>
+
                 <View>
                   <Text className="text-white font-semibold mb-2">Sort By</Text>
                   <View className="flex-row gap-2">
@@ -602,6 +720,7 @@ export default function ResourcesScreen() {
                     ))}
                   </View>
                 </View>
+
                 <TouchableOpacity
                   className="bg-red-600/20 border border-red-600 p-3 rounded-xl mt-3"
                   onPress={() => {
@@ -616,10 +735,12 @@ export default function ResourcesScreen() {
                 </TouchableOpacity>
               </View>
             )}
+
             <Text className="text-gray-400 mb-3">
               Showing {filteredResources.length} of {displayResources.length}{" "}
               resources
             </Text>
+
             {filteredResources.length === 0 ? (
               <View className="flex-1 items-center justify-center py-10">
                 <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
@@ -678,6 +799,8 @@ export default function ResourcesScreen() {
                           ? `${item.uploader.first_name} ${item.uploader.last_name}`
                           : "Unknown"
                       }
+                      uploadedById={item.uploaded_by}
+                      onViewProfile={handleViewProfile}
                       createdAt={formatDate(item.created_at)}
                       downloads={item.downloads_count}
                       views={resourceStats.get(item.id)?.viewCount || 0}
@@ -727,6 +850,7 @@ export default function ResourcesScreen() {
           </View>
         )}
       </View>
+
       {/* Preview Modal */}
       <Modal
         visible={showPreview}
@@ -774,6 +898,7 @@ export default function ResourcesScreen() {
           )}
         </View>
       </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         visible={showDeleteConfirm}
@@ -819,6 +944,7 @@ export default function ResourcesScreen() {
           </View>
         </View>
       </Modal>
+
       {/* Feature Modals */}
       {selectedResourceId && (
         <>
@@ -849,6 +975,16 @@ export default function ResourcesScreen() {
           />
         </>
       )}
+
+      {/* FIXED: Profile Modal OUTSIDE selectedResourceId check */}
+      <UserProfileModal
+        visible={showProfileModal}
+        userId={profileUserId}
+        onClose={() => {
+          setShowProfileModal(false);
+          setProfileUserId(null);
+        }}
+      />
       <Toast />
     </ScreenWrapper>
   );

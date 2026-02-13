@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import Toast from "react-native-toast-message";
-import { useUserRole } from "../hooks/useUserRole";
+import { useUserRole } from "../../hooks/useUserRole";
 
 export default function AdminLayout() {
   const { role, loading } = useUserRole();

@@ -8,6 +8,7 @@ interface ResourceCardProps {
   status?: "pending" | "approved" | "rejected";
   subjectName: string;
   uploadedBy?: string;
+  uploadedById?: string; // NEW: Add uploader's user ID
   createdAt: string;
   downloads?: number;
   views?: number;
@@ -23,6 +24,7 @@ interface ResourceCardProps {
   onReport?: () => void;
   onBookmark?: () => void;
   onShare?: () => void;
+  onViewProfile?: (userId: string) => void; // NEW: Profile view handler
   showActions?: boolean;
 }
 
@@ -33,6 +35,7 @@ export default function ResourceCard({
   status,
   subjectName,
   uploadedBy,
+  uploadedById, // NEW
   createdAt,
   downloads = 0,
   views = 0,
@@ -48,6 +51,7 @@ export default function ResourceCard({
   onReport,
   onBookmark,
   onShare,
+  onViewProfile, // NEW
   showActions = false,
 }: ResourceCardProps) {
   const categoryIcons = {
@@ -189,11 +193,29 @@ export default function ResourceCard({
             <Text className="text-gray-500 text-xs ml-1">{createdAt}</Text>
           </View>
 
+          {/* NEW: Clickable uploader name */}
           {uploadedBy && (
-            <View className="flex-row items-center">
-              <Ionicons name="person" size={14} color="#6B7280" />
-              <Text className="text-gray-500 text-xs ml-1">{uploadedBy}</Text>
-            </View>
+            <TouchableOpacity
+              className="flex-row items-center"
+              onPress={() => {
+                if (uploadedById && onViewProfile) {
+                  onViewProfile(uploadedById);
+                }
+              }}
+              disabled={!uploadedById || !onViewProfile}
+              activeOpacity={uploadedById && onViewProfile ? 0.6 : 1}
+            >
+              <Ionicons name="person" size={14} color="#22d3ee" />
+              <Text
+                className={`text-xs ml-1 ${
+                  uploadedById && onViewProfile
+                    ? "text-cyan-400 font-semibold"
+                    : "text-gray-500"
+                }`}
+              >
+                {uploadedBy}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
 

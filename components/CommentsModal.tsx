@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +14,8 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { supabase } from "../supabase";
+import ProfilePicture from "./ProfilePicture";
+import UserProfileModal from "./UserProfileModal";
 
 interface Comment {
   id: string;
@@ -21,7 +24,9 @@ interface Comment {
   user_id: string;
   first_name: string;
   last_name: string;
+  profile_picture_url: string | null;
   replies?: Comment[];
+  parent_comment_id?: string;
 }
 
 interface CommentsModalProps {
@@ -37,15 +42,33 @@ export default function CommentsModal({
   resourceTitle,
   onClose,
 }: CommentsModalProps) {
+  const router = useRouter();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [replyToUser, setReplyToUser] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteCommentId, setDeleteCommentId] = useState<string | null>(null);
+
+  // Thread expansion state
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(
+    new Set()
+  );
+
+  // PHASE 3: Profile modal state
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  // DM suggestion state
+  const [showDmSuggestion, setShowDmSuggestion] = useState(false);
+  const [dmSuggestionUsers, setDmSuggestionUsers] = useState<{
+    user1: { id: string; name: string };
+    user2: { id: string; name: string };
+  } | null>(null);
 
   const fetchCurrentUser = async () => {
     const {
@@ -62,6 +85,53 @@ export default function CommentsModal({
 
       setUserRole(roleData?.role || null);
     }
+  };
+
+  const checkForDmSuggestion = (
+    mainComment: Comment,
+    replies: Comment[]
+  ): boolean => {
+    if (!replies || replies.length < 3) return false;
+
+    const originalCommenterId = mainComment.user_id;
+    let exchanges = 0;
+    let previousUserId = originalCommenterId;
+
+    for (const reply of replies) {
+      if (reply.user_id !== previousUserId) {
+        exchanges++;
+        previousUserId = reply.user_id;
+      }
+
+      if (exchanges >= 3) {
+        const user1 = originalCommenterId;
+        const user2 = replies.find((r) => r.user_id !== user1)?.user_id;
+
+        if (
+          user1 &&
+          user2 &&
+          (currentUserId === user1 || currentUserId === user2)
+        ) {
+          const user1Name =
+            user1 === mainComment.user_id
+              ? `${mainComment.first_name} ${mainComment.last_name}`
+              : `${replies.find((r) => r.user_id === user1)?.first_name} ${replies.find((r) => r.user_id === user1)?.last_name}`;
+
+          const user2Name =
+            user2 === mainComment.user_id
+              ? `${mainComment.first_name} ${mainComment.last_name}`
+              : `${replies.find((r) => r.user_id === user2)?.first_name} ${replies.find((r) => r.user_id === user2)?.last_name}`;
+
+          setDmSuggestionUsers({
+            user1: { id: user1, name: user1Name || "Unknown" },
+            user2: { id: user2, name: user2Name || "Unknown" },
+          });
+          return true;
+        }
+      }
+    }
+
+    return false;
   };
 
   const fetchComments = useCallback(async () => {
@@ -89,7 +159,7 @@ export default function CommentsModal({
       (data || []).map(async (comment) => {
         const { data: userData } = await supabase
           .from("teachers")
-          .select("first_name, last_name")
+          .select("first_name, last_name, profile_picture_url")
           .eq("id", comment.user_id)
           .single();
 
@@ -97,6 +167,7 @@ export default function CommentsModal({
           ...comment,
           first_name: userData?.first_name || "Unknown",
           last_name: userData?.last_name || "",
+          profile_picture_url: userData?.profile_picture_url || null,
         };
       })
     );
@@ -113,14 +184,22 @@ export default function CommentsModal({
         repliesMap.get(reply.parent_comment_id!)?.push(reply as any);
       });
 
-    const organized = mainComments.map((comment) => ({
-      ...comment,
-      replies: repliesMap.get(comment.id) || [],
-    }));
+    const organized = mainComments.map((comment) => {
+      const replies = repliesMap.get(comment.id) || [];
+
+      if (checkForDmSuggestion(comment, replies)) {
+        setShowDmSuggestion(true);
+      }
+
+      return {
+        ...comment,
+        replies,
+      };
+    });
 
     setComments(organized);
     setLoading(false);
-  }, [resourceId]);
+  }, [resourceId, currentUserId]);
 
   useEffect(() => {
     if (visible) {
@@ -165,6 +244,7 @@ export default function CommentsModal({
     });
     setCommentText("");
     setReplyToId(null);
+    setReplyToUser(null);
     setSubmitting(false);
     fetchComments();
   };
@@ -200,6 +280,45 @@ export default function CommentsModal({
     fetchComments();
   };
 
+  const toggleThread = (commentId: string) => {
+    setExpandedThreads((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(commentId)) {
+        newSet.delete(commentId);
+      } else {
+        newSet.add(commentId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleUserPress = (userId: string) => {
+    if (userId === currentUserId) return;
+    setSelectedUserId(userId);
+    setShowProfileModal(true);
+  };
+
+  // FIXED: Proper modal closing with longer delay
+  const handleDmSuggestionAccept = () => {
+    if (!dmSuggestionUsers) return;
+
+    const otherUser =
+      dmSuggestionUsers.user1.id === currentUserId
+        ? dmSuggestionUsers.user2
+        : dmSuggestionUsers.user1;
+
+    // Hide DM suggestion banner
+    setShowDmSuggestion(false);
+
+    // Close the comments modal FIRST
+    onClose();
+
+    // Wait for modal animation to complete (500ms), then navigate
+    setTimeout(() => {
+      router.push(`/dm/${otherUser.id}`);
+    }, 500);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -221,28 +340,37 @@ export default function CommentsModal({
       userRole === "admin" ||
       userRole === "super_admin";
 
+    const hasReplies =
+      !isReply && comment.replies && comment.replies.length > 0;
+    const isExpanded = expandedThreads.has(comment.id);
+
     return (
       <View
         key={comment.id}
-        className={`mb-3 ${isReply ? "ml-8 border-l-2 border-neutral-700 pl-3" : ""}`}
+        className={`mb-3 ${isReply ? "ml-8 border-l-2 border-cyan-500/30 pl-3" : ""}`}
       >
         <View className="bg-neutral-800 rounded-xl p-4">
           <View className="flex-row items-center justify-between mb-2">
-            <View className="flex-row items-center flex-1">
-              <View className="bg-cyan-600 w-8 h-8 rounded-full items-center justify-center mr-2">
-                <Text className="text-white font-bold text-sm">
-                  {comment.first_name?.[0] || "?"}
-                </Text>
-              </View>
-              <View className="flex-1">
-                <Text className="text-white font-semibold text-sm">
+            <TouchableOpacity
+              className="flex-row items-center flex-1"
+              onPress={() => handleUserPress(comment.user_id)}
+              activeOpacity={comment.user_id === currentUserId ? 1 : 0.6}
+            >
+              <ProfilePicture
+                imageUrl={comment.profile_picture_url}
+                firstName={comment.first_name}
+                lastName={comment.last_name}
+                size="sm"
+              />
+              <View className="flex-1 ml-2">
+                <Text className="text-cyan-400 font-semibold text-sm">
                   {comment.first_name} {comment.last_name}
                 </Text>
                 <Text className="text-gray-500 text-xs">
                   {formatDate(comment.created_at)}
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
 
             {canDelete && (
               <TouchableOpacity
@@ -258,20 +386,45 @@ export default function CommentsModal({
             {comment.comment_text}
           </Text>
 
-          {!isReply && (
+          <View className="flex-row items-center mt-3 gap-4">
             <TouchableOpacity
-              className="mt-2 flex-row items-center"
-              onPress={() => setReplyToId(comment.id)}
+              className="flex-row items-center"
+              onPress={() => {
+                setReplyToId(
+                  isReply ? comment.parent_comment_id || comment.id : comment.id
+                );
+                setReplyToUser(`${comment.first_name} ${comment.last_name}`);
+              }}
             >
               <Ionicons name="arrow-undo" size={14} color="#22d3ee" />
-              <Text className="text-cyan-400 text-xs ml-1">Reply</Text>
+              <Text className="text-cyan-400 text-xs ml-1 font-semibold">
+                Reply
+              </Text>
             </TouchableOpacity>
-          )}
+
+            {hasReplies && (
+              <TouchableOpacity
+                className="flex-row items-center"
+                onPress={() => toggleThread(comment.id)}
+              >
+                <Ionicons
+                  name={isExpanded ? "chevron-up" : "chevron-down"}
+                  size={14}
+                  color="#22d3ee"
+                />
+                <Text className="text-cyan-400 text-xs ml-1 font-semibold">
+                  {isExpanded
+                    ? "Hide replies"
+                    : `View ${comment.replies!.length} ${comment.replies!.length === 1 ? "reply" : "replies"}`}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        {!isReply &&
-          comment.replies &&
-          comment.replies.map((reply) => renderComment(reply, true))}
+        {isExpanded &&
+          hasReplies &&
+          comment.replies!.map((reply) => renderComment(reply, true))}
       </View>
     );
   };
@@ -287,7 +440,6 @@ export default function CommentsModal({
         className="flex-1 bg-black"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        {/* Header */}
         <View className="bg-neutral-900 p-4 pt-12 border-b border-neutral-800">
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose} className="p-2">
@@ -302,16 +454,61 @@ export default function CommentsModal({
           </Text>
         </View>
 
-        {/* Comments list */}
+        {showDmSuggestion && dmSuggestionUsers && (
+          <View className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border-b border-cyan-500/30 p-4">
+            <View className="flex-row items-start">
+              <View className="bg-cyan-500/20 w-10 h-10 rounded-full items-center justify-center mr-3">
+                <Ionicons name="chatbubbles" size={20} color="#22d3ee" />
+              </View>
+              <View className="flex-1">
+                <View className="flex-row items-center mb-1">
+                  <Ionicons name="star" size={16} color="#22d3ee" />
+                  <Text className="text-white font-semibold ml-1">
+                    Great conversation!
+                  </Text>
+                </View>
+                <Text className="text-gray-300 text-sm mb-3">
+                  You`re having an active discussion. Consider moving to direct
+                  messages for a more personal chat.
+                </Text>
+                <View className="flex-row gap-2">
+                  <TouchableOpacity
+                    className="flex-1 bg-cyan-500 py-2.5 rounded-lg flex-row items-center justify-center"
+                    onPress={handleDmSuggestionAccept}
+                  >
+                    <Ionicons name="paper-plane" size={16} color="#fff" />
+                    <Text className="text-white font-semibold ml-2 text-sm">
+                      Send Message
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="bg-neutral-800 px-4 py-2.5 rounded-lg"
+                    onPress={() => setShowDmSuggestion(false)}
+                  >
+                    <Text className="text-gray-400 font-semibold text-sm">
+                      Dismiss
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
         {loading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator size="large" color="#22d3ee" />
           </View>
         ) : comments.length === 0 ? (
           <View className="flex-1 items-center justify-center px-5">
-            <Text className="text-6xl mb-4">💬</Text>
+            <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons name="chatbubble-outline" size={40} color="#22d3ee" />
+            </View>
+            <Text className="text-white text-xl font-bold mb-2">
+              No comments yet
+            </Text>
             <Text className="text-gray-400 text-center">
-              No comments yet. Be the first to share your thoughts!
+              Be the first to share your thoughts!
             </Text>
           </View>
         ) : (
@@ -324,19 +521,22 @@ export default function CommentsModal({
           />
         )}
 
-        {/* Reply banner */}
-        {replyToId && (
+        {replyToId && replyToUser && (
           <View className="bg-cyan-900/20 px-4 py-2 flex-row items-center justify-between border-t border-cyan-800">
             <Text className="text-cyan-400 text-sm">
-              Replying to comment...
+              Replying to {replyToUser}
             </Text>
-            <TouchableOpacity onPress={() => setReplyToId(null)}>
+            <TouchableOpacity
+              onPress={() => {
+                setReplyToId(null);
+                setReplyToUser(null);
+              }}
+            >
               <Ionicons name="close-circle" size={20} color="#22d3ee" />
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Input box */}
         <View className="bg-neutral-900 p-4 border-t border-neutral-800">
           <View className="flex-row items-end gap-2">
             <TextInput
@@ -365,7 +565,15 @@ export default function CommentsModal({
         </View>
       </KeyboardAvoidingView>
 
-      {/* Delete confirmation modal */}
+      <UserProfileModal
+        visible={showProfileModal}
+        userId={selectedUserId}
+        onClose={() => {
+          setShowProfileModal(false);
+          setSelectedUserId(null);
+        }}
+      />
+
       <Modal
         visible={showDeleteConfirm}
         transparent

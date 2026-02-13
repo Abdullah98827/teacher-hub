@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import ProfilePicture from "./ProfilePicture";
 import StatusBadge from "./StatusBadge";
 
 interface CommentCardProps {
@@ -10,6 +11,7 @@ interface CommentCardProps {
     is_deleted: boolean;
     first_name: string;
     last_name: string;
+    profile_picture_url?: string | null; // Add profile picture URL
     resource_title: string;
   };
   onRestore?: () => void;
@@ -39,9 +41,13 @@ export default function CommentCard({
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-2">
           <View className="flex-row items-center gap-2 mb-1">
-            <View className="bg-cyan-500/20 w-8 h-8 rounded-full items-center justify-center">
-              <Ionicons name="person" size={16} color="#22d3ee" />
-            </View>
+            {/* Use ProfilePicture component instead of icon */}
+            <ProfilePicture
+              imageUrl={comment.profile_picture_url}
+              firstName={comment.first_name}
+              lastName={comment.last_name}
+              size="sm"
+            />
             <Text className="text-white font-semibold">
               {comment.first_name} {comment.last_name}
             </Text>

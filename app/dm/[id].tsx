@@ -1,3 +1,4 @@
+import LogoHeader from "@/components/logoHeader";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -237,6 +238,7 @@ export default function DMChatScreen() {
 
   return (
     <ScreenWrapper>
+      <LogoHeader position="left" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
