@@ -1,5 +1,6 @@
 import LogoHeader from "@/components/logoHeader";
 import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -38,12 +39,7 @@ export default function FollowingScreen() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  useEffect(() => {
-    loadUserName();
-    loadFollowing();
-  }, [userId]);
-
-  const loadUserName = async () => {
+  const loadUserName = useCallback(async () => {
     const { data } = await supabase
       .from("teachers")
       .select("first_name, last_name")
@@ -53,9 +49,9 @@ export default function FollowingScreen() {
     if (data) {
       setUserName(`${data.first_name} ${data.last_name}`);
     }
-  };
+  }, [userId]);
 
-  const loadFollowing = async () => {
+  const loadFollowing = useCallback(async () => {
     try {
       const { data, error } = await supabase.rpc("get_following", {
         teacher_uuid: userId,
@@ -76,12 +72,22 @@ export default function FollowingScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadUserName();
+  }, [loadUserName]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFollowing();
+    }, [loadFollowing])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadFollowing();
-  }, []);
+  }, [loadFollowing]);
 
   const handleUserPress = (followingId: string) => {
     setSelectedUserId(followingId);
@@ -125,10 +131,12 @@ export default function FollowingScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      {/* Header */}
       <View className="bg-neutral-1000 p-4 pt-6 border-b border-neutral-800">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/settings")}
+            className="mr-4"
+          >
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
@@ -140,7 +148,6 @@ export default function FollowingScreen() {
         </View>
       </View>
 
-      {/* Content */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
@@ -173,15 +180,12 @@ export default function FollowingScreen() {
         />
       )}
 
-      {/* Profile Modal */}
       <UserProfileModal
         visible={showProfileModal}
         userId={selectedUserId}
         onClose={() => {
           setShowProfileModal(false);
           setSelectedUserId(null);
-          // Refresh list after closing modal
-          loadFollowing();
         }}
       />
 

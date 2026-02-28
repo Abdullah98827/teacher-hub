@@ -1,6 +1,6 @@
 import LogoHeader from "@/components/logoHeader";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native"; // Added for auto-refresh on focus
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -25,7 +25,7 @@ interface SuggestedUser {
   profile_picture_url: string | null;
   bio: string | null;
   school_name: string | null;
-  followers_count: any; // can be number or { count: number }
+  followers_count: number;
 }
 
 function SuggestedUserCard({
@@ -112,25 +112,13 @@ export default function SuggestedUsersScreen() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  useEffect(() => {
-    loadSuggestedUsers();
-  }, []);
-
-  // Auto-refresh when screen is focused (fixes count not updating after follow)
-  useFocusEffect(
-    useCallback(() => {
-      loadSuggestedUsers();
-    }, [])
-  );
-
-  const loadSuggestedUsers = async () => {
+  const loadSuggestedUsers = useCallback(async () => {
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check if current user is admin
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -144,28 +132,18 @@ export default function SuggestedUsersScreen() {
       let error;
 
       if (isAdmin) {
-        // Admins see ALL VERIFIED teachers (limited to 50 for performance)
         const result = await supabase
           .from("teachers")
           .select(
-            `
-          id,
-          first_name,
-          last_name,
-          profile_picture_url,
-          bio,
-          school_name,
-          followers:follows!following_id(count)
-        `
+            "id, first_name, last_name, profile_picture_url, bio, school_name, followers_count"
           )
-          .eq("verified", true) // ONLY VERIFIED
+          .eq("verified", true)
           .order("first_name", { ascending: true })
           .limit(50);
 
         data = result.data;
         error = result.error;
       } else {
-        // Normal users get subject-based suggestions via RPC (assuming RPC already filters verified)
         const result = await supabase.rpc("get_suggested_users", {
           user_uuid: user.id,
           limit_count: 20,
@@ -177,13 +155,7 @@ export default function SuggestedUsersScreen() {
 
       if (error) throw error;
 
-      // Normalise followers_count
-      const formatted = (data || []).map((u: any) => ({
-        ...u,
-        followers_count: u.followers?.count ?? 0,
-      }));
-
-      setSuggestedUsers(formatted);
+      setSuggestedUsers(data || []);
     } catch (error: any) {
       console.error("Error loading suggested users:", error);
       Toast.show({
@@ -195,12 +167,22 @@ export default function SuggestedUsersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSuggestedUsers();
+  }, [loadSuggestedUsers]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadSuggestedUsers();
+    }, [loadSuggestedUsers])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadSuggestedUsers();
-  }, []);
+  }, [loadSuggestedUsers]);
 
   const handleUserPress = (userId: string) => {
     setSelectedUserId(userId);
@@ -214,10 +196,18 @@ export default function SuggestedUsersScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      {/* Header */}
       <View className="bg-neutral-1000 p-4 pt-6 border-b border-neutral-800">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.push("/(tabs)/settings");
+              }
+            }}
+            className="mr-4"
+          >
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
@@ -231,7 +221,6 @@ export default function SuggestedUsersScreen() {
         </View>
       </View>
 
-      {/* Content */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
@@ -265,15 +254,12 @@ export default function SuggestedUsersScreen() {
         />
       )}
 
-      {/* Profile Modal */}
       <UserProfileModal
         visible={showProfileModal}
         userId={selectedUserId}
         onClose={() => {
           setShowProfileModal(false);
           setSelectedUserId(null);
-          // Refresh list after closing modal
-          loadSuggestedUsers();
         }}
       />
       <Toast />

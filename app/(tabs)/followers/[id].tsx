@@ -1,6 +1,6 @@
 import LogoHeader from "@/components/logoHeader";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "@react-navigation/native"; // Add this import
+import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -23,7 +23,7 @@ interface Follower {
   last_name: string;
   profile_picture_url: string | null;
   bio: string | null;
-  followers_count: any; // can be number or { count: number }
+  followers_count: number;
   followed_at: string;
 }
 
@@ -39,18 +39,7 @@ export default function FollowersScreen() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-  useEffect(() => {
-    loadUserName();
-  }, [userId]);
-
-  // Auto-refresh followers when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadFollowers();
-    }, [userId])
-  );
-
-  const loadUserName = async () => {
+  const loadUserName = useCallback(async () => {
     const { data } = await supabase
       .from("teachers")
       .select("first_name, last_name")
@@ -59,27 +48,18 @@ export default function FollowersScreen() {
     if (data) {
       setUserName(`${data.first_name} ${data.last_name}`);
     }
-  };
+  }, [userId]);
 
-  const loadFollowers = async () => {
+  const loadFollowers = useCallback(async () => {
     try {
       const { data, error } = await supabase.rpc("get_followers", {
         teacher_uuid: userId,
         limit_count: 100,
         offset_count: 0,
       });
+
       if (error) throw error;
-
-      // Safely handle followers_count (might be { count: n })
-      const formatted = (data || []).map((item: Follower) => ({
-        ...item,
-        followers_count:
-          typeof item.followers_count === "object"
-            ? (item.followers_count?.count ?? 0)
-            : (item.followers_count ?? 0),
-      }));
-
-      setFollowers(formatted);
+      setFollowers(data || []);
     } catch (error: any) {
       console.error("Error loading followers:", error);
       Toast.show({
@@ -91,12 +71,22 @@ export default function FollowersScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadUserName();
+  }, [loadUserName]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFollowers();
+    }, [loadFollowers])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadFollowers();
-  }, []);
+  }, [loadFollowers]);
 
   const handleUserPress = (followerId: string) => {
     setSelectedUserId(followerId);
@@ -138,10 +128,12 @@ export default function FollowersScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      {/* Header */}
       <View className="bg-neutral-1000 p-4 pt-6 border-b border-neutral-800">
         <View className="flex-row items-center">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/settings")}
+            className="mr-4"
+          >
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
@@ -153,7 +145,6 @@ export default function FollowersScreen() {
         </View>
       </View>
 
-      {/* Content */}
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#22d3ee" />
@@ -186,14 +177,12 @@ export default function FollowersScreen() {
         />
       )}
 
-      {/* Profile Modal */}
       <UserProfileModal
         visible={showProfileModal}
         userId={selectedUserId}
         onClose={() => {
           setShowProfileModal(false);
           setSelectedUserId(null);
-          // Already refreshes via useFocusEffect
         }}
       />
       <Toast />
