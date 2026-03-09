@@ -23,6 +23,7 @@ import ReportModal from "../../components/ReportModal";
 import ResourceCard from "../../components/ResourceCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import ShareModal from "../../components/ShareModal";
+import TranslationModal from "../../components/TranslationModal"; // ← NEW import
 import UserProfileModal from "../../components/UserProfileModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../supabase";
@@ -57,12 +58,12 @@ export default function ResourcesScreen() {
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [myResources, setMyResources] = useState<Resource[]>([]);
-  const [followingResources, setFollowingResources] = useState<Resource[]>([]); // ADDED
+  const [followingResources, setFollowingResources] = useState<Resource[]>([]);
   const [savedResources, setSavedResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "browse" | "mine" | "saved" | "following" // UPDATED
+    "browse" | "mine" | "saved" | "following"
   >("browse");
   const [selectedResource, setSelectedResource] = useState<Resource | null>(
     null
@@ -74,6 +75,7 @@ export default function ResourcesScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteResourceId, setDeleteResourceId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -81,6 +83,10 @@ export default function ResourcesScreen() {
     "newest"
   );
   const [showFilters, setShowFilters] = useState(false);
+
+  // Translation modal state
+  const [showTranslationModal, setShowTranslationModal] = useState(false);
+
   // Modal states
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(
     null
@@ -90,6 +96,7 @@ export default function ResourcesScreen() {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+
   // Stats and bookmarks
   const [resourceStats, setResourceStats] = useState<Map<string, any>>(
     new Map()
@@ -98,19 +105,15 @@ export default function ResourcesScreen() {
 
   const fetchResources = useCallback(async () => {
     if (!user?.id) return;
-
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
       .eq("id", user.id)
       .single();
-
     const isAdmin =
       roleData?.role === "admin" || roleData?.role === "super_admin";
-
     let approvedData;
     if (isAdmin) {
-      // Admins see all approved resources
       const { data } = await supabase
         .from("resources")
         .select("*, uploaded_by, subject:subjects(name, is_public)")
@@ -118,38 +121,27 @@ export default function ResourcesScreen() {
         .order("created_at", { ascending: false });
       approvedData = data;
     } else {
-      // Teachers see:
-      // 1. Resources for their subscribed subjects
-      // 2. Resources for public subjects
       const { data: membershipData } = await supabase
         .from("memberships")
         .select("subject_ids")
         .eq("id", user.id)
         .eq("active", true)
         .single();
-
       const subscribedSubjectIds = membershipData?.subject_ids || [];
-
-      // Get public subject IDs
       const { data: publicSubjects } = await supabase
         .from("subjects")
         .select("id")
         .eq("is_public", true);
-
       const publicSubjectIds = (publicSubjects || []).map((s) => s.id);
-
-      // Combine subscribed and public subject IDs
       const allAccessibleSubjectIds = [
         ...new Set([...subscribedSubjectIds, ...publicSubjectIds]),
       ];
-
       if (allAccessibleSubjectIds.length === 0) {
         setResources([]);
         setLoading(false);
         setRefreshing(false);
         return;
       }
-
       const { data } = await supabase
         .from("resources")
         .select("*, uploaded_by, subject:subjects(name, is_public)")
@@ -158,14 +150,11 @@ export default function ResourcesScreen() {
         .order("created_at", { ascending: false });
       approvedData = data;
     }
-
-    // Fetch user's own resources - FIXED: Added uploaded_by
     const { data: myData } = await supabase
       .from("resources")
       .select("*, uploaded_by, subject:subjects(name, is_public)")
       .eq("uploaded_by", user.id)
       .order("created_at", { ascending: false });
-
     const enrichApproved = await Promise.all(
       (approvedData || []).map(async (resource) => {
         const { data: teacher } = await supabase
@@ -179,7 +168,6 @@ export default function ResourcesScreen() {
         };
       })
     );
-
     const enrichMy = await Promise.all(
       (myData || []).map(async (resource) => {
         const { data: teacher } = await supabase
@@ -193,12 +181,9 @@ export default function ResourcesScreen() {
         };
       })
     );
-
-    // Fetch stats and bookmarks for all resources
     const allResources = [...enrichApproved, ...enrichMy];
     const statsMap = new Map();
     const bookmarkSet = new Set<string>();
-
     await Promise.all(
       allResources.map(async (resource) => {
         const stats = await getResourceStats(resource.id);
@@ -209,18 +194,14 @@ export default function ResourcesScreen() {
         }
       })
     );
-
     setResourceStats(statsMap);
     setBookmarks(bookmarkSet);
     setResources(enrichApproved as any);
     setMyResources(enrichMy as any);
-
-    // Fetch saved/bookmarked resources
     const { data: bookmarkedIds } = await supabase
       .from("resource_bookmarks")
       .select("resource_id")
       .eq("user_id", user.id);
-
     if (bookmarkedIds && bookmarkedIds.length > 0) {
       const bookmarkedResourceIds = bookmarkedIds.map((b) => b.resource_id);
       const savedList = enrichApproved.filter((r) =>
@@ -230,39 +211,29 @@ export default function ResourcesScreen() {
     } else {
       setSavedResources([]);
     }
-
     setLoading(false);
     setRefreshing(false);
   }, [user?.id]);
 
-  // ADDED: fetchFollowingResources function
   const fetchFollowingResources = async () => {
     if (!user?.id) return;
-
     setLoading(true);
-    // Get list of users you follow
     const { data: followingData } = await supabase
       .from("follows")
       .select("following_id")
       .eq("follower_id", user.id);
-
     if (!followingData || followingData.length === 0) {
       setFollowingResources([]);
       setLoading(false);
       return;
     }
-
     const followingIds = followingData.map((f) => f.following_id);
-
-    // Get resources from people you follow
     const { data } = await supabase
       .from("resources")
       .select("*, uploaded_by, subject:subjects(name, is_public)")
       .eq("status", "approved")
       .in("uploaded_by", followingIds)
       .order("created_at", { ascending: false });
-
-    // Enrich with uploader details
     const enriched = await Promise.all(
       (data || []).map(async (resource) => {
         const { data: teacher } = await supabase
@@ -276,11 +247,8 @@ export default function ResourcesScreen() {
         };
       })
     );
-
-    // Fetch stats and bookmarks
     const statsMap = new Map();
     const bookmarkSet = new Set<string>();
-
     await Promise.all(
       enriched.map(async (resource) => {
         const stats = await getResourceStats(resource.id);
@@ -291,7 +259,6 @@ export default function ResourcesScreen() {
         }
       })
     );
-
     setResourceStats((prev) => new Map([...prev, ...statsMap]));
     setBookmarks((prev) => new Set([...prev, ...bookmarkSet]));
     setFollowingResources(enriched as any);
@@ -311,7 +278,6 @@ export default function ResourcesScreen() {
       const stats = await getResourceStats(resource.id);
       setResourceStats((prev) => new Map(prev).set(resource.id, stats));
     }
-
     const url = await getSignedUrl(resource.file_url, 600);
     if (!url) {
       Toast.show({
@@ -321,7 +287,6 @@ export default function ResourcesScreen() {
       });
       return;
     }
-
     if (Platform.OS === "web") {
       window.open(url, "_blank");
     } else {
@@ -336,7 +301,6 @@ export default function ResourcesScreen() {
       .from("resources")
       .update({ downloads_count: resource.downloads_count + 1 })
       .eq("id", resource.id);
-
     const url = await getSignedUrl(resource.file_url, 600);
     if (!url) {
       Toast.show({
@@ -346,7 +310,6 @@ export default function ResourcesScreen() {
       });
       return;
     }
-
     await Linking.openURL(url);
     Toast.show({ type: "success", text1: "Downloading resource..." });
     setShowPreview(false);
@@ -356,7 +319,6 @@ export default function ResourcesScreen() {
   const deleteResource = async (resourceId: string) => {
     if (isDeleting) return;
     setIsDeleting(true);
-
     const resourceToDelete = myResources.find((r) => r.id === resourceId);
     if (!resourceToDelete) {
       Toast.show({
@@ -366,18 +328,15 @@ export default function ResourcesScreen() {
       setIsDeleting(false);
       return;
     }
-
     const fileDeleted = await deleteFile(resourceToDelete.file_url);
     if (!fileDeleted) {
       setIsDeleting(false);
       return;
     }
-
     const { error } = await supabase
       .from("resources")
       .delete()
       .eq("id", resourceId);
-
     if (error) {
       Toast.show({
         type: "error",
@@ -387,7 +346,6 @@ export default function ResourcesScreen() {
       setIsDeleting(false);
       return;
     }
-
     Toast.show({ type: "success", text1: "Resource deleted" });
     setIsDeleting(false);
     fetchResources();
@@ -465,7 +423,7 @@ export default function ResourcesScreen() {
         ? myResources
         : activeTab === "saved"
           ? savedResources
-          : followingResources; // UPDATED
+          : followingResources;
 
   const filteredResources = displayResources
     .filter((item) => {
@@ -553,7 +511,6 @@ export default function ResourcesScreen() {
                   My Uploads ({myResources.length})
                 </Text>
               </TouchableOpacity>
-              {/* ADDED: Following tab button */}
               <TouchableOpacity
                 className={`py-3 px-4 rounded-xl ${
                   activeTab === "following" ? "bg-cyan-500" : "bg-neutral-800"
@@ -597,7 +554,6 @@ export default function ResourcesScreen() {
                     ? "No resources from teachers you follow"
                     : "You haven't uploaded any resources"}
             </Text>
-            {/* ADDED: Discover Teachers button for empty following state */}
             {activeTab === "following" && displayResources.length === 0 && (
               <TouchableOpacity
                 className="bg-cyan-600 px-6 py-3 rounded-lg mt-4"
@@ -872,17 +828,22 @@ export default function ResourcesScreen() {
             >
               {selectedResource?.title}
             </Text>
-            <TouchableOpacity
-              className="p-2"
-              onPress={async () => {
-                if (selectedResource) {
-                  await downloadResource(selectedResource);
-                }
-              }}
-            >
-              <Ionicons name="download" size={24} color="#22d3ee" />
-            </TouchableOpacity>
+            <View className="flex-row items-center gap-6">
+              <TouchableOpacity
+                onPress={async () => {
+                  if (selectedResource)
+                    await downloadResource(selectedResource);
+                }}
+              >
+                <Ionicons name="download-outline" size={26} color="#22d3ee" />
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => setShowTranslationModal(true)}>
+                <Ionicons name="language-outline" size={26} color="#22d3ee" />
+              </TouchableOpacity>
+            </View>
           </View>
+
           {signedUrl && Platform.OS !== "web" && (
             <WebView
               source={{ uri: signedUrl }}
@@ -898,6 +859,14 @@ export default function ResourcesScreen() {
           )}
         </View>
       </Modal>
+
+      {/* Translation Modal Component */}
+      {/* Translation Modal Component */}
+      <TranslationModal
+        visible={showTranslationModal}
+        onClose={() => setShowTranslationModal(false)}
+        resourceId={selectedResource?.id ?? ""}
+      />
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -976,7 +945,6 @@ export default function ResourcesScreen() {
         </>
       )}
 
-      {/* FIXED: Profile Modal OUTSIDE selectedResourceId check */}
       <UserProfileModal
         visible={showProfileModal}
         userId={profileUserId}
@@ -985,6 +953,7 @@ export default function ResourcesScreen() {
           setProfileUserId(null);
         }}
       />
+
       <Toast />
     </ScreenWrapper>
   );
