@@ -15,6 +15,7 @@ import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
 interface Comment {
@@ -42,6 +43,8 @@ export default function ManageCommentsScreen() {
     null
   );
   const [processing, setProcessing] = useState(false);
+
+  const { bgCardAlt, textPrimary, textSecondary } = useAppTheme();
 
   const fetchComments = useCallback(async () => {
     try {
@@ -203,7 +206,7 @@ export default function ManageCommentsScreen() {
           className={`flex-row items-center justify-center px-4 py-3 rounded-xl mb-4 ${
             showDeletedOnly
               ? "bg-red-500/20 border-2 border-red-500"
-              : "bg-neutral-800"
+              : bgCardAlt
           }`}
           onPress={() => setShowDeletedOnly(!showDeletedOnly)}
         >
@@ -214,7 +217,7 @@ export default function ManageCommentsScreen() {
           />
           <Text
             className={`font-semibold ml-2 ${
-              showDeletedOnly ? "text-red-400" : "text-gray-400"
+              showDeletedOnly ? "text-red-400" : textSecondary
             }`}
           >
             {showDeletedOnly ? "Showing Deleted Only" : "Show Deleted Only"}
@@ -226,10 +229,10 @@ export default function ManageCommentsScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="chatbubble-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">
+            <Text className={`${textPrimary} text-xl font-bold mb-2`}>
               No Comments
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               {showDeletedOnly
                 ? "No deleted comments found"
                 : "No comments match your search"}

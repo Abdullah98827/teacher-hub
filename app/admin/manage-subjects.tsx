@@ -20,6 +20,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import SubjectCard from "../../components/SubjectCard";
 import SubscribersModal from "../../components/SubscribersModal";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 
@@ -50,6 +51,8 @@ export default function AdminSubjectManagementScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
+
+  const { bgCard, bgCardAlt, bgInput, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   // State
   const [subjects, setSubjects] = useState<SubjectWithGroupChat[]>([]);
@@ -510,27 +513,27 @@ export default function AdminSubjectManagementScreen() {
         </TouchableOpacity>
 
         {/* Stats Summary */}
-        <View className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 mb-4 border border-cyan-500/20">
+        <View className={`bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 mb-4 border border-cyan-500/20`}>
           <View className="flex-row justify-around">
             <View className="items-center">
               <Text className="text-cyan-400 text-2xl font-bold">
                 {totalMessages}
               </Text>
-              <Text className="text-gray-400 text-xs">Messages</Text>
+              <Text className={`${textMuted} text-xs`}>Messages</Text>
             </View>
-            <View className="w-px bg-neutral-800" />
+            <View className={`w-px ${border}`} />
             <View className="items-center">
               <Text className="text-purple-400 text-2xl font-bold">
                 {totalSubscribers}
               </Text>
-              <Text className="text-gray-400 text-xs">Subscribers</Text>
+              <Text className={`${textMuted} text-xs`}>Subscribers</Text>
             </View>
-            <View className="w-px bg-neutral-800" />
+            <View className={`w-px ${border}`} />
             <View className="items-center">
               <Text className="text-red-400 text-2xl font-bold">
                 {totalDeleted}
               </Text>
-              <Text className="text-gray-400 text-xs">Deleted</Text>
+              <Text className={`${textMuted} text-xs`}>Deleted</Text>
             </View>
           </View>
         </View>
@@ -544,7 +547,7 @@ export default function AdminSubjectManagementScreen() {
             <Text className="text-white text-xl font-bold mb-2">
               No Subjects
             </Text>
-            <Text className="text-gray-400 text-center mb-4">
+            <Text className={`${textSecondary} text-center mb-4`}>
               Create your first subject with group chat
             </Text>
             <TouchableOpacity
@@ -599,9 +602,9 @@ export default function AdminSubjectManagementScreen() {
         onRequestClose={() => setShowModal(false)}
       >
         <View className="flex-1 bg-black/80 justify-end">
-          <ScrollView className="bg-neutral-900 rounded-t-3xl p-6 max-h-[90%]">
+          <ScrollView className={`${bgCard} rounded-t-3xl p-6 max-h-[90%]`}>
             <View className="flex-row items-center justify-between mb-6">
-              <Text className="text-white text-2xl font-bold">
+              <Text className={`${textPrimary} text-2xl font-bold`}>
                 {editingSubject ? "Edit Subject" : "Create Subject"}
               </Text>
               <TouchableOpacity onPress={() => setShowModal(false)}>
@@ -610,9 +613,9 @@ export default function AdminSubjectManagementScreen() {
             </View>
 
             <View className="mb-4">
-              <Text className="text-gray-400 text-sm mb-2">Subject Name *</Text>
+              <Text className={`${textMuted} text-sm mb-2`}>Subject Name *</Text>
               <TextInput
-                className="bg-neutral-800 text-white px-4 py-3 rounded-lg"
+                className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="e.g., English, Mathematics, EAL Support"
                 placeholderTextColor="#6B7280"
                 value={formData.name}
@@ -623,11 +626,11 @@ export default function AdminSubjectManagementScreen() {
             </View>
 
             <View className="mb-4">
-              <Text className="text-gray-400 text-sm mb-2">
+              <Text className={`${textMuted} text-sm mb-2`}>
                 Subject Description
               </Text>
               <TextInput
-                className="bg-neutral-800 text-white px-4 py-3 rounded-lg"
+                className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="Brief description of the subject"
                 placeholderTextColor="#6B7280"
                 value={formData.description}
@@ -640,11 +643,11 @@ export default function AdminSubjectManagementScreen() {
             </View>
 
             <View className="mb-4">
-              <Text className="text-gray-400 text-sm mb-2">
+              <Text className={`${textMuted} text-sm mb-2`}>
                 Group Chat Description
               </Text>
               <TextInput
-                className="bg-neutral-800 text-white px-4 py-3 rounded-lg"
+                className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="e.g., Discuss lesson plans and teaching strategies"
                 placeholderTextColor="#6B7280"
                 value={formData.groupChatDescription}
@@ -654,9 +657,9 @@ export default function AdminSubjectManagementScreen() {
                 multiline
                 numberOfLines={2}
               />
-              <Text className="text-gray-600 text-xs mt-1">
-                Group chat name will be "{formData.name || "Subject"} Teachers
-                Chat"
+              <Text className={`${textMuted} text-xs mt-1`}>
+                Group chat name will be &quot;{formData.name || "Subject"} Teachers
+                Chat&quot;
               </Text>
             </View>
 

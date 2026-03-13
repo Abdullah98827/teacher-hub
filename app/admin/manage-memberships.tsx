@@ -15,6 +15,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 
@@ -33,6 +34,7 @@ export default function ManageMembershipsScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
+  const { textSecondary } = useAppTheme();
   const [memberships, setMemberships] = useState<ActiveMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -135,7 +137,7 @@ export default function ManageMembershipsScreen() {
             <Text className="text-white text-xl font-bold mb-2">
               No Memberships
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               No memberships match your filter
             </Text>
           </View>

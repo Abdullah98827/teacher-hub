@@ -15,6 +15,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TeacherVerificationCard from "../../components/TeacherVerificationCard";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 
@@ -31,6 +32,7 @@ export default function VerifyTeachersScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
+  const { textSecondary } = useAppTheme();
   const [pendingUsers, setPendingUsers] = useState<PendingTeacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -211,7 +213,7 @@ export default function VerifyTeachersScreen() {
             <Text className="text-white text-xl font-bold mb-2">
               All Clear!
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               No pending teacher verifications
             </Text>
           </View>

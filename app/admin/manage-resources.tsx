@@ -595,7 +595,7 @@ export default function AdminResourcesScreen() {
                         </>
                       )}
                       <TouchableOpacity
-                        className={`bg-neutral-800 py-3 px-4 rounded-lg ${
+                        className={`${bgCardAlt} py-3 px-4 rounded-lg ${
                           isProcessing ? "opacity-50" : ""
                         }`}
                         onPress={() =>

@@ -16,6 +16,7 @@ import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 
@@ -33,6 +34,7 @@ export default function ManageContactRequestsScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
+  const { textSecondary } = useAppTheme();
   const [requests, setRequests] = useState<ManageContactRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -184,7 +186,7 @@ export default function ManageContactRequestsScreen() {
             <Text className="text-white text-xl font-bold mb-2">
               No Requests
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               No contact requests match your filter
             </Text>
           </View>

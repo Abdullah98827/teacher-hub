@@ -16,6 +16,7 @@ import ReportCard from "../../components/ReportCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
 interface Report {
@@ -38,6 +39,8 @@ export default function ManageReportsScreen() {
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [updating, setUpdating] = useState(false);
+
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   const fetchReports = useCallback(async () => {
     try {
@@ -186,7 +189,7 @@ export default function ManageReportsScreen() {
             <Text className="text-white text-xl font-bold mb-2">
               No Reports
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               No {filter !== "all" ? filter : ""} reports found
             </Text>
           </View>
@@ -226,10 +229,10 @@ export default function ManageReportsScreen() {
         onRequestClose={() => setShowDetailModal(false)}
       >
         <View className="flex-1 bg-black/80 justify-end">
-          <View className="bg-neutral-900 rounded-t-3xl max-h-[80%]">
+          <View className={`${bgCard} rounded-t-3xl max-h-[80%]`}>
             <ScrollView className="p-6">
               <View className="flex-row items-center justify-between mb-6">
-                <Text className="text-white text-2xl font-bold">
+                <Text className={`${textPrimary} text-2xl font-bold`}>
                   Report Details
                 </Text>
                 <TouchableOpacity onPress={() => setShowDetailModal(false)}>
@@ -266,9 +269,9 @@ export default function ManageReportsScreen() {
 
                   {/* Reason */}
                   <View className="mb-4">
-                    <Text className="text-gray-400 text-xs mb-1">Reason</Text>
-                    <View className="bg-neutral-800/50 rounded-lg p-3">
-                      <Text className="text-white font-semibold">
+                    <Text className={`${textMuted} text-xs mb-1`}>Reason</Text>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <Text className={`${textPrimary} font-semibold`}>
                         {selectedReport.reason}
                       </Text>
                     </View>
@@ -276,9 +279,9 @@ export default function ManageReportsScreen() {
 
                   {/* Resource */}
                   <View className="mb-4">
-                    <Text className="text-gray-400 text-xs mb-1">Resource</Text>
-                    <View className="bg-neutral-800/50 rounded-lg p-3">
-                      <Text className="text-white">
+                    <Text className={`${textMuted} text-xs mb-1`}>Resource</Text>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <Text className={textPrimary}>
                         {selectedReport.resource.title}
                       </Text>
                     </View>
@@ -287,11 +290,11 @@ export default function ManageReportsScreen() {
                   {/* Description */}
                   {selectedReport.description && (
                     <View className="mb-4">
-                      <Text className="text-gray-400 text-xs mb-1">
+                      <Text className={`${textMuted} text-xs mb-1`}>
                         Description
                       </Text>
-                      <View className="bg-neutral-800/50 rounded-lg p-3">
-                        <Text className="text-white leading-5">
+                      <View className={`${bgCardAlt} rounded-lg p-3`}>
+                        <Text className={`${textPrimary} leading-5`}>
                           {selectedReport.description}
                         </Text>
                       </View>
@@ -299,15 +302,15 @@ export default function ManageReportsScreen() {
                   )}
 
                   {/* Reporter info */}
-                  <View className="flex-row items-center justify-between mb-6 p-3 bg-neutral-800/30 rounded-lg">
+                  <View className={`flex-row items-center justify-between mb-6 p-3 ${bgCardAlt} rounded-lg`}>
                     <View className="flex-row items-center">
                       <Ionicons name="person" size={16} color="#6B7280" />
-                      <Text className="text-gray-400 text-sm ml-2">
+                      <Text className={`${textSecondary} text-sm ml-2`}>
                         {selectedReport.reporter.first_name}{" "}
                         {selectedReport.reporter.last_name}
                       </Text>
                     </View>
-                    <Text className="text-gray-600 text-xs">
+                    <Text className={`${textMuted} text-xs`}>
                       {formatDate(selectedReport.created_at)}
                     </Text>
                   </View>
