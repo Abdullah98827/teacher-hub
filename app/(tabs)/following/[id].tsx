@@ -16,6 +16,7 @@ import ProfilePicture from "../../../components/ProfilePicture";
 import ScreenWrapper from "../../../components/ScreenWrapper";
 import UserProfileModal from "../../../components/UserProfileModal";
 import { supabase } from "../../../supabase";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface Following {
   id: string;

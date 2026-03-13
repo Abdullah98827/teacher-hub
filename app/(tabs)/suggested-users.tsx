@@ -15,6 +15,7 @@ import Toast from "react-native-toast-message";
 import ProfilePicture from "../../components/ProfilePicture";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import UserProfileModal from "../../components/UserProfileModal";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useFollow } from "../../hooks/useFollow";
 import { supabase } from "../../supabase";
 
@@ -40,9 +41,10 @@ function SuggestedUserCard({
     toggleFollow,
     loading: followLoading,
   } = useFollow(user.id);
+  const { bgCard, border, textPrimary, textSecondary } = useAppTheme();
 
   return (
-    <View className="bg-neutral-900 p-4 rounded-xl border border-neutral-800 mb-3">
+    <View className={`${bgCard} p-4 rounded-xl border ${border} mb-3`}>
       <TouchableOpacity onPress={onPress}>
         <View className="flex-row items-center">
           <ProfilePicture
@@ -52,25 +54,25 @@ function SuggestedUserCard({
             size="md"
           />
           <View className="flex-1 ml-3">
-            <Text className="text-white font-semibold text-base">
+            <Text className={`${textPrimary} font-semibold text-base`}>
               {user.first_name} {user.last_name}
             </Text>
             {user.bio && (
-              <Text className="text-gray-400 text-sm mt-1" numberOfLines={2}>
+              <Text className={`${textSecondary} text-sm mt-1`} numberOfLines={2}>
                 {user.bio}
               </Text>
             )}
             {user.school_name && (
               <View className="flex-row items-center mt-1">
                 <Ionicons name="school-outline" size={12} color="#9CA3AF" />
-                <Text className="text-gray-500 text-xs ml-1">
+                <Text className={`${textSecondary} text-xs ml-1`}>
                   {user.school_name}
                 </Text>
               </View>
             )}
             <View className="flex-row items-center mt-1">
               <Ionicons name="people-outline" size={12} color="#9CA3AF" />
-              <Text className="text-gray-500 text-xs ml-1">
+              <Text className={`${textSecondary} text-xs ml-1`}>
                 {user.followers_count ?? 0}{" "}
                 {(user.followers_count ?? 0) === 1 ? "follower" : "followers"}
               </Text>
@@ -80,7 +82,7 @@ function SuggestedUserCard({
       </TouchableOpacity>
       <TouchableOpacity
         className={`mt-3 py-2.5 rounded-lg flex-row items-center justify-center ${
-          isFollowing ? "bg-neutral-800 border border-cyan-600" : "bg-cyan-600"
+          isFollowing ? `${bgCard} border border-cyan-600` : "bg-cyan-600"
         }`}
         onPress={toggleFollow}
         disabled={followLoading}
@@ -111,6 +113,7 @@ export default function SuggestedUsersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const { bgCard, border, textPrimary, textSecondary } = useAppTheme();
 
   const loadSuggestedUsers = useCallback(async () => {
     try {
@@ -196,7 +199,7 @@ export default function SuggestedUsersScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      <View className="bg-neutral-1000 p-4 pt-6 border-b border-neutral-800">
+      <View className={`p-4 pt-6 border-b ${border}`}>
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => {
@@ -211,10 +214,10 @@ export default function SuggestedUsersScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-white text-xl font-bold">
+            <Text className={`${textPrimary} text-xl font-bold`}>
               Suggested Teachers
             </Text>
-            <Text className="text-gray-400 text-sm">
+            <Text className={`${textSecondary} text-sm`}>
               Based on your subjects
             </Text>
           </View>
@@ -230,10 +233,10 @@ export default function SuggestedUsersScreen() {
           <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
             <Ionicons name="search-outline" size={40} color="#22d3ee" />
           </View>
-          <Text className="text-white text-xl font-bold mb-2">
+          <Text className={`${textPrimary} text-xl font-bold mb-2`}>
             No Suggestions
           </Text>
-          <Text className="text-gray-400 text-center">
+          <Text className={`${textSecondary} text-center`}>
             We couldn`t find any teachers to suggest at this time. Check back
             later!
           </Text>

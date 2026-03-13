@@ -16,6 +16,7 @@ import ProfilePicture from "../../../components/ProfilePicture";
 import ScreenWrapper from "../../../components/ScreenWrapper";
 import UserProfileModal from "../../../components/UserProfileModal";
 import { supabase } from "../../../supabase";
+import { useAppTheme } from "../../../hooks/useAppTheme";
 
 interface Follower {
   id: string;
@@ -31,6 +32,7 @@ export default function FollowersScreen() {
   const params = useLocalSearchParams();
   const userId = params.id as string;
   const router = useRouter();
+  const { bgCard, border, textPrimary, textSecondary } = useAppTheme();
 
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function FollowersScreen() {
 
   const renderFollower = ({ item }: { item: Follower }) => (
     <TouchableOpacity
-      className="flex-row items-center p-4 bg-neutral-900 mb-2 rounded-xl border border-neutral-800"
+      className={`flex-row items-center p-4 ${bgCard} mb-2 rounded-xl ${border} border`}
       onPress={() => handleUserPress(item.id)}
     >
       <ProfilePicture
@@ -105,17 +107,17 @@ export default function FollowersScreen() {
         size="md"
       />
       <View className="flex-1 ml-3">
-        <Text className="text-white font-semibold text-base">
+        <Text className={`${textPrimary} font-semibold text-base`}>
           {item.first_name} {item.last_name}
         </Text>
         {item.bio && (
-          <Text className="text-gray-400 text-sm mt-1" numberOfLines={1}>
+          <Text className={`${textSecondary} text-sm mt-1`} numberOfLines={1}>
             {item.bio}
           </Text>
         )}
         <View className="flex-row items-center mt-1">
           <Ionicons name="people-outline" size={14} color="#9CA3AF" />
-          <Text className="text-gray-500 text-xs ml-1">
+          <Text className={`${textSecondary} text-xs ml-1`}>
             {item.followers_count ?? 0}{" "}
             {(item.followers_count ?? 0) === 1 ? "follower" : "followers"}
           </Text>
@@ -128,7 +130,7 @@ export default function FollowersScreen() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      <View className="bg-neutral-1000 p-4 pt-6 border-b border-neutral-800">
+      <View className={`${bgCard} p-4 pt-6 border-b ${border}`}>
         <View className="flex-row items-center">
           <TouchableOpacity
             onPress={() => router.push("/(tabs)/settings")}
@@ -137,9 +139,9 @@ export default function FollowersScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-white text-xl font-bold">Followers</Text>
+            <Text className={`${textPrimary} text-xl font-bold`}>Followers</Text>
             {userName && (
-              <Text className="text-gray-400 text-sm">{userName}</Text>
+              <Text className={`${textSecondary} text-sm`}>{userName}</Text>
             )}
           </View>
         </View>
@@ -154,10 +156,10 @@ export default function FollowersScreen() {
           <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
             <Ionicons name="people-outline" size={40} color="#22d3ee" />
           </View>
-          <Text className="text-white text-xl font-bold mb-2">
+          <Text className={`${textPrimary} text-xl font-bold mb-2`}>
             No Followers Yet
           </Text>
-          <Text className="text-gray-400 text-center">
+          <Text className={`${textSecondary} text-center`}>
             This teacher doesn`t have any followers yet
           </Text>
         </View>

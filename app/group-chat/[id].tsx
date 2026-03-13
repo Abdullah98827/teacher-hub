@@ -16,6 +16,7 @@ import {
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 
@@ -53,6 +54,17 @@ export default function GroupChatScreen() {
   const flatListRef = useRef<FlatList>(null);
 
   const isAdmin = role === "admin";
+
+  const {
+    bgCard,
+    bgCardAlt,
+    bgInput,
+    border,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    placeholderColor,
+  } = useAppTheme();
 
   const fetchGroupChat = useCallback(async () => {
     if (!id) return;
@@ -299,19 +311,15 @@ export default function GroupChatScreen() {
 
           <View
             className={`max-w-[75%] px-4 py-3 rounded-2xl ${
-              isOwnMessage
-                ? "bg-cyan-500 rounded-br-sm"
-                : "bg-neutral-800 rounded-bl-sm"
+              isOwnMessage ? "bg-cyan-500 rounded-br-sm" : `${bgCardAlt} rounded-bl-sm`
             }`}
           >
-            <Text
-              className={`${isOwnMessage ? "text-white" : "text-gray-100"}`}
-            >
+            <Text className={`${isOwnMessage ? "text-white" : textPrimary}`}>
               {item.message}
             </Text>
             <Text
               className={`text-xs mt-1 ${
-                isOwnMessage ? "text-cyan-100" : "text-gray-500"
+                isOwnMessage ? "text-cyan-100" : textMuted
               }`}
             >
               {formatTime(item.created_at)}
@@ -356,13 +364,13 @@ export default function GroupChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {/* Header */}
-        <View className="bg-neutral-900 px-5 py-4 flex-row items-center border-b border-neutral-800">
+        <View className={`${bgCard} px-5 py-4 flex-row items-center border-b ${border}`}>
           <TouchableOpacity className="mr-3" onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
             <View className="flex-row items-center gap-2">
-              <Text className="text-white font-bold text-lg" numberOfLines={1}>
+              <Text className={`${textPrimary} font-bold text-lg`} numberOfLines={1}>
                 {groupChat?.name}
               </Text>
               {isAdmin && (
@@ -372,7 +380,7 @@ export default function GroupChatScreen() {
               )}
             </View>
             {groupChat?.description && (
-              <Text className="text-gray-400 text-xs" numberOfLines={1}>
+              <Text className={`${textSecondary} text-xs`} numberOfLines={1}>
                 {groupChat.description}
               </Text>
             )}
@@ -385,7 +393,7 @@ export default function GroupChatScreen() {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          className="flex-1 px-5 pt-4 bg-black"
+          className="flex-1 px-5 pt-4"
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: false })
@@ -393,8 +401,8 @@ export default function GroupChatScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <Ionicons name="chatbubbles-outline" size={60} color="#374151" />
-              <Text className="text-gray-500 mt-4">No messages yet</Text>
-              <Text className="text-gray-600 text-sm">
+              <Text className={`${textSecondary} mt-4`}>No messages yet</Text>
+              <Text className={`${textMuted} text-sm`}>
                 Be the first to say something!
               </Text>
             </View>
@@ -402,12 +410,12 @@ export default function GroupChatScreen() {
         />
 
         {/* Input */}
-        <View className="bg-neutral-900 px-5 py-3 border-t border-neutral-800">
+        <View className={`${bgCard} px-5 py-3 border-t ${border}`}>
           <View className="flex-row items-center">
             <TextInput
-              className="flex-1 bg-neutral-800 text-white px-4 py-3 rounded-full mr-3"
+              className={`flex-1 ${bgInput} ${textPrimary} px-4 py-3 rounded-full mr-3`}
               placeholder="Type a message..."
-              placeholderTextColor="#6B7280"
+              placeholderTextColor={placeholderColor}
               value={newMessage}
               onChangeText={setNewMessage}
               multiline
@@ -415,7 +423,7 @@ export default function GroupChatScreen() {
             />
             <TouchableOpacity
               className={`w-12 h-12 rounded-full items-center justify-center ${
-                newMessage.trim() && !sending ? "bg-cyan-500" : "bg-neutral-800"
+                newMessage.trim() && !sending ? "bg-cyan-500" : bgCardAlt
               }`}
               onPress={sendMessage}
               disabled={!newMessage.trim() || sending}
@@ -426,7 +434,7 @@ export default function GroupChatScreen() {
                 <Ionicons
                   name="send"
                   size={20}
-                  color={newMessage.trim() ? "#fff" : "#6B7280"}
+                  color={newMessage.trim() ? "#fff" : placeholderColor}
                 />
               )}
             </TouchableOpacity>

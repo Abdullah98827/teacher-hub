@@ -27,6 +27,7 @@ import ShareModal from "../../components/ShareModal";
 import TranslationModal from "../../components/TranslationModal"; // ← NEW import
 import UserProfileModal from "../../components/UserProfileModal";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import {
   checkBookmark,
@@ -56,6 +57,17 @@ interface Resource {
 export default function ResourcesScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const {
+    bgCard,
+    bgCardAlt,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    placeholderColor,
+  } = useAppTheme();
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [myResources, setMyResources] = useState<Resource[]>([]);
@@ -471,62 +483,29 @@ export default function ResourcesScreen() {
             className="mb-4"
           >
             <View className="flex-row gap-2">
-              <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${
-                  activeTab === "browse" ? "bg-cyan-500" : "bg-neutral-800"
-                }`}
-                onPress={() => setActiveTab("browse")}
-              >
-                <Text
-                  className={`text-center font-bold ${
-                    activeTab === "browse" ? "text-white" : "text-gray-400"
-                  }`}
+              {(
+                [
+                  { key: "browse", label: `Browse (${resources.length})` },
+                  { key: "saved", label: `Saved (${savedResources.length})` },
+                  { key: "mine", label: `My Uploads (${myResources.length})` },
+                  {
+                    key: "following",
+                    label: `Following (${followingResources.length})`,
+                  },
+                ] as const
+              ).map(({ key, label }) => (
+                <TouchableOpacity
+                  key={key}
+                  className={`py-3 px-4 rounded-xl ${activeTab === key ? "bg-cyan-500" : bgCardAlt}`}
+                  onPress={() => setActiveTab(key)}
                 >
-                  Browse ({resources.length})
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${
-                  activeTab === "saved" ? "bg-cyan-500" : "bg-neutral-800"
-                }`}
-                onPress={() => setActiveTab("saved")}
-              >
-                <Text
-                  className={`text-center font-bold ${
-                    activeTab === "saved" ? "text-white" : "text-gray-400"
-                  }`}
-                >
-                  Saved ({savedResources.length})
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${
-                  activeTab === "mine" ? "bg-cyan-500" : "bg-neutral-800"
-                }`}
-                onPress={() => setActiveTab("mine")}
-              >
-                <Text
-                  className={`text-center font-bold ${
-                    activeTab === "mine" ? "text-white" : "text-gray-400"
-                  }`}
-                >
-                  My Uploads ({myResources.length})
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${
-                  activeTab === "following" ? "bg-cyan-500" : "bg-neutral-800"
-                }`}
-                onPress={() => setActiveTab("following")}
-              >
-                <Text
-                  className={`text-center font-bold ${
-                    activeTab === "following" ? "text-white" : "text-gray-400"
-                  }`}
-                >
-                  Following ({followingResources.length})
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    className={`text-center font-bold ${activeTab === key ? "text-white" : textSecondary}`}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </ScrollView>
           <TouchableOpacity
@@ -555,8 +534,7 @@ export default function ResourcesScreen() {
                   : activeTab === "following"
                     ? "No resources from teachers you follow"
                     : "You haven't uploaded any resources"}
-            </Text>
-            {activeTab === "following" && displayResources.length === 0 && (
+            </Text>            {activeTab === "following" && displayResources.length === 0 && (
               <TouchableOpacity
                 className="bg-cyan-600 px-6 py-3 rounded-lg mt-4"
                 onPress={() => router.push("/suggested-users")}
@@ -570,32 +548,32 @@ export default function ResourcesScreen() {
         ) : (
           <View className="flex-1">
             <TouchableOpacity
-              className="bg-neutral-800 p-3 rounded-xl mb-3 flex-row items-center justify-between"
+              className={`${bgCardAlt} p-3 rounded-xl mb-3 flex-row items-center justify-between`}
               onPress={() => setShowFilters(!showFilters)}
             >
               <View className="flex-row items-center">
                 <Ionicons name="filter" size={20} color="#22d3ee" />
-                <Text className="text-white font-semibold ml-2">
+                <Text className={`${textPrimary} font-semibold ml-2`}>
                   Filters & Sort
                 </Text>
               </View>
               <Ionicons
                 name={showFilters ? "chevron-up" : "chevron-down"}
                 size={20}
-                color="#9CA3AF"
+                color={placeholderColor}
               />
             </TouchableOpacity>
 
             {showFilters && (
-              <View className="bg-neutral-900 p-4 rounded-xl mb-3">
+              <View className={`${bgCard} p-4 rounded-xl mb-3`}>
                 <View className="mb-3">
-                  <Text className="text-white font-semibold mb-2">Search</Text>
-                  <View className="bg-neutral-800 flex-row items-center px-3 py-2 rounded-xl border border-neutral-700">
-                    <Ionicons name="search" size={20} color="#9CA3AF" />
+                  <Text className={`${textPrimary} font-semibold mb-2`}>Search</Text>
+                  <View className={`${bgInput} flex-row items-center px-3 py-2 rounded-xl ${borderInput} border`}>
+                    <Ionicons name="search" size={20} color={placeholderColor} />
                     <TextInput
-                      className="flex-1 text-white ml-2"
+                      className={`flex-1 ${textPrimary} ml-2`}
                       placeholder="Search by title..."
-                      placeholderTextColor="#9CA3AF"
+                      placeholderTextColor={placeholderColor}
                       value={searchQuery}
                       onChangeText={setSearchQuery}
                     />
@@ -604,7 +582,7 @@ export default function ResourcesScreen() {
                         <Ionicons
                           name="close-circle"
                           size={20}
-                          color="#9CA3AF"
+                          color={placeholderColor}
                         />
                       </TouchableOpacity>
                     )}
@@ -612,7 +590,7 @@ export default function ResourcesScreen() {
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-white font-semibold mb-2">
+                  <Text className={`${textPrimary} font-semibold mb-2`}>
                     Category
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
@@ -621,17 +599,13 @@ export default function ResourcesScreen() {
                         <TouchableOpacity
                           key={cat}
                           className={`px-3 py-2 rounded-lg ${
-                            selectedCategory === cat
-                              ? "bg-cyan-500"
-                              : "bg-neutral-800"
+                            selectedCategory === cat ? "bg-cyan-500" : bgCardAlt
                           }`}
                           onPress={() => setSelectedCategory(cat)}
                         >
                           <Text
                             className={`font-semibold ${
-                              selectedCategory === cat
-                                ? "text-white"
-                                : "text-gray-400"
+                              selectedCategory === cat ? "text-white" : textSecondary
                             }`}
                           >
                             {cat === "all"
@@ -649,7 +623,7 @@ export default function ResourcesScreen() {
                 </View>
 
                 <View>
-                  <Text className="text-white font-semibold mb-2">Sort By</Text>
+                  <Text className={`${textPrimary} font-semibold mb-2`}>Sort By</Text>
                   <View className="flex-row gap-2">
                     {[
                       { value: "newest", label: "Newest" },
@@ -659,17 +633,13 @@ export default function ResourcesScreen() {
                       <TouchableOpacity
                         key={sort.value}
                         className={`px-3 py-2 rounded-lg ${
-                          sortBy === sort.value
-                            ? "bg-cyan-500"
-                            : "bg-neutral-800"
+                          sortBy === sort.value ? "bg-cyan-500" : bgCardAlt
                         }`}
                         onPress={() => setSortBy(sort.value as any)}
                       >
                         <Text
                           className={`font-semibold ${
-                            sortBy === sort.value
-                              ? "text-white"
-                              : "text-gray-400"
+                            sortBy === sort.value ? "text-white" : textSecondary
                           }`}
                         >
                           {sort.label}
@@ -694,7 +664,7 @@ export default function ResourcesScreen() {
               </View>
             )}
 
-            <Text className="text-gray-400 mb-3">
+            <Text className={`${textMuted} mb-3`}>
               Showing {filteredResources.length} of {displayResources.length}{" "}
               resources
             </Text>
@@ -704,7 +674,7 @@ export default function ResourcesScreen() {
                 <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
                   <Ionicons name="search" size={40} color="#22d3ee" />
                 </View>
-                <Text className="text-gray-400 text-center">
+                <Text className={`${textSecondary} text-center`}>
                   No resources match your filters
                 </Text>
                 <TouchableOpacity
@@ -817,7 +787,7 @@ export default function ResourcesScreen() {
         onRequestClose={() => setShowPreview(false)}
       >
         <View className="flex-1 bg-black">
-          <View className="bg-neutral-900 p-4 pt-12 flex-row items-center justify-between">
+          <View className={`${bgCard} p-4 pt-12 flex-row items-center justify-between`}>
             <TouchableOpacity
               className="p-2"
               onPress={() => setShowPreview(false)}
@@ -825,7 +795,7 @@ export default function ResourcesScreen() {
               <Ionicons name="close" size={28} color="#fff" />
             </TouchableOpacity>
             <Text
-              className="text-white font-bold text-lg flex-1 text-center"
+              className={`${textPrimary} font-bold text-lg flex-1 text-center`}
               numberOfLines={1}
             >
               {selectedResource?.title}
@@ -898,28 +868,26 @@ export default function ResourcesScreen() {
         onRequestClose={() => setShowDeleteConfirm(false)}
       >
         <View className="flex-1 bg-black/50 justify-center items-center p-5">
-          <View className="bg-neutral-900 rounded-2xl p-6 w-full max-w-sm">
-            <Text className="text-white text-xl font-bold mb-2">
+          <View className={`${bgCard} rounded-2xl p-6 w-full max-w-sm`}>
+            <Text className={`${textPrimary} text-xl font-bold mb-2`}>
               Delete Resource?
             </Text>
-            <Text className="text-gray-400 mb-6">
+            <Text className={`${textSecondary} mb-6`}>
               This will permanently delete the file and all its data.
             </Text>
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-800 py-3 rounded-xl"
+                className={`flex-1 ${bgCardAlt} py-3 rounded-xl`}
                 onPress={() => {
                   setShowDeleteConfirm(false);
                   setDeleteResourceId(null);
                 }}
                 disabled={isDeleting}
               >
-                <Text className="text-white text-center font-bold">Cancel</Text>
+                <Text className={`${textPrimary} text-center font-bold`}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className={`flex-1 bg-red-600 py-3 rounded-xl ${
-                  isDeleting ? "opacity-50" : ""
-                }`}
+                className={`flex-1 bg-red-600 py-3 rounded-xl ${isDeleting ? "opacity-50" : ""}`}
                 onPress={confirmDelete}
                 disabled={isDeleting}
               >

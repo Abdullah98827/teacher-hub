@@ -14,6 +14,7 @@ import {
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { useAuth } from "../contexts/AuthContext";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 interface Conversation {
@@ -28,6 +29,15 @@ interface Conversation {
 export default function DirectMessagesScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const {
+    bgCard,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    placeholderColor,
+  } = useAppTheme();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [allTeachers, setAllTeachers] = useState<any[]>([]);
@@ -40,7 +50,6 @@ export default function DirectMessagesScreen() {
     if (!user?.id) return;
 
     try {
-      // Get all messages where user is sender or receiver
       const { data: messages, error } = await supabase
         .from("direct_messages")
         .select("*")
@@ -49,7 +58,6 @@ export default function DirectMessagesScreen() {
 
       if (error) throw error;
 
-      // Group by conversation partner
       const conversationMap = new Map<string, any>();
 
       for (const msg of messages || []) {
@@ -69,7 +77,6 @@ export default function DirectMessagesScreen() {
         }
       }
 
-      // Fetch user names
       const conversationsWithNames = await Promise.all(
         Array.from(conversationMap.values()).map(async (conv) => {
           const { data: teacher } = await supabase
@@ -142,7 +149,7 @@ export default function DirectMessagesScreen() {
 
   const renderConversation = ({ item }: { item: Conversation }) => (
     <TouchableOpacity
-      className="bg-neutral-900 rounded-xl p-4 mb-3 flex-row items-center border border-neutral-800"
+      className={`${bgCard} rounded-xl p-4 mb-3 flex-row items-center ${border} border`}
       onPress={() => router.push(`/dm/${item.userId}`)}
       activeOpacity={0.7}
     >
@@ -153,15 +160,15 @@ export default function DirectMessagesScreen() {
       </View>
       <View className="flex-1">
         <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-white font-bold text-base">
+          <Text className={`${textPrimary} font-bold text-base`}>
             {item.userName}
           </Text>
-          <Text className="text-gray-500 text-xs">
+          <Text className={`${textSecondary} text-xs`}>
             {formatTime(item.lastMessageTime)}
           </Text>
         </View>
         <Text
-          className={`text-sm ${item.unreadCount > 0 ? "text-white font-semibold" : "text-gray-400"}`}
+          className={`text-sm ${item.unreadCount > 0 ? `${textPrimary} font-semibold` : textSecondary}`}
           numberOfLines={1}
         >
           {item.lastMessage}
@@ -179,7 +186,7 @@ export default function DirectMessagesScreen() {
 
   const renderTeacher = ({ item }: { item: any }) => (
     <TouchableOpacity
-      className="bg-neutral-900 rounded-xl p-4 mb-3 flex-row items-center border border-neutral-800"
+      className={`${bgCard} rounded-xl p-4 mb-3 flex-row items-center ${border} border`}
       onPress={() => {
         setShowNewChat(false);
         router.push(`/dm/${item.id}`);
@@ -191,7 +198,7 @@ export default function DirectMessagesScreen() {
           {item.first_name.charAt(0).toUpperCase()}
         </Text>
       </View>
-      <Text className="text-white font-semibold text-base">
+      <Text className={`${textPrimary} font-semibold text-base`}>
         {item.first_name} {item.last_name}
       </Text>
     </TouchableOpacity>
@@ -235,12 +242,12 @@ export default function DirectMessagesScreen() {
 
         {showNewChat && (
           <View className="mb-4">
-            <View className="bg-neutral-800 flex-row items-center px-4 py-3 rounded-xl border border-neutral-700">
-              <Ionicons name="search" size={20} color="#6B7280" />
+            <View className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl ${borderInput} border`}>
+              <Ionicons name="search" size={20} color={placeholderColor} />
               <TextInput
-                className="flex-1 text-white ml-2"
+                className={`flex-1 ${textPrimary} ml-2`}
                 placeholder="Search teachers..."
-                placeholderTextColor="#6B7280"
+                placeholderTextColor={placeholderColor}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
@@ -257,17 +264,17 @@ export default function DirectMessagesScreen() {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View className="items-center py-10">
-                <Text className="text-gray-500">No teachers found</Text>
+                <Text className={textSecondary}>No teachers found</Text>
               </View>
             }
           />
         ) : conversations.length === 0 ? (
           <View className="flex-1 items-center justify-center">
             <Ionicons name="chatbubble-outline" size={60} color="#374151" />
-            <Text className="text-white text-xl font-bold mt-4 mb-2">
+            <Text className={`${textPrimary} text-xl font-bold mt-4 mb-2`}>
               No Messages Yet
             </Text>
-            <Text className="text-gray-400 text-center mb-6">
+            <Text className={`${textSecondary} text-center mb-6`}>
               Start a conversation with other teachers
             </Text>
             <TouchableOpacity

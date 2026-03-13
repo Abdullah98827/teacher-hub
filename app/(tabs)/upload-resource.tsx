@@ -14,6 +14,7 @@ import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import { uploadFile } from "../../utils/storage";
 
@@ -27,6 +28,7 @@ type Category = "powerpoint" | "worksheet" | "lesson_plan";
 export default function UploadResourceScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { bgInput, borderInput, textPrimary, textSecondary, placeholderColor } = useAppTheme();
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -233,17 +235,17 @@ export default function UploadResourceScreen() {
         <Text className="text-3xl font-bold text-cyan-400 mb-2">
           Upload Resource
         </Text>
-        <Text className="text-gray-400 mb-6">
+        <Text className={`${textSecondary} mb-6`}>
           Share your materials. Get 20% off after 10 approved uploads!
         </Text>
 
         {/* Title */}
         <View className="mb-4">
-          <Text className="text-white font-semibold mb-2">Title *</Text>
+          <Text className={`${textPrimary} font-semibold mb-2`}>Title *</Text>
           <TextInput
-            className="bg-neutral-800 text-white px-4 py-3 rounded-xl border border-neutral-700"
+            className={`${bgInput} ${textPrimary} px-4 py-3 rounded-xl border ${borderInput}`}
             placeholder="e.g., Algebra Worksheet - Quadratic Equations"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
             value={title}
             onChangeText={setTitle}
           />
@@ -251,13 +253,13 @@ export default function UploadResourceScreen() {
 
         {/* Description */}
         <View className="mb-4">
-          <Text className="text-white font-semibold mb-2">
+          <Text className={`${textPrimary} font-semibold mb-2`}>
             Description (Optional)
           </Text>
           <TextInput
-            className="bg-neutral-800 text-white px-4 py-3 rounded-xl border border-neutral-700"
+            className={`${bgInput} ${textPrimary} px-4 py-3 rounded-xl border ${borderInput}`}
             placeholder="Brief description..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -268,7 +270,7 @@ export default function UploadResourceScreen() {
 
         {/* Subject Selection */}
         <View className="mb-4">
-          <Text className="text-white font-semibold mb-2">Subject *</Text>
+          <Text className={`${textPrimary} font-semibold mb-2`}>Subject *</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex-row gap-2">
               {subjects.map((subject) => (
@@ -277,15 +279,13 @@ export default function UploadResourceScreen() {
                   className={`px-4 py-3 rounded-xl border ${
                     selectedSubject === subject.id
                       ? "bg-cyan-500 border-cyan-500"
-                      : "bg-neutral-800 border-neutral-700"
+                      : `${bgInput} ${borderInput}`
                   }`}
                   onPress={() => setSelectedSubject(subject.id)}
                 >
                   <Text
                     className={`font-semibold ${
-                      selectedSubject === subject.id
-                        ? "text-white"
-                        : "text-gray-400"
+                      selectedSubject === subject.id ? "text-white" : textSecondary
                     }`}
                   >
                     {subject.name}
@@ -298,7 +298,7 @@ export default function UploadResourceScreen() {
 
         {/* Category */}
         <View className="mb-4">
-          <Text className="text-white font-semibold mb-2">Category *</Text>
+          <Text className={`${textPrimary} font-semibold mb-2`}>Category *</Text>
           <View className="flex-row gap-2 flex-wrap">
             {categories.map((cat) => (
               <TouchableOpacity
@@ -306,7 +306,7 @@ export default function UploadResourceScreen() {
                 className={`flex-row items-center px-4 py-3 rounded-xl border ${
                   selectedCategory === cat.value
                     ? "bg-cyan-500 border-cyan-500"
-                    : "bg-neutral-800 border-neutral-700"
+                    : `${bgInput} ${borderInput}`
                 }`}
                 onPress={() => setSelectedCategory(cat.value as Category)}
               >
@@ -317,9 +317,7 @@ export default function UploadResourceScreen() {
                 />
                 <Text
                   className={`ml-2 font-semibold ${
-                    selectedCategory === cat.value
-                      ? "text-white"
-                      : "text-gray-400"
+                    selectedCategory === cat.value ? "text-white" : textSecondary
                   }`}
                 >
                   {cat.label}
@@ -331,29 +329,27 @@ export default function UploadResourceScreen() {
 
         {/* File Picker */}
         <View className="mb-6">
-          <Text className="text-white font-semibold mb-2">File *</Text>
+          <Text className={`${textPrimary} font-semibold mb-2`}>File *</Text>
           <TouchableOpacity
-            className="bg-neutral-800 border border-neutral-700 rounded-xl p-4 flex-row items-center justify-between"
+            className={`${bgInput} border ${borderInput} rounded-xl p-4 flex-row items-center justify-between`}
             onPress={pickDocument}
           >
             <View className="flex-row items-center flex-1">
               <Ionicons name="cloud-upload" size={24} color="#22d3ee" />
-              <Text className="text-gray-400 ml-3 flex-1" numberOfLines={1}>
+              <Text className={`${textSecondary} ml-3 flex-1`} numberOfLines={1}>
                 {selectedFile ? selectedFile.name : "Choose a file..."}
               </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
-          <Text className="text-gray-500 text-xs mt-1">
+          <Text className={`${textSecondary} text-xs mt-1`}>
             Supported: PDF, PPT, PPTX, DOC, DOCX
           </Text>
         </View>
 
         {/* Upload Button */}
         <TouchableOpacity
-          className={`bg-cyan-500 p-4 rounded-xl mb-6 ${
-            uploading ? "opacity-50" : ""
-          }`}
+          className={`bg-cyan-500 p-4 rounded-xl mb-6 ${uploading ? "opacity-50" : ""}`}
           onPress={uploadResource}
           disabled={uploading}
         >

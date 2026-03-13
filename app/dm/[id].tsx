@@ -15,6 +15,7 @@ import {
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
 interface Message {
@@ -30,6 +31,16 @@ export default function DMChatScreen() {
   const { id: partnerId } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuth();
   const router = useRouter();
+  const {
+    bgCard,
+    bgCardAlt,
+    bgInput,
+    border,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    placeholderColor,
+  } = useAppTheme();
 
   const [partnerName, setPartnerName] = useState("Loading...");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -198,16 +209,16 @@ export default function DMChatScreen() {
           className={`max-w-[75%] px-4 py-3 rounded-2xl ${
             isOwnMessage
               ? "bg-cyan-500 rounded-br-sm"
-              : "bg-neutral-800 rounded-bl-sm"
+              : `${bgCardAlt} rounded-bl-sm`
           }`}
         >
-          <Text className={`${isOwnMessage ? "text-white" : "text-gray-100"}`}>
+          <Text className={`${isOwnMessage ? "text-white" : textPrimary}`}>
             {item.message}
           </Text>
           <View className="flex-row items-center justify-between mt-1">
             <Text
               className={`text-xs ${
-                isOwnMessage ? "text-cyan-100" : "text-gray-500"
+                isOwnMessage ? "text-cyan-100" : textMuted
               }`}
             >
               {formatTime(item.created_at)}
@@ -245,7 +256,7 @@ export default function DMChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {/* Header */}
-        <View className="bg-neutral-900 px-5 py-4 flex-row items-center border-b border-neutral-800">
+        <View className={`${bgCard} px-5 py-4 flex-row items-center border-b ${border}`}>
           <TouchableOpacity className="mr-3" onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
@@ -254,7 +265,7 @@ export default function DMChatScreen() {
               {partnerName.charAt(0).toUpperCase()}
             </Text>
           </View>
-          <Text className="text-white font-bold text-lg" numberOfLines={1}>
+          <Text className={`${textPrimary} font-bold text-lg`} numberOfLines={1}>
             {partnerName}
           </Text>
         </View>
@@ -265,7 +276,7 @@ export default function DMChatScreen() {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          className="flex-1 px-5 pt-4 bg-black"
+          className="flex-1 px-5 pt-4"
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: false })
@@ -273,8 +284,8 @@ export default function DMChatScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <Ionicons name="chatbubble-outline" size={60} color="#374151" />
-              <Text className="text-gray-500 mt-4">No messages yet</Text>
-              <Text className="text-gray-600 text-sm">
+              <Text className={`${textSecondary} mt-4`}>No messages yet</Text>
+              <Text className={`${textMuted} text-sm`}>
                 Start the conversation!
               </Text>
             </View>
@@ -282,12 +293,12 @@ export default function DMChatScreen() {
         />
 
         {/* Input */}
-        <View className="bg-neutral-900 px-5 py-3 border-t border-neutral-800">
+        <View className={`${bgCard} px-5 py-3 border-t ${border}`}>
           <View className="flex-row items-center">
             <TextInput
-              className="flex-1 bg-neutral-800 text-white px-4 py-3 rounded-full mr-3"
+              className={`flex-1 ${bgInput} ${textPrimary} px-4 py-3 rounded-full mr-3`}
               placeholder="Type a message..."
-              placeholderTextColor="#6B7280"
+              placeholderTextColor={placeholderColor}
               value={newMessage}
               onChangeText={setNewMessage}
               multiline
@@ -295,7 +306,7 @@ export default function DMChatScreen() {
             />
             <TouchableOpacity
               className={`w-12 h-12 rounded-full items-center justify-center ${
-                newMessage.trim() && !sending ? "bg-cyan-500" : "bg-neutral-800"
+                newMessage.trim() && !sending ? "bg-cyan-500" : bgCardAlt
               }`}
               onPress={sendMessage}
               disabled={!newMessage.trim() || sending}
@@ -306,7 +317,7 @@ export default function DMChatScreen() {
                 <Ionicons
                   name="send"
                   size={20}
-                  color={newMessage.trim() ? "#fff" : "#6B7280"}
+                  color={newMessage.trim() ? "#fff" : placeholderColor}
                 />
               )}
             </TouchableOpacity>
