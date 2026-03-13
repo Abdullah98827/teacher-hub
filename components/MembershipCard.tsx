@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
+import useAppTheme from "../hooks/useAppTheme";
 
 interface MembershipCardProps {
   membership: {
@@ -14,6 +15,7 @@ interface MembershipCardProps {
 }
 
 export default function MembershipCard({ membership }: MembershipCardProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -29,7 +31,7 @@ export default function MembershipCard({ membership }: MembershipCardProps) {
   const isMulti = membership.tier === "multi";
 
   return (
-    <View className="bg-neutral-900 rounded-xl mb-3 border border-neutral-800 p-4">
+    <View className={`${bgCard} rounded-xl mb-3 border ${border} p-4`}>
       {/* Email and tier badge */}
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-2">
@@ -37,7 +39,7 @@ export default function MembershipCard({ membership }: MembershipCardProps) {
             <View className="bg-cyan-500/20 w-8 h-8 rounded-full items-center justify-center">
               <Ionicons name="person" size={16} color="#22d3ee" />
             </View>
-            <Text className="text-white font-semibold flex-1" numberOfLines={1}>
+            <Text className={`${textPrimary} font-semibold flex-1`} numberOfLines={1}>
               {membership.email}
             </Text>
           </View>
@@ -85,10 +87,10 @@ export default function MembershipCard({ membership }: MembershipCardProps) {
       </View>
 
       {/* Subjects */}
-      <View className="bg-neutral-800/50 rounded-lg p-3 mb-3">
+      <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
         <View className="flex-row items-center mb-2">
           <Ionicons name="book" size={14} color="#6B7280" />
-          <Text className="text-gray-500 text-xs ml-1.5">Subjects</Text>
+          <Text className={`${textMuted} text-xs ml-1.5`}>Subjects</Text>
         </View>
         <Text className="text-gray-300 leading-5">
           {membership.subject_names?.length > 0
@@ -98,8 +100,8 @@ export default function MembershipCard({ membership }: MembershipCardProps) {
       </View>
 
       {/* Date */}
-      <View className="border-t border-neutral-800 pt-2">
-        <Text className="text-gray-600 text-xs">
+      <View className={`border-t ${border} pt-2`}>
+        <Text className={`${textMuted} text-xs`}>
           Created {formatDate(membership.created_at)}
         </Text>
       </View>

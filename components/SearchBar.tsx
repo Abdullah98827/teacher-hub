@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface SearchBarProps {
   value: string;
@@ -14,15 +15,17 @@ export default function SearchBar({
   placeholder = "Search...",
   label,
 }: SearchBarProps) {
+  const { bgInput, borderInput, textPrimary, placeholderColor } = useAppTheme();
+
   return (
     <View className="mb-4">
-      {label && <Text className="text-white font-semibold mb-2">{label}</Text>}
-      <View className="bg-neutral-800 flex-row items-center px-4 py-3 rounded-xl border border-neutral-700">
+      {label && <Text className={`${textPrimary} font-semibold mb-2`}>{label}</Text>}
+      <View className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl border ${borderInput}`}>
         <Ionicons name="search" size={20} color="#9CA3AF" />
         <TextInput
-          className="flex-1 text-white ml-2"
+          className={`flex-1 ${textPrimary} ml-2`}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={placeholderColor}
           value={value}
           onChangeText={onChangeText}
         />

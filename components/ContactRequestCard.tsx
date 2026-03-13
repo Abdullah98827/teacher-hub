@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import useAppTheme from "../hooks/useAppTheme";
 
 interface ContactRequestCardProps {
   request: {
@@ -17,6 +18,7 @@ export default function ContactRequestCard({
   request,
   onMarkResolved,
 }: ContactRequestCardProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {

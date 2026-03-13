@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
 
@@ -25,6 +26,8 @@ export default function TrendingResources() {
   const router = useRouter();
   const [resources, setResources] = useState<TrendingResource[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   useEffect(() => {
     loadTrendingResources();
@@ -177,7 +180,7 @@ export default function TrendingResources() {
 
   if (loading) {
     return (
-      <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
+      <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
         <ActivityIndicator size="large" color="#22d3ee" />
       </View>
     );
@@ -185,11 +188,11 @@ export default function TrendingResources() {
 
   if (resources.length === 0) {
     return (
-      <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-        <Text className="text-white text-xl font-bold mb-2">
+      <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
+        <Text className={`${textPrimary} text-xl font-bold mb-2`}>
           Trending Resources
         </Text>
-        <Text className="text-gray-400 mb-4">No trending resources yet.</Text>
+        <Text className={`${textSecondary} mb-4`}>No trending resources yet.</Text>
         <TouchableOpacity
           className="bg-cyan-600 p-3 rounded-lg"
           onPress={() => router.push("/(tabs)/resources")}
@@ -203,17 +206,17 @@ export default function TrendingResources() {
   }
 
   return (
-    <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
+    <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
       <View className="mb-4">
-        <Text className="text-white text-xl font-bold">Trending Resources</Text>
-        <Text className="text-gray-400 text-sm">Most popular content</Text>
+        <Text className={`${textPrimary} text-xl font-bold`}>Trending Resources</Text>
+        <Text className={`${textSecondary} text-sm`}>Most popular content</Text>
       </View>
 
       <View>
         {resources.map((resource, index) => (
           <TouchableOpacity
             key={resource.id}
-            className="bg-neutral-800 rounded-xl p-4 border border-neutral-700 mb-3"
+            className={`${bgCardAlt} rounded-xl p-4 border ${border} mb-3`}
             activeOpacity={0.7}
             onPress={() => router.push("/(tabs)/resources")}
           >
@@ -240,7 +243,7 @@ export default function TrendingResources() {
             </View>
 
             <Text
-              className="text-white font-bold text-base mb-2"
+              className={`${textPrimary} font-bold text-base mb-2`}
               numberOfLines={2}
             >
               {resource.title}
@@ -252,24 +255,24 @@ export default function TrendingResources() {
               </Text>
             </View>
 
-            <View className="flex-row items-center justify-between mb-3 pb-3 border-b border-neutral-700">
+            <View className={`flex-row items-center justify-between mb-3 pb-3 border-b ${border}`}>
               <View className="flex-row items-center gap-3">
                 <View className="flex-row items-center">
                   <Ionicons name="eye" size={14} color="#9CA3AF" />
-                  <Text className="text-gray-400 text-xs ml-1">
+                  <Text className={`${textMuted} text-xs ml-1`}>
                     {resource.views_count}
                   </Text>
                 </View>
                 <View className="flex-row items-center">
                   <Ionicons name="download" size={14} color="#22d3ee" />
-                  <Text className="text-gray-400 text-xs ml-1">
+                  <Text className={`${textMuted} text-xs ml-1`}>
                     {resource.downloads_count}
                   </Text>
                 </View>
                 {resource.rating_count > 0 && (
                   <View className="flex-row items-center">
                     <Ionicons name="star" size={14} color="#f59e0b" />
-                    <Text className="text-gray-400 text-xs ml-1">
+                    <Text className={`${textMuted} text-xs ml-1`}>
                       {resource.rating_avg} ({resource.rating_count})
                     </Text>
                   </View>
@@ -277,7 +280,7 @@ export default function TrendingResources() {
                 {resource.comment_count > 0 && (
                   <View className="flex-row items-center">
                     <Ionicons name="chatbubble" size={14} color="#a855f7" />
-                    <Text className="text-gray-400 text-xs ml-1">
+                    <Text className={`${textMuted} text-xs ml-1`}>
                       {resource.comment_count}
                     </Text>
                   </View>
@@ -293,12 +296,12 @@ export default function TrendingResources() {
                   lastName={resource.uploader_last_name}
                   size="sm"
                 />
-                <Text className="text-gray-400 text-xs ml-2" numberOfLines={1}>
+                <Text className={`${textMuted} text-xs ml-2`} numberOfLines={1}>
                   {resource.uploader_first_name} {resource.uploader_last_name}
                 </Text>
               </View>
 
-              <Text className="text-gray-500 text-xs">
+              <Text className={`${textMuted} text-xs`}>
                 {formatDate(resource.created_at)}
               </Text>
             </View>

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
 
@@ -19,6 +20,8 @@ interface LeaderboardEntry {
 export default function WeeklyLeaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   useEffect(() => {
     loadLeaderboard();
@@ -56,7 +59,7 @@ export default function WeeklyLeaderboard() {
 
   if (loading) {
     return (
-      <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
+      <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
         <ActivityIndicator size="large" color="#22d3ee" />
       </View>
     );
@@ -64,21 +67,21 @@ export default function WeeklyLeaderboard() {
 
   if (leaderboard.length === 0) {
     return (
-      <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-        <Text className="text-white text-lg font-bold mb-2">
+      <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
+        <Text className={`${textPrimary} text-lg font-bold mb-2`}>
           Top Contributors
         </Text>
-        <Text className="text-gray-400">No activity yet. Be the first!</Text>
+        <Text className={textSecondary}>No activity yet. Be the first!</Text>
       </View>
     );
   }
 
   return (
-    <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
+    <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
       <View className="mb-4">
-        <Text className="text-white text-xl font-bold">Top Contributors</Text>
-        <Text className="text-gray-400 text-sm">
-          This week`s most active teachers
+        <Text className={`${textPrimary} text-xl font-bold`}>Top Contributors</Text>
+        <Text className={`${textSecondary} text-sm`}>
+          This week&apos;s most active teachers
         </Text>
       </View>
 
@@ -92,7 +95,7 @@ export default function WeeklyLeaderboard() {
               className={`mb-3 p-4 rounded-xl ${
                 entry.rank <= 3
                   ? "bg-cyan-900/40 border border-cyan-500/30"
-                  : "bg-neutral-800"
+                  : bgCardAlt
               }`}
               activeOpacity={0.7}
             >
@@ -105,7 +108,7 @@ export default function WeeklyLeaderboard() {
                       color={medal.color}
                     />
                   ) : (
-                    <Text className="text-gray-400 font-bold text-xl">
+                    <Text className={`${textSecondary} font-bold text-xl`}>
                       {entry.rank}
                     </Text>
                   )}
@@ -119,15 +122,15 @@ export default function WeeklyLeaderboard() {
                 />
 
                 <View className="flex-1 ml-3">
-                  <Text className="text-white font-bold text-base">
+                  <Text className={`${textPrimary} font-bold text-base`}>
                     {entry.first_name} {entry.last_name}
                   </Text>
-                  <Text className="text-gray-400 text-sm">
+                  <Text className={`${textSecondary} text-sm`}>
                     {entry.total_points} points
                   </Text>
                 </View>
 
-                <View className="bg-neutral-900 px-3 py-2 rounded-lg">
+                <View className={`${bgCard} px-3 py-2 rounded-lg`}>
                   <Text className="text-cyan-400 text-xs">
                     {entry.resources_uploaded} resources
                   </Text>
@@ -141,23 +144,22 @@ export default function WeeklyLeaderboard() {
         })}
       </View>
 
-      {/* FIXED: Changed orange to amber for visibility */}
-      <View className="bg-neutral-800 p-4 rounded-lg mt-4">
-        <Text className="text-white text-sm font-semibold mb-2 text-center">
+      <View className={`${bgCardAlt} p-4 rounded-lg mt-4`}>
+        <Text className={`${textPrimary} text-sm font-semibold mb-2 text-center`}>
           How to Earn Points
         </Text>
         <View className="flex-row justify-around">
           <View className="items-center">
             <Text className="text-cyan-400 font-bold text-lg">+10</Text>
-            <Text className="text-gray-400 text-xs">Upload</Text>
+            <Text className={`${textMuted} text-xs`}>Upload</Text>
           </View>
           <View className="items-center">
             <Text className="text-purple-400 font-bold text-lg">+2</Text>
-            <Text className="text-gray-400 text-xs">Comment</Text>
+            <Text className={`${textMuted} text-xs`}>Comment</Text>
           </View>
           <View className="items-center">
             <Text className="text-gray-500 font-bold text-lg">+5</Text>
-            <Text className="text-gray-400 text-xs">Rating</Text>
+            <Text className={`${textMuted} text-xs`}>Rating</Text>
           </View>
         </View>
       </View>

@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface StatItem {
   label: string;
@@ -19,17 +20,19 @@ const colorMap = {
 };
 
 export default function StatsSummary({ stats }: StatsSummaryProps) {
+  const { border, textMuted } = useAppTheme();
+
   return (
     <View className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 mb-4 border border-cyan-500/20">
       <View className="flex-row justify-around">
         {stats.map((stat, index) => (
           <View key={index}>
-            {index > 0 && <View className="w-px bg-neutral-800" />}
+            {index > 0 && <View className={`w-px ${border}`} />}
             <View className="items-center">
               <Text className={`${colorMap[stat.color]} text-2xl font-bold`}>
                 {stat.value}
               </Text>
-              <Text className="text-gray-400 text-xs">{stat.label}</Text>
+              <Text className={`${textMuted} text-xs`}>{stat.label}</Text>
             </View>
           </View>
         ))}

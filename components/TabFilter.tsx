@@ -1,4 +1,5 @@
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface Tab {
   key: string;
@@ -17,6 +18,8 @@ export default function TabFilter({
   activeTab,
   onTabChange,
 }: TabFilterProps) {
+  const { bgCardAlt, textSecondary } = useAppTheme();
+
   return (
     <View className="mb-4">
       <ScrollView
@@ -29,14 +32,14 @@ export default function TabFilter({
             <TouchableOpacity
               key={tab.key}
               className={`rounded-xl ${
-                activeTab === tab.key ? "bg-cyan-500" : "bg-neutral-800"
+                activeTab === tab.key ? "bg-cyan-500" : bgCardAlt
               }`}
               style={{ paddingHorizontal: 16, paddingVertical: 10 }}
               onPress={() => onTabChange(tab.key)}
             >
               <Text
                 className={`font-semibold text-sm ${
-                  activeTab === tab.key ? "text-white" : "text-gray-400"
+                  activeTab === tab.key ? "text-white" : textSecondary
                 }`}
                 numberOfLines={1}
               >

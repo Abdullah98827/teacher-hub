@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import useAppTheme from "../hooks/useAppTheme";
 
 interface TeacherVerificationCardProps {
   teacher: {
@@ -29,8 +30,9 @@ export default function TeacherVerificationCard({
   onReject,
   processing,
 }: TeacherVerificationCardProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
   return (
-    <View className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800">
+    <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
       {/* Teacher info */}
       <View className="mb-3">
         <View className="flex-row items-center gap-2 mb-3">
@@ -38,22 +40,22 @@ export default function TeacherVerificationCard({
             <Ionicons name="person" size={20} color="#22d3ee" />
           </View>
           <View className="flex-1">
-            <Text className="text-white font-bold text-lg">
+            <Text className={`${textPrimary} font-bold text-lg`}>
               {teacher.first_name} {teacher.last_name}
             </Text>
-            <Text className="text-gray-400 text-sm">{teacher.email}</Text>
+            <Text className={`${textSecondary} text-sm`}>{teacher.email}</Text>
           </View>
         </View>
 
         {/* TRN */}
-        <View className="bg-neutral-800/50 rounded-lg p-3 mb-3">
+        <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
           <View className="flex-row items-center mb-1">
             <Ionicons name="card" size={14} color="#6B7280" />
-            <Text className="text-gray-500 text-xs ml-1.5">
+            <Text className={`${textMuted} text-xs ml-1.5`}>
               Teacher Reference Number
             </Text>
           </View>
-          <Text className="text-white font-bold text-lg">{teacher.trn}</Text>
+          <Text className={`${textPrimary} font-bold text-lg`}>{teacher.trn}</Text>
         </View>
 
         {/* Teacher pass photo */}
@@ -61,13 +63,13 @@ export default function TeacherVerificationCard({
           <View>
             <View className="flex-row items-center mb-2">
               <Ionicons name="image" size={14} color="#6B7280" />
-              <Text className="text-gray-500 text-xs ml-1.5">
+              <Text className={`${textMuted} text-xs ml-1.5`}>
                 Teacher Pass Photo
               </Text>
             </View>
             <Image
               source={{ uri: imageUrl }}
-              className="w-full h-48 rounded-lg bg-neutral-800"
+              className={`w-full h-48 rounded-lg ${bgCardAlt}`}
               resizeMode="contain"
             />
           </View>
