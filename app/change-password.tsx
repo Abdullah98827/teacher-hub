@@ -10,6 +10,7 @@ import {
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function ChangePasswordScreen() {
@@ -18,6 +19,15 @@ export default function ChangePasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const {
+    bgCard,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    placeholderColor,
+  } = useAppTheme();
 
   const handleChangePassword = async () => {
     // Makes sure all fields are filled
@@ -83,41 +93,45 @@ export default function ChangePasswordScreen() {
           <Text className="text-3xl font-bold text-cyan-400 mb-2 text-center">
             Change Password
           </Text>
-          <Text className="text-gray-400 text-center mb-6">
+          <Text className={`${textSecondary} text-center mb-6`}>
             Update your account password
           </Text>
 
-          <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-            <Text className="text-gray-400 text-xs mb-2">Current Password</Text>
+          <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
+            <Text className={`${textSecondary} text-xs mb-2`}>
+              Current Password
+            </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               placeholder="Enter current password"
               value={currentPassword}
               onChangeText={setCurrentPassword}
               secureTextEntry
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
 
-            <Text className="text-gray-400 text-xs mb-2">New Password</Text>
+            <Text className={`${textSecondary} text-xs mb-2`}>
+              New Password
+            </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               placeholder="Enter new password"
               value={newPassword}
               onChangeText={setNewPassword}
               secureTextEntry
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
 
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               Confirm New Password
             </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-6 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-6 rounded-lg`}
               placeholder="Confirm new password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
 
             <TouchableOpacity
@@ -135,7 +149,7 @@ export default function ChangePasswordScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="bg-neutral-800 p-4 rounded-lg border border-neutral-700"
+              className={`${bgInput} p-4 rounded-lg border ${borderInput}`}
               onPress={() => router.back()}
             >
               <Text className="text-center text-cyan-400 font-semibold">

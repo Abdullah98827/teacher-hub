@@ -16,6 +16,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import TrendingResources from "../../components/TrendingResources";
 import WeeklyLeaderboard from "../../components/WeeklyLeaderboard";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 
@@ -48,6 +49,8 @@ export default function CommunityScreen() {
   >("chats");
 
   const isAdmin = role === "admin";
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary } =
+    useAppTheme();
 
   const fetchGroupChats = useCallback(async () => {
     if (!user?.id) return;
@@ -158,7 +161,7 @@ export default function CommunityScreen() {
 
   const renderGroupChat = ({ item }: { item: GroupChat }) => (
     <TouchableOpacity
-      className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800"
+      className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}
       onPress={() => router.push(`/group-chat/${item.id}`)}
       activeOpacity={0.7}
     >
@@ -178,7 +181,10 @@ export default function CommunityScreen() {
           <Ionicons name="chatbubbles" size={24} color="#22d3ee" />
         </View>
         <View className="flex-1">
-          <Text className="text-white font-bold text-lg" numberOfLines={1}>
+          <Text
+            className={`${textPrimary} font-bold text-lg`}
+            numberOfLines={1}
+          >
             {item.name}
           </Text>
           <View className="flex-row items-center gap-2">
@@ -205,7 +211,7 @@ export default function CommunityScreen() {
 
       {item.lastMessage ? (
         <View className="ml-15">
-          <Text className="text-gray-400 text-sm" numberOfLines={2}>
+          <Text className={`${textSecondary} text-sm`} numberOfLines={2}>
             <Text className="font-semibold">
               {item.lastMessage.sender.first_name}:
             </Text>{" "}
@@ -216,7 +222,9 @@ export default function CommunityScreen() {
           </Text>
         </View>
       ) : (
-        <Text className="text-gray-500 text-sm ml-15">No messages yet</Text>
+        <Text className={`${textSecondary} text-sm ml-15`}>
+          No messages yet
+        </Text>
       )}
     </TouchableOpacity>
   );
@@ -251,7 +259,7 @@ export default function CommunityScreen() {
                   </View>
                 )}
               </View>
-              <Text className="text-gray-400">
+              <Text className={textSecondary}>
                 Connect with fellow teachers
               </Text>
             </View>
@@ -264,7 +272,7 @@ export default function CommunityScreen() {
           </View>
 
           <TouchableOpacity
-            className="bg-gradient-to-r from-cyan-900/40 to-purple-900/40 rounded-xl p-4 mb-4 border border-cyan-500/30"
+            className="bg-cyan-900/30 rounded-xl p-4 mb-4 border border-cyan-500/30"
             onPress={() => router.push("/suggested-users")}
             activeOpacity={0.7}
           >
@@ -273,10 +281,10 @@ export default function CommunityScreen() {
                 <Ionicons name="people" size={28} color="#fff" />
               </View>
               <View className="flex-1">
-                <Text className="text-white font-bold text-lg">
+                <Text className={`${textPrimary} font-bold text-lg`}>
                   Discover Teachers
                 </Text>
-                <Text className="text-cyan-200 text-sm">
+                <Text className="text-cyan-400 text-sm">
                   Find teachers in your subjects
                 </Text>
               </View>
@@ -291,33 +299,33 @@ export default function CommunityScreen() {
           >
             <View className="flex-row gap-2">
               <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${activeTab === "chats" ? "bg-cyan-500" : "bg-neutral-800"}`}
+                className={`py-3 px-4 rounded-xl ${activeTab === "chats" ? "bg-cyan-500" : bgCardAlt}`}
                 onPress={() => setActiveTab("chats")}
               >
                 <Text
-                  className={`font-bold ${activeTab === "chats" ? "text-white" : "text-gray-400"}`}
+                  className={`font-bold ${activeTab === "chats" ? "text-white" : textSecondary}`}
                 >
                   Group Chats ({groupChats.length})
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${activeTab === "trending" ? "bg-cyan-500" : "bg-neutral-800"}`}
+                className={`py-3 px-4 rounded-xl ${activeTab === "trending" ? "bg-cyan-500" : bgCardAlt}`}
                 onPress={() => setActiveTab("trending")}
               >
                 <Text
-                  className={`font-bold ${activeTab === "trending" ? "text-white" : "text-gray-400"}`}
+                  className={`font-bold ${activeTab === "trending" ? "text-white" : textSecondary}`}
                 >
                   Trending
                 </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                className={`py-3 px-4 rounded-xl ${activeTab === "leaderboard" ? "bg-cyan-500" : "bg-neutral-800"}`}
+                className={`py-3 px-4 rounded-xl ${activeTab === "leaderboard" ? "bg-cyan-500" : bgCardAlt}`}
                 onPress={() => setActiveTab("leaderboard")}
               >
                 <Text
-                  className={`font-bold ${activeTab === "leaderboard" ? "text-white" : "text-gray-400"}`}
+                  className={`font-bold ${activeTab === "leaderboard" ? "text-white" : textSecondary}`}
                 >
                   Leaderboard
                 </Text>
@@ -334,10 +342,10 @@ export default function CommunityScreen() {
                   <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
                     <Ionicons name="chatbubbles" size={40} color="#22d3ee" />
                   </View>
-                  <Text className="text-white text-xl font-bold mb-2">
+                  <Text className={`${textPrimary} text-xl font-bold mb-2`}>
                     No Group Chats
                   </Text>
-                  <Text className="text-gray-400 text-center">
+                  <Text className={`${textSecondary} text-center`}>
                     {isAdmin
                       ? "No group chats have been created yet"
                       : "Subscribe to subjects or check public chats"}

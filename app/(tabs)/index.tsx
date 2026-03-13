@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
 interface UserProfile {
@@ -38,6 +39,7 @@ export default function DashboardScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { bgCard, border, textPrimary, textSecondary } = useAppTheme();
 
   const fetchDashboardData = useCallback(async () => {
     const {
@@ -117,35 +119,37 @@ export default function DashboardScreen() {
       <LogoHeader position="left" />
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Welcome Card */}
-        <View className="bg-gradient-to-br from-cyan-900/30 to-purple-900/30 rounded-2xl p-6 mb-6 border border-cyan-800/50">
+        <View className="bg-cyan-900/20 rounded-2xl p-6 mb-6 border border-cyan-800/50">
           <Text className="text-3xl font-bold text-cyan-400 mb-2">
             Hello {userProfile.firstName}!
           </Text>
-          <Text className="text-base text-gray-300">
+          <Text className={`text-base ${textSecondary}`}>
             Welcome back to Teacher-Hub
           </Text>
         </View>
 
         {/* Stats Cards */}
-        <Text className="text-white font-bold text-lg mb-3">Your Stats</Text>
+        <Text className={`${textPrimary} font-bold text-lg mb-3`}>
+          Your Stats
+        </Text>
         <View className="flex-row gap-3 mb-6">
           <View className="flex-1 bg-blue-900/30 rounded-xl p-4 border border-blue-800">
             <Ionicons name="cloud-upload" size={24} color="#3b82f6" />
-            <Text className="text-3xl font-bold text-white mt-2">
+            <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.uploadedResources}
             </Text>
             <Text className="text-blue-400 text-xs">Uploaded</Text>
           </View>
           <View className="flex-1 bg-green-900/30 rounded-xl p-4 border border-green-800">
             <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
-            <Text className="text-3xl font-bold text-white mt-2">
+            <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.approvedResources}
             </Text>
             <Text className="text-green-400 text-xs">Approved</Text>
           </View>
           <View className="flex-1 bg-purple-900/30 rounded-xl p-4 border border-purple-800">
             <Ionicons name="download" size={24} color="#a855f7" />
-            <Text className="text-3xl font-bold text-white mt-2">
+            <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.totalDownloads}
             </Text>
             <Text className="text-purple-400 text-xs">Downloads</Text>
@@ -153,7 +157,9 @@ export default function DashboardScreen() {
         </View>
 
         {/* Quick Actions */}
-        <Text className="text-white font-bold text-lg mb-3">Quick Actions</Text>
+        <Text className={`${textPrimary} font-bold text-lg mb-3`}>
+          Quick Actions
+        </Text>
         <View className="gap-3 mb-6">
           <TouchableOpacity
             className="bg-cyan-600 rounded-xl p-4 flex-row items-center justify-between"
@@ -176,7 +182,7 @@ export default function DashboardScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-neutral-900 rounded-xl p-4 flex-row items-center justify-between border border-neutral-800"
+            className={`${bgCard} rounded-xl p-4 flex-row items-center justify-between border ${border}`}
             onPress={() => router.push("/(tabs)/resources")}
           >
             <View className="flex-row items-center">
@@ -184,10 +190,10 @@ export default function DashboardScreen() {
                 <Ionicons name="library" size={20} color="#22d3ee" />
               </View>
               <View>
-                <Text className="text-white font-bold text-base">
+                <Text className={`${textPrimary} font-bold text-base`}>
                   Browse Library
                 </Text>
-                <Text className="text-gray-400 text-xs">
+                <Text className={`${textSecondary} text-xs`}>
                   Explore teaching resources
                 </Text>
               </View>
@@ -205,7 +211,7 @@ export default function DashboardScreen() {
                   <Ionicons name="shield-checkmark" size={20} color="#ef4444" />
                 </View>
                 <View>
-                  <Text className="text-white font-bold text-base">
+                  <Text className={`${textPrimary} font-bold text-base`}>
                     Manage Resources
                   </Text>
                   <Text className="text-red-400 text-xs">Admin access</Text>
@@ -221,7 +227,7 @@ export default function DashboardScreen() {
           <Text className="text-cyan-400 font-bold text-base mb-2">
             💡 Did You Know?
           </Text>
-          <Text className="text-gray-300 text-sm leading-5">
+          <Text className={`${textSecondary} text-sm leading-5`}>
             Upload 10 approved resources to earn a 20% discount on your next
             subscription renewal!
           </Text>

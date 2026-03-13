@@ -10,6 +10,7 @@ import {
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../components/ScreenWrapper";
 import LogoHeader from "../components/logoHeader";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function ContactAdmin() {
@@ -19,6 +20,15 @@ export default function ContactAdmin() {
   const [loading, setLoading] = useState(false);
   const [fetchingUser, setFetchingUser] = useState(true);
   const router = useRouter();
+  const {
+    bgCard,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    placeholderColor,
+  } = useAppTheme();
 
   //when page loads its logged in with user's email
   useEffect(() => {
@@ -100,29 +110,31 @@ export default function ContactAdmin() {
           <Text className="text-3xl font-bold text-cyan-400 mb-2 text-center">
             Contact Admin
           </Text>
-          <Text className="text-gray-400 text-center mb-6">
+          <Text className={`${textSecondary} text-center mb-6`}>
             Send a message to the admin team
           </Text>
 
-          <View className="bg-neutral-900 rounded-xl p-6 border border-neutral-800">
-            <Text className="text-gray-400 text-xs mb-2">Your Email</Text>
+          <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
+            <Text className={`${textSecondary} text-xs mb-2`}>Your Email</Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               value={email}
               editable={false}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
 
-            <Text className="text-gray-400 text-xs mb-2">Your Message</Text>
+            <Text className={`${textSecondary} text-xs mb-2`}>
+              Your Message
+            </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               placeholder="Type your message here..."
               value={message}
               onChangeText={setMessage}
               multiline
               numberOfLines={6}
               textAlignVertical="top"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
 
             <TouchableOpacity
@@ -141,7 +153,7 @@ export default function ContactAdmin() {
 
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-800 p-4 rounded-lg border border-neutral-700"
+                className={`flex-1 ${bgInput} p-4 rounded-lg border ${borderInput}`}
                 onPress={() => router.back()}
               >
                 <Text className="text-center text-cyan-400 font-semibold">

@@ -2,6 +2,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Animated, Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { useUserRole } from "../hooks/useUserRole";
 import { supabase } from "../supabase";
 
@@ -12,6 +13,7 @@ export default function LogoHeader({
 }) {
   const router = useRouter();
   const { role } = useUserRole();
+  const { isDark } = useAppTheme();
   const [isVerified, setIsVerified] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -72,7 +74,9 @@ export default function LogoHeader({
   const isClickable = role === "admin" || (role === "teacher" && isVerified);
 
   return (
-    <View className="w-full px-5 py-4 flex-row items-center justify-between">
+    <View
+      className={`w-full px-5 py-4 flex-row items-center justify-between border-b ${isDark ? "border-neutral-900 bg-black" : "border-gray-100 bg-white"}`}
+    >
       {/* Logo */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <TouchableOpacity
@@ -87,7 +91,9 @@ export default function LogoHeader({
               Admin Hub
             </Text>
           ) : (
-            <Text className="text-2xl font-bold text-white tracking-wide">
+            <Text
+              className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-wide`}
+            >
               Teacher
               <Text className="text-purple-400">-Hub</Text>
             </Text>

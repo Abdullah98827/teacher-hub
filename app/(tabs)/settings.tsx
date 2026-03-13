@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
 import ProfilePicture from "../../components/ProfilePicture";
+import { ThemePreference, useTheme } from "../../contexts/ThemeContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { deleteProfilePicture } from "../../utils/profilePictureHelpers";
@@ -44,6 +46,30 @@ export default function SettingsScreen() {
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+
+  // Theme
+  const { themePreference, setThemePreference } = useTheme();
+  const {
+    isDark,
+    bg,
+    bgCard,
+    bgCardAlt,
+    border,
+    textPrimary,
+    textSecondary,
+    textLabel,
+    loadingBg,
+  } = useAppTheme();
+
+  const THEME_OPTIONS: {
+    label: string;
+    value: ThemePreference;
+    icon: string;
+  }[] = [
+    { label: "Light", value: "light", icon: "sunny" },
+    { label: "Dark", value: "dark", icon: "moon" },
+    { label: "System", value: "system", icon: "phone-portrait" },
+  ];
 
   useEffect(() => {
     loadProfile();
@@ -189,7 +215,7 @@ export default function SettingsScreen() {
   if (loading || roleLoading) {
     return (
       <View
-        className="flex-1 bg-black justify-center items-center"
+        className={`flex-1 ${loadingBg} justify-center items-center`}
         style={{ paddingTop: insets.top }}
       >
         <ActivityIndicator size="large" color="#22d3ee" />
@@ -198,7 +224,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-black" style={{ paddingTop: insets.top }}>
+    <View className={`flex-1 ${bg}`} style={{ paddingTop: insets.top }}>
       <LogoHeader position="left" />
 
       <ScrollView className="flex-1 px-5">
@@ -206,13 +232,13 @@ export default function SettingsScreen() {
           <Text className="text-3xl font-bold text-cyan-400 mb-2">
             Settings
           </Text>
-          <Text className="text-gray-400">
+          <Text className={textSecondary}>
             Manage your account and preferences
           </Text>
         </View>
 
         {/* Profile Picture Section */}
-        <View className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
           <Text className="text-xl font-bold text-cyan-400 mb-4">
             Profile Picture
           </Text>
@@ -246,7 +272,9 @@ export default function SettingsScreen() {
                     size="xl"
                   />
 
-                  <View className="absolute bottom-0 right-0 bg-cyan-600 rounded-full p-2 border-2 border-neutral-900">
+                  <View
+                    className={`absolute bottom-0 right-0 bg-cyan-600 rounded-full p-2 border-2 ${isDark ? "border-neutral-900" : "border-gray-50"}`}
+                  >
                     <Ionicons name="camera" size={16} color="#fff" />
                   </View>
                 </>
@@ -269,8 +297,10 @@ export default function SettingsScreen() {
 
         {/* NEW: Followers/Following Section */}
         {userId && (
-          <View className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800 overflow-hidden">
-            <View className="p-3 border-b border-neutral-800">
+          <View
+            className={`${bgCard} rounded-xl mb-4 border ${border} overflow-hidden`}
+          >
+            <View className={`p-3 border-b ${border}`}>
               <Text className="text-xl font-bold text-cyan-400">
                 Your Network
               </Text>
@@ -278,17 +308,17 @@ export default function SettingsScreen() {
 
             <View className="flex-row">
               <TouchableOpacity
-                className="flex-1 items-center py-3 border-r border-neutral-800"
+                className={`flex-1 items-center py-3 border-r ${border}`}
                 onPress={() => router.push(`/followers/${userId}`)}
                 activeOpacity={0.7}
               >
                 <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mb-2">
                   <Ionicons name="people" size={24} color="#22d3ee" />
                 </View>
-                <Text className="text-white text-xl font-bold">
+                <Text className={`${textPrimary} text-xl font-bold`}>
                   {followersCount}
                 </Text>
-                <Text className="text-gray-400 text-sm">
+                <Text className={`${textSecondary} text-sm`}>
                   {followersCount === 1 ? "Follower" : "Followers"}
                 </Text>
               </TouchableOpacity>
@@ -301,42 +331,42 @@ export default function SettingsScreen() {
                 <View className="bg-purple-500/20 w-12 h-12 rounded-full items-center justify-center mb-2">
                   <Ionicons name="person-add" size={24} color="#a855f7" />
                 </View>
-                <Text className="text-white text-xl font-bold">
+                <Text className={`${textPrimary} text-xl font-bold`}>
                   {followingCount}
                 </Text>
-                <Text className="text-gray-400 text-sm">Following</Text>
+                <Text className={`${textSecondary} text-sm`}>Following</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
         {/* Profile Information */}
-        <View className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
           <Text className="text-xl font-bold text-cyan-400 mb-4">
             Profile Information
           </Text>
 
           <View className="mb-3">
-            <Text className="text-gray-500 text-xs mb-1">Full Name</Text>
-            <Text className="text-white text-base">
+            <Text className={`${textLabel} text-xs mb-1`}>Full Name</Text>
+            <Text className={`${textPrimary} text-base`}>
               {profile.firstName} {profile.lastName}
             </Text>
           </View>
 
           <View className="mb-3">
-            <Text className="text-gray-500 text-xs mb-1">Email Address</Text>
-            <Text className="text-white text-base">{profile.email}</Text>
+            <Text className={`${textLabel} text-xs mb-1`}>Email Address</Text>
+            <Text className={`${textPrimary} text-base`}>{profile.email}</Text>
           </View>
 
           <View className="mb-3">
-            <Text className="text-gray-500 text-xs mb-1">
+            <Text className={`${textLabel} text-xs mb-1`}>
               Teacher Reference Number (TRN)
             </Text>
-            <Text className="text-white text-base">{profile.trn}</Text>
+            <Text className={`${textPrimary} text-base`}>{profile.trn}</Text>
           </View>
 
           <View className="mb-3">
-            <Text className="text-gray-500 text-xs mb-1">Account Role</Text>
+            <Text className={`${textLabel} text-xs mb-1`}>Account Role</Text>
             <View className="flex-row items-center">
               <Ionicons
                 name={role === "admin" ? "shield-checkmark" : "school"}
@@ -353,12 +383,14 @@ export default function SettingsScreen() {
 
           {role === "teacher" && (
             <View>
-              <Text className="text-gray-500 text-xs mb-1">
+              <Text className={`${textLabel} text-xs mb-1`}>
                 Membership Type (Cannot be changed)
               </Text>
-              <View className="bg-neutral-700 border border-neutral-600 p-4 rounded-lg flex-row items-center">
+              <View
+                className={`${bgCardAlt} border ${border} p-4 rounded-lg flex-row items-center`}
+              >
                 <Ionicons name="lock-closed" size={16} color="#6B7280" />
-                <Text className="text-gray-400 ml-2 flex-1 capitalize">
+                <Text className={`${textSecondary} ml-2 flex-1 capitalize`}>
                   {profile.membershipTier === "single"
                     ? "Single Subject"
                     : profile.membershipTier === "multi"
@@ -369,7 +401,7 @@ export default function SettingsScreen() {
 
               {profile.subjectNames.length > 0 && (
                 <View className="mt-2">
-                  <Text className="text-gray-500 text-xs mb-2">
+                  <Text className={`${textLabel} text-xs mb-2`}>
                     Your Subjects:
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
@@ -388,8 +420,53 @@ export default function SettingsScreen() {
           )}
         </View>
 
+        {/* ── Appearance ── */}
+        <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
+          <Text className="text-xl font-bold text-cyan-400 mb-4">
+            Appearance
+          </Text>
+          <Text className={`${textSecondary} text-sm mb-4`}>
+            Choose how Teacher Hub looks to you
+          </Text>
+          <View className="flex-row gap-3">
+            {THEME_OPTIONS.map((option) => {
+              const isSelected = themePreference === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setThemePreference(option.value)}
+                  activeOpacity={0.7}
+                  className={`flex-1 items-center py-4 px-2 rounded-xl border-2 ${
+                    isSelected
+                      ? "border-cyan-400 bg-cyan-500/10"
+                      : `${isDark ? "border-neutral-700 bg-neutral-800" : "border-gray-200 bg-gray-100"}`
+                  }`}
+                >
+                  <Ionicons
+                    name={option.icon as any}
+                    size={24}
+                    color={
+                      isSelected ? "#22d3ee" : isDark ? "#9ca3af" : "#6b7280"
+                    }
+                  />
+                  <Text
+                    className={`text-xs font-semibold mt-2 ${
+                      isSelected ? "text-cyan-400" : textSecondary
+                    }`}
+                  >
+                    {option.label}
+                  </Text>
+                  {isSelected && (
+                    <View className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         {role === "admin" && (
-          <View className="bg-gradient-to-br from-red-900 to-orange-900 rounded-xl p-5 mb-4 border-2 border-red-500">
+          <View className="rounded-xl p-5 mb-4 border-2 border-red-500 bg-red-950">
             <View className="flex-row items-center mb-3">
               <View className="bg-red-600 w-14 h-14 rounded-full items-center justify-center mr-4">
                 <Ionicons name="shield-checkmark" size={28} color="#fff" />
@@ -416,19 +493,19 @@ export default function SettingsScreen() {
         )}
 
         {/* Account Actions */}
-        <View className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
           <Text className="text-xl font-bold text-cyan-400 mb-4">
             Account Actions
           </Text>
 
           <TouchableOpacity
-            className="bg-neutral-800 p-4 rounded-lg mb-3 active:scale-95 border border-neutral-700"
+            className={`${bgCardAlt} p-4 rounded-lg mb-3 active:scale-95 border ${border}`}
             onPress={() => router.push("/edit-profile")}
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <Ionicons name="pencil" size={20} color="#22d3ee" />
-                <Text className="text-white font-semibold ml-3">
+                <Text className={`${textPrimary} font-semibold ml-3`}>
                   Edit Profile
                 </Text>
               </View>
@@ -437,13 +514,13 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-neutral-800 p-4 rounded-lg mb-3 active:scale-95 border border-neutral-700"
+            className={`${bgCardAlt} p-4 rounded-lg mb-3 active:scale-95 border ${border}`}
             onPress={() => router.push("/change-password")}
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <Ionicons name="key" size={20} color="#22d3ee" />
-                <Text className="text-white font-semibold ml-3">
+                <Text className={`${textPrimary} font-semibold ml-3`}>
                   Change Password
                 </Text>
               </View>
@@ -452,13 +529,13 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="bg-neutral-800 p-4 rounded-lg mb-3 active:scale-95 border border-neutral-700"
+            className={`${bgCardAlt} p-4 rounded-lg mb-3 active:scale-95 border ${border}`}
             onPress={() => router.push("/suggested-users")}
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
                 <Ionicons name="people" size={22} color="#22d3ee" />
-                <Text className="text-white ml-3 text-base">
+                <Text className={`${textPrimary} ml-3 text-base`}>
                   Discover Teachers
                 </Text>
               </View>
@@ -483,11 +560,11 @@ export default function SettingsScreen() {
         </View>
 
         {role === "teacher" && (
-          <View className="bg-neutral-900 rounded-xl p-5 mb-6 border border-neutral-800">
+          <View className={`${bgCard} rounded-xl p-5 mb-6 border ${border}`}>
             <Text className="text-xl font-bold text-cyan-400 mb-4">
               Support
             </Text>
-            <Text className="text-gray-400 mb-3">
+            <Text className={`${textSecondary} mb-3`}>
               Need help or want to reach out to the admin team?
             </Text>
 
@@ -510,8 +587,12 @@ export default function SettingsScreen() {
         onRequestClose={() => setShowPictureModal(false)}
       >
         <View className="flex-1 bg-black/70 justify-center items-center">
-          <View className="bg-neutral-900 rounded-xl p-6 mx-5 w-80 border border-neutral-800">
-            <Text className="text-xl font-bold text-white mb-4 text-center">
+          <View
+            className={`${bgCard} rounded-xl p-6 mx-5 w-80 border ${border}`}
+          >
+            <Text
+              className={`text-xl font-bold ${textPrimary} mb-4 text-center`}
+            >
               Profile Picture
             </Text>
 
@@ -535,10 +616,10 @@ export default function SettingsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="bg-neutral-800 p-4 rounded-lg border border-neutral-700"
+              className={`${bgCardAlt} p-4 rounded-lg border ${border}`}
               onPress={() => setShowPictureModal(false)}
             >
-              <Text className="text-white text-center font-semibold">
+              <Text className={`${textPrimary} text-center font-semibold`}>
                 Cancel
               </Text>
             </TouchableOpacity>
@@ -548,17 +629,21 @@ export default function SettingsScreen() {
 
       {showLogoutModal && Platform.OS === "web" && (
         <View className="absolute inset-0 bg-black/70 justify-center items-center z-50">
-          <View className="bg-neutral-900 rounded-xl p-6 mx-5 max-w-sm border border-neutral-800">
-            <Text className="text-xl font-bold text-white mb-3">Logout</Text>
-            <Text className="text-gray-300 mb-6">
+          <View
+            className={`${bgCard} rounded-xl p-6 mx-5 max-w-sm border ${border}`}
+          >
+            <Text className={`text-xl font-bold ${textPrimary} mb-3`}>
+              Logout
+            </Text>
+            <Text className={`${textSecondary} mb-6`}>
               Are you sure you want to logout?
             </Text>
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-800 p-4 rounded-lg border border-neutral-700"
+                className={`flex-1 ${bgCardAlt} p-4 rounded-lg border ${border}`}
                 onPress={() => setShowLogoutModal(false)}
               >
-                <Text className="text-white text-center font-semibold">
+                <Text className={`${textPrimary} text-center font-semibold`}>
                   Cancel
                 </Text>
               </TouchableOpacity>

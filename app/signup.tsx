@@ -5,6 +5,7 @@ import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function Signup() {
@@ -19,6 +20,14 @@ export default function Signup() {
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const {
+    bgCard,
+    bgInput,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    placeholderColor,
+  } = useAppTheme();
 
   const showToast = (type: "success" | "error", title: string, msg: string) =>
     Toast.show({ type, text1: title, text2: msg });
@@ -169,62 +178,62 @@ export default function Signup() {
     <ScreenWrapper>
       <LogoHeader position="left" />
       <View className="flex-1 justify-center items-center">
-        <View className="w-full max-w-md bg-neutral-900 p-6 rounded-xl shadow-lg">
+        <View className={`w-full max-w-md ${bgCard} p-6 rounded-xl shadow-lg`}>
           <Text className="text-3xl font-bold text-center mb-6 text-cyan-400">
             Sign Up
           </Text>
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="First Name"
             value={formData.firstName}
             onChangeText={(val) => updateField("firstName", val)}
             autoCapitalize="words"
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Last Name"
             value={formData.lastName}
             onChangeText={(val) => updateField("lastName", val)}
             autoCapitalize="words"
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Email"
             value={formData.email}
             onChangeText={(val) => updateField("email", val)}
             keyboardType="email-address"
             autoCapitalize="none"
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Password"
             value={formData.password}
             onChangeText={(val) => updateField("password", val)}
             secureTextEntry
             autoCapitalize="none"
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-3 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Teacher Reference Number (TRN)"
             value={formData.trn}
             onChangeText={(val) => updateField("trn", val)}
             keyboardType="number-pad"
             autoCapitalize="none"
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TouchableOpacity
@@ -256,7 +265,7 @@ export default function Signup() {
             <View
               className={`w-5 h-5 border-2 rounded mr-2 ${consent ? "bg-cyan-600" : "bg-white"}`}
             />
-            <Text className="flex-1 text-sm text-gray-300">
+            <Text className={`flex-1 text-sm ${textSecondary}`}>
               I consent to photo verification (deleted after approval)
             </Text>
           </TouchableOpacity>

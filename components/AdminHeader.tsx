@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface AdminHeaderProps {
   title: string;
@@ -14,12 +15,17 @@ export default function AdminHeader({
   showBack = true,
 }: AdminHeaderProps) {
   const router = useRouter();
+  const { textSecondary, isDark } = useAppTheme();
 
   return (
     <View className="flex-row items-center justify-between mb-4">
       {showBack ? (
         <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={isDark ? "#fff" : "#111827"}
+          />
         </TouchableOpacity>
       ) : (
         <View className="w-10" />
@@ -30,7 +36,7 @@ export default function AdminHeader({
           {title}
         </Text>
         {subtitle && (
-          <Text className="text-gray-400 text-center text-sm mt-0.5">
+          <Text className={`${textSecondary} text-center text-sm mt-0.5`}>
             {subtitle}
           </Text>
         )}

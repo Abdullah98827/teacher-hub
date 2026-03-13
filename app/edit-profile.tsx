@@ -15,6 +15,7 @@ import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ProfilePicture from "../components/ProfilePicture";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import {
   deleteProfilePicture,
@@ -51,6 +52,18 @@ export default function EditProfileScreen() {
   const [showPictureModal, setShowPictureModal] = useState(false);
 
   const router = useRouter();
+
+  const {
+    bgCard,
+    bgInput,
+    bgCardAlt,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    placeholderColor,
+    isDark,
+  } = useAppTheme();
 
   /**
    * Load user's current profile data when page opens
@@ -262,7 +275,7 @@ export default function EditProfileScreen() {
       <LogoHeader position="left" />
 
       {/* Page Title with Back Button */}
-      <View className="px-5 py-4 border-b border-neutral-800">
+      <View className={`px-5 py-4 border-b ${border}`}>
         <View className="flex-row items-center">
           {/* Back Button */}
           <TouchableOpacity
@@ -278,7 +291,7 @@ export default function EditProfileScreen() {
             <Text className="text-2xl font-bold text-cyan-400">
               Edit Profile
             </Text>
-            <Text className="text-gray-400 text-sm">
+            <Text className={`${textSecondary} text-sm`}>
               Update your personal information
             </Text>
           </View>
@@ -287,7 +300,7 @@ export default function EditProfileScreen() {
 
       <ScrollView className="flex-1 px-6">
         {/* Profile Picture Section */}
-        <View className="bg-neutral-900 rounded-xl p-6 mb-4 mt-6 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-6 mb-4 mt-6 border ${border}`}>
           <Text className="text-lg font-bold text-cyan-400 mb-4 text-center">
             Profile Picture
           </Text>
@@ -323,7 +336,11 @@ export default function EditProfileScreen() {
                     size="xl"
                   />
 
-                  <View className="absolute bottom-0 right-0 bg-cyan-600 rounded-full p-2 border-2 border-neutral-900">
+                  <View
+                    className={`absolute bottom-0 right-0 bg-cyan-600 rounded-full p-2 border-2 ${
+                      isDark ? "border-neutral-900" : "border-gray-50"
+                    }`}
+                  >
                     <Ionicons name="camera" size={16} color="#fff" />
                   </View>
                 </>
@@ -345,64 +362,68 @@ export default function EditProfileScreen() {
         </View>
 
         {/* Basic Information */}
-        <View className="bg-neutral-900 rounded-xl p-6 mb-4 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-6 mb-4 border ${border}`}>
           <Text className="text-lg font-bold text-cyan-400 mb-4">
             Basic Information
           </Text>
 
           {/* First Name */}
           <View className="mb-4">
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               First Name <Text className="text-red-400">*</Text>
             </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="First Name"
               value={firstName}
               onChangeText={setFirstName}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
           </View>
 
           {/* Last Name */}
           <View className="mb-4">
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               Last Name <Text className="text-red-400">*</Text>
             </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="Last Name"
               value={lastName}
               onChangeText={setLastName}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
           </View>
 
           {/* Email (Read-only) */}
           <View className="mb-4">
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               Email (Cannot be changed)
             </Text>
-            <View className="bg-neutral-700 border border-neutral-600 p-4 rounded-lg flex-row items-center">
+            <View
+              className={`${bgCardAlt} border ${borderInput} p-4 rounded-lg flex-row items-center`}
+            >
               <Ionicons name="lock-closed" size={16} color="#6B7280" />
-              <Text className="text-gray-400 ml-2 flex-1">{email}</Text>
+              <Text className={`${textSecondary} ml-2 flex-1`}>{email}</Text>
             </View>
           </View>
 
           {/* TRN (Read-only) */}
           <View>
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               Teacher Reference Number (Cannot be changed)
             </Text>
-            <View className="bg-neutral-700 border border-neutral-600 p-4 rounded-lg flex-row items-center">
+            <View
+              className={`${bgCardAlt} border ${borderInput} p-4 rounded-lg flex-row items-center`}
+            >
               <Ionicons name="lock-closed" size={16} color="#6B7280" />
-              <Text className="text-gray-400 ml-2 flex-1">{trn}</Text>
+              <Text className={`${textSecondary} ml-2 flex-1`}>{trn}</Text>
             </View>
           </View>
         </View>
 
         {/* Professional Information */}
-        <View className="bg-neutral-900 rounded-xl p-6 mb-4 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-6 mb-4 border ${border}`}>
           <Text className="text-lg font-bold text-cyan-400 mb-4">
             Professional Information
           </Text>
@@ -410,19 +431,21 @@ export default function EditProfileScreen() {
           {/* Bio */}
           <View className="mb-4">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-gray-400 text-xs">Bio (Optional)</Text>
+              <Text className={`${textSecondary} text-xs`}>Bio (Optional)</Text>
               <Text
-                className={`text-xs ${bio.length > 150 ? "text-red-400" : "text-gray-500"}`}
+                className={`text-xs ${
+                  bio.length > 150 ? "text-red-400" : textSecondary
+                }`}
               >
                 {bio.length}/150
               </Text>
             </View>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="Tell us about yourself..."
               value={bio}
               onChangeText={setBio}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
               multiline
               numberOfLines={3}
               maxLength={150}
@@ -432,29 +455,29 @@ export default function EditProfileScreen() {
 
           {/* School Name */}
           <View className="mb-4">
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               School/Institution (Optional)
             </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="e.g. Wellington Academy"
               value={schoolName}
               onChangeText={setSchoolName}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
             />
           </View>
 
           {/* Years of Experience */}
           <View>
-            <Text className="text-gray-400 text-xs mb-2">
+            <Text className={`${textSecondary} text-xs mb-2`}>
               Years of Teaching Experience (Optional)
             </Text>
             <TextInput
-              className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 rounded-lg"
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="e.g. 5"
               value={yearsExperience}
               onChangeText={setYearsExperience}
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
               keyboardType="number-pad"
               maxLength={2}
             />
@@ -462,143 +485,88 @@ export default function EditProfileScreen() {
         </View>
 
         {/* Privacy Settings - Only DM Permissions */}
-        <View className="bg-neutral-900 rounded-xl p-6 mb-4 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-6 mb-4 border ${border}`}>
           <Text className="text-lg font-bold text-cyan-400 mb-4">
             Privacy Settings
           </Text>
 
-          <Text className="text-gray-400 text-xs mb-3">
+          <Text className={`${textSecondary} text-xs mb-3`}>
             Who can send you direct messages?
           </Text>
 
-          <TouchableOpacity
-            className={`p-4 rounded-lg mb-2 border ${
-              allowDms === "everyone"
-                ? "bg-cyan-600 border-cyan-500"
-                : "bg-neutral-800 border-neutral-700"
-            }`}
-            onPress={() => setAllowDms("everyone")}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center flex-1">
-                <Ionicons
-                  name="mail-outline"
-                  size={20}
-                  color={allowDms === "everyone" ? "#fff" : "#9CA3AF"}
-                />
-                <View className="ml-3 flex-1">
-                  <Text
-                    className={`font-semibold ${
-                      allowDms === "everyone" ? "text-white" : "text-gray-300"
-                    }`}
-                  >
-                    Everyone
-                  </Text>
-                  <Text
-                    className={
-                      allowDms === "everyone"
-                        ? "text-cyan-100 text-xs"
-                        : "text-gray-500 text-xs"
-                    }
-                  >
-                    All teachers can message you
-                  </Text>
+          {(["everyone", "followers_only", "nobody"] as const).map((option) => {
+            const isSelected = allowDms === option;
+            const labels: Record<
+              string,
+              { title: string; sub: string; icon: string }
+            > = {
+              everyone: {
+                title: "Everyone",
+                sub: "All teachers can message you",
+                icon: "mail-outline",
+              },
+              followers_only: {
+                title: "Followers Only",
+                sub: "Only people you follow",
+                icon: "people-outline",
+              },
+              nobody: {
+                title: "Nobody",
+                sub: "Turn off direct messages",
+                icon: "close-circle-outline",
+              },
+            };
+            const { title, sub, icon } = labels[option];
+            return (
+              <TouchableOpacity
+                key={option}
+                className={`p-4 rounded-lg mb-2 border ${
+                  isSelected
+                    ? "bg-cyan-600 border-cyan-500"
+                    : `${bgInput} ${borderInput}`
+                }`}
+                onPress={() => setAllowDms(option)}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center flex-1">
+                    <Ionicons
+                      name={icon as any}
+                      size={20}
+                      color={isSelected ? "#fff" : "#9CA3AF"}
+                    />
+                    <View className="ml-3 flex-1">
+                      <Text
+                        className={`font-semibold ${
+                          isSelected ? "text-white" : textPrimary
+                        }`}
+                      >
+                        {title}
+                      </Text>
+                      <Text
+                        className={`text-xs ${
+                          isSelected ? "text-cyan-100" : textSecondary
+                        }`}
+                      >
+                        {sub}
+                      </Text>
+                    </View>
+                  </View>
+                  {isSelected && (
+                    <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                  )}
                 </View>
-              </View>
-              {allowDms === "everyone" && (
-                <Ionicons name="checkmark-circle" size={24} color="#fff" />
-              )}
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg mb-2 border ${
-              allowDms === "followers_only"
-                ? "bg-cyan-600 border-cyan-500"
-                : "bg-neutral-800 border-neutral-700"
-            }`}
-            onPress={() => setAllowDms("followers_only")}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center flex-1">
-                <Ionicons
-                  name="people-outline"
-                  size={20}
-                  color={allowDms === "followers_only" ? "#fff" : "#9CA3AF"}
-                />
-                <View className="ml-3 flex-1">
-                  <Text
-                    className={`font-semibold ${
-                      allowDms === "followers_only"
-                        ? "text-white"
-                        : "text-gray-300"
-                    }`}
-                  >
-                    Followers Only
-                  </Text>
-                  <Text
-                    className={
-                      allowDms === "followers_only"
-                        ? "text-cyan-100 text-xs"
-                        : "text-gray-500 text-xs"
-                    }
-                  >
-                    Only people you follow
-                  </Text>
-                </View>
-              </View>
-              {allowDms === "followers_only" && (
-                <Ionicons name="checkmark-circle" size={24} color="#fff" />
-              )}
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            className={`p-4 rounded-lg border ${
-              allowDms === "nobody"
-                ? "bg-cyan-600 border-cyan-500"
-                : "bg-neutral-800 border-neutral-700"
-            }`}
-            onPress={() => setAllowDms("nobody")}
-          >
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center flex-1">
-                <Ionicons
-                  name="close-circle-outline"
-                  size={20}
-                  color={allowDms === "nobody" ? "#fff" : "#9CA3AF"}
-                />
-                <View className="ml-3 flex-1">
-                  <Text
-                    className={`font-semibold ${
-                      allowDms === "nobody" ? "text-white" : "text-gray-300"
-                    }`}
-                  >
-                    Nobody
-                  </Text>
-                  <Text
-                    className={
-                      allowDms === "nobody"
-                        ? "text-cyan-100 text-xs"
-                        : "text-gray-500 text-xs"
-                    }
-                  >
-                    Turn off direct messages
-                  </Text>
-                </View>
-              </View>
-              {allowDms === "nobody" && (
-                <Ionicons name="checkmark-circle" size={24} color="#fff" />
-              )}
-            </View>
-          </TouchableOpacity>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {/* Action Buttons */}
-        <View className="bg-neutral-900 rounded-xl p-6 mb-6 border border-neutral-800">
+        <View className={`${bgCard} rounded-xl p-6 mb-6 border ${border}`}>
           {/* Save Button */}
           <TouchableOpacity
-            className={`p-4 rounded-lg mb-3 ${saving ? "bg-gray-400" : "bg-cyan-600"}`}
+            className={`p-4 rounded-lg mb-3 ${
+              saving ? "bg-gray-400" : "bg-cyan-600"
+            }`}
             onPress={handleSave}
             disabled={saving}
           >
@@ -614,7 +582,7 @@ export default function EditProfileScreen() {
 
           {/* Cancel Button */}
           <TouchableOpacity
-            className="bg-neutral-800 p-4 rounded-lg border border-neutral-700"
+            className={`${bgInput} p-4 rounded-lg border ${borderInput}`}
             onPress={() => router.back()}
           >
             <Text className="text-center text-cyan-400 font-semibold">
@@ -632,8 +600,12 @@ export default function EditProfileScreen() {
         onRequestClose={() => setShowPictureModal(false)}
       >
         <View className="flex-1 bg-black/70 justify-center items-center">
-          <View className="bg-neutral-900 rounded-xl p-6 mx-5 w-80 border border-neutral-800">
-            <Text className="text-xl font-bold text-white mb-4 text-center">
+          <View
+            className={`${bgCard} rounded-xl p-6 mx-5 w-80 border ${border}`}
+          >
+            <Text
+              className={`text-xl font-bold ${textPrimary} mb-4 text-center`}
+            >
               Profile Picture
             </Text>
 
@@ -654,10 +626,10 @@ export default function EditProfileScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="bg-neutral-800 p-4 rounded-lg border border-neutral-700"
+              className={`${bgInput} p-4 rounded-lg border ${borderInput}`}
               onPress={() => setShowPictureModal(false)}
             >
-              <Text className="text-white text-center font-semibold">
+              <Text className={`${textPrimary} text-center font-semibold`}>
                 Cancel
               </Text>
             </TouchableOpacity>

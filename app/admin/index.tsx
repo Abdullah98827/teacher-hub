@@ -1,9 +1,11 @@
 import { useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../../hooks/useAppTheme";
 
 export default function AdminHub() {
   const router = useRouter();
+  const { bg, bgCard, bgCardAlt, border, textPrimary } = useAppTheme();
 
   // Admins navigation links
   const links = [
@@ -20,24 +22,28 @@ export default function AdminHub() {
   ] as const;
 
   return (
-    <View className="flex-1 bg-black px-6 pt-16">
-      <Text className="text-white text-2xl font-bold mb-6">Admin Hub</Text>
+    <View className={`flex-1 ${bg} px-6 pt-16`}>
+      <Text className={`${textPrimary} text-2xl font-bold mb-6`}>
+        Admin Hub
+      </Text>
 
       {links.map(({ label, route }) => (
         <TouchableOpacity
           key={route}
-          className="bg-neutral-800 p-4 rounded-xl mb-3"
+          className={`${bgCard} border ${border} p-4 rounded-xl mb-3`}
           onPress={() => router.push(route)}
         >
-          <Text className="text-white text-lg font-medium">{label}</Text>
+          <Text className={`${textPrimary} text-lg font-medium`}>{label}</Text>
         </TouchableOpacity>
       ))}
 
       <TouchableOpacity
-        className="bg-neutral-700 p-4 rounded-xl mt-6 active:scale-95"
+        className={`${bgCardAlt} p-4 rounded-xl mt-6 active:scale-95`}
         onPress={() => router.replace("/(tabs)")}
       >
-        <Text className="text-white text-center font-medium">Back to App</Text>
+        <Text className={`${textPrimary} text-center font-medium`}>
+          Back to App
+        </Text>
       </TouchableOpacity>
 
       <Toast />

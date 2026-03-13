@@ -2,11 +2,13 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 
 export default function AdminLayout() {
   const { role, loading } = useUserRole();
   const router = useRouter();
+  const { loadingBg, tabBarBg } = useAppTheme();
 
   // Checks if user is admin, redirects if not
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function AdminLayout() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-black">
+      <View className={`flex-1 justify-center items-center ${loadingBg}`}>
         <ActivityIndicator size="large" color="#22d3ee" />
       </View>
     );
@@ -35,7 +37,7 @@ export default function AdminLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: "#0a0a0a" },
+        headerStyle: { backgroundColor: tabBarBg },
         headerTintColor: "#22d3ee",
         headerTitleStyle: { fontWeight: "bold" },
         headerBackTitle: "Back",

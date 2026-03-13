@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 type Subject = {
@@ -25,6 +26,8 @@ export default function Membership() {
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary } =
+    useAppTheme();
 
   const pricing = {
     single: "£9.99/month",
@@ -120,9 +123,7 @@ export default function Membership() {
 
         <View className="flex-row gap-4 mb-6">
           <TouchableOpacity
-            className={`p-4 rounded-xl w-40 ${
-              tier === "single" ? "bg-cyan-600" : "bg-neutral-800"
-            }`}
+            className={`p-4 rounded-xl w-40 ${tier === "single" ? "bg-cyan-600" : bgCard}`}
             onPress={() => {
               setTier("single");
               setSelectedSubjectIds([]); // Reset selections when changing tier
@@ -143,9 +144,7 @@ export default function Membership() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`p-4 rounded-xl w-40 ${
-              tier === "multi" ? "bg-cyan-600" : "bg-neutral-800"
-            }`}
+            className={`p-4 rounded-xl w-40 ${tier === "multi" ? "bg-cyan-600" : bgCard}`}
             onPress={() => {
               setTier("multi");
               setSelectedSubjectIds([]); // Reset selections when changing tier
@@ -166,7 +165,7 @@ export default function Membership() {
           </TouchableOpacity>
         </View>
 
-        <Text className="text-gray-300 mb-2">
+        <Text className={`${textSecondary} mb-2`}>
           Select {tier === "multi" ? "up to 2" : "1"} subject(s):
         </Text>
 
@@ -177,7 +176,7 @@ export default function Membership() {
               className={`flex-row items-center p-3 mb-2 rounded-xl border ${
                 selectedSubjectIds.includes(subject.id)
                   ? "bg-cyan-600 border-cyan-400"
-                  : "bg-neutral-800 border-neutral-700"
+                  : `${bgCard} ${border}`
               }`}
               onPress={() => toggleSubject(subject.id)}
             >
@@ -188,15 +187,19 @@ export default function Membership() {
                   resizeMode="cover"
                 />
               ) : (
-                <View className="w-10 h-10 mr-3 rounded-full bg-neutral-700 items-center justify-center">
+                <View
+                  className={`w-10 h-10 mr-3 rounded-full ${bgCardAlt} items-center justify-center`}
+                >
                   <Text className="text-white text-xs">📚</Text>
                 </View>
               )}
 
               <View className="flex-1">
-                <Text className="text-white font-semibold">{subject.name}</Text>
+                <Text className={`${textPrimary} font-semibold`}>
+                  {subject.name}
+                </Text>
                 {subject.description && (
-                  <Text className="text-gray-400 text-xs">
+                  <Text className={`${textSecondary} text-xs`}>
                     {subject.description}
                   </Text>
                 )}
@@ -217,7 +220,7 @@ export default function Membership() {
 
         <View className="flex-row justify-between mt-6 w-full max-w-md">
           <TouchableOpacity
-            className="flex-1 bg-neutral-800 p-3 rounded-xl mr-2 active:scale-95"
+            className={`flex-1 ${bgCard} p-3 rounded-xl mr-2 active:scale-95`}
             onPress={() => router.push("/contact")}
           >
             <Text className="text-center text-cyan-400 font-medium">
@@ -234,7 +237,7 @@ export default function Membership() {
         </View>
 
         <TouchableOpacity
-          className="mt-4 bg-neutral-700 p-3 rounded-xl w-full max-w-md active:scale-95"
+          className={`mt-4 ${bgCardAlt} p-3 rounded-xl w-full max-w-md active:scale-95`}
           onPress={() => router.back()}
         >
           <Text className="text-center text-cyan-300 font-medium">Back</Text>

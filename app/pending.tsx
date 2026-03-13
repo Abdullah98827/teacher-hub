@@ -2,10 +2,12 @@ import { useRouter } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function PendingApproval() {
   const router = useRouter();
+  const { textSecondary } = useAppTheme();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -19,12 +21,14 @@ export default function PendingApproval() {
         <Text className="text-3xl font-bold text-cyan-400 mb-4 text-center">
           Account Pending Approval
         </Text>
-        <Text className="text-gray-300 text-center text-base leading-relaxed">
+        <Text
+          className={`${textSecondary} text-center text-base leading-relaxed`}
+        >
           Your account has been submitted successfully and is awaiting
           verification by an admin. Once approved, you’ll be able to choose your
           membership and access Teacher Hub resources.
         </Text>
-        <Text className="text-gray-400 text-sm mt-6 text-center mb-8">
+        <Text className={`${textSecondary} text-sm mt-6 text-center mb-8`}>
           Approval usually takes 24–48 hours. You’ll receive an email once your
           account is verified.
         </Text>

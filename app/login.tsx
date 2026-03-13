@@ -4,6 +4,7 @@ import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function Login() {
@@ -11,6 +12,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { bgCard, bgInput, borderInput, textPrimary, placeholderColor } =
+    useAppTheme();
 
   // Basic email validation using regex pattern
   // Reference: https://www.w3resource.com/javascript/form/email-validation.php
@@ -121,30 +124,30 @@ export default function Login() {
       <LogoHeader position="left" />
 
       <View className="flex-1 justify-center items-center">
-        <View className="w-full max-w-md bg-neutral-900 p-6 rounded-xl shadow-lg">
+        <View className={`w-full max-w-md ${bgCard} p-6 rounded-xl shadow-lg`}>
           <Text className="text-3xl font-bold text-center mb-6 text-cyan-400 tracking-wide">
             Login
           </Text>
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-xl`}
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TextInput
-            className="bg-neutral-800 border border-neutral-700 text-gray-100 p-4 mb-4 rounded-xl"
+            className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-xl`}
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
             editable={!loading}
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={placeholderColor}
           />
 
           <TouchableOpacity
@@ -159,7 +162,7 @@ export default function Login() {
 
           <Link href="/signup" asChild>
             <TouchableOpacity className="p-3" disabled={loading}>
-              <Text className="text-center text-cyan-400 underline">
+              <Text className={`text-center text-cyan-400 underline`}>
                 Don`t have an account? Sign up
               </Text>
             </TouchableOpacity>

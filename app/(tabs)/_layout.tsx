@@ -4,11 +4,14 @@ import { Tabs } from "expo-router/tabs";
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "../../global.css";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
 export default function TabLayout() {
   const router = useRouter();
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const { tabBarBg, tabBarBorder, tabBarActive, tabBarInactive, loadingBg } =
+    useAppTheme();
 
   const checkUserAccess = useCallback(async () => {
     const {
@@ -54,7 +57,7 @@ export default function TabLayout() {
 
   if (checkingAccess) {
     return (
-      <View className="flex-1 items-center justify-center bg-black">
+      <View className={`flex-1 items-center justify-center ${loadingBg}`}>
         <ActivityIndicator size="large" color="#22d3ee" />
       </View>
     );
@@ -64,11 +67,11 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#22d3ee",
-        tabBarInactiveTintColor: "#9ca3af",
+        tabBarActiveTintColor: tabBarActive,
+        tabBarInactiveTintColor: tabBarInactive,
         tabBarStyle: {
-          backgroundColor: "#0a0a0a",
-          borderTopColor: "#262626",
+          backgroundColor: tabBarBg,
+          borderTopColor: tabBarBorder,
           borderTopWidth: 1,
         },
         tabBarLabelStyle: {
