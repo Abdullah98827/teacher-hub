@@ -572,6 +572,12 @@ export default function CommentsModal({
           setShowProfileModal(false);
           setSelectedUserId(null);
         }}
+        onNavigateToPath={(path) => {
+          setShowProfileModal(false);
+          setSelectedUserId(null);
+          onClose(); // close CommentsModal too
+          setTimeout(() => router.push(path as any), 500);
+        }}
       />
 
       <Modal

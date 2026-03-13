@@ -187,6 +187,11 @@ export default function FollowingScreen() {
           setShowProfileModal(false);
           setSelectedUserId(null);
         }}
+        onNavigateToPath={(path) => {
+          setShowProfileModal(false);
+          setSelectedUserId(null);
+          setTimeout(() => router.push(path as any), 400);
+        }}
       />
 
       <Toast />

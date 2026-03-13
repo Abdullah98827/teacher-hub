@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -18,6 +17,8 @@ interface UserProfileModalProps {
   visible: boolean;
   userId: string | null;
   onClose: () => void;
+  // Instead of navigating internally, we tell the parent where to go
+  onNavigateToPath?: (path: string) => void;
 }
 
 interface UserProfile {
@@ -39,13 +40,12 @@ export default function UserProfileModal({
   visible,
   userId,
   onClose,
+  onNavigateToPath,
 }: UserProfileModalProps) {
-  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Use the follow hook
   const {
     isFollowing,
     followersCount,
@@ -60,61 +60,41 @@ export default function UserProfileModal({
   }, []);
 
   useEffect(() => {
-    if (visible && userId) {
-      loadProfile();
-    }
+    if (visible && userId) loadProfile();
   }, [visible, userId]);
 
   const getCurrentUser = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (user) {
-      setCurrentUserId(user.id);
-    }
+    if (user) setCurrentUserId(user.id);
   };
 
   const loadProfile = async () => {
     if (!userId) return;
-
     setLoading(true);
-
     try {
-      // Get basic profile info
       const { data: teacherData, error: teacherError } = await supabase
         .from("teachers")
         .select(
-          `
-          id,
-          first_name,
-          last_name,
-          profile_picture_url,
-          bio,
-          school_name,
-          years_experience,
-          allow_dms
-        `
+          "id, first_name, last_name, profile_picture_url, bio, school_name, years_experience, allow_dms"
         )
         .eq("id", userId)
         .single();
-
       if (teacherError) throw teacherError;
 
-      // Get resource count
       const { count: resourceCount } = await supabase
         .from("resources")
         .select("*", { count: "exact", head: true })
         .eq("uploaded_by", userId)
         .eq("status", "approved");
 
-      // Get comment count
       const { count: commentCount } = await supabase
         .from("resource_comments")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("is_deleted", false);
 
-      // Get membership info
       const { data: membershipData } = await supabase
         .from("memberships")
         .select("tier, subject_ids")
@@ -128,7 +108,6 @@ export default function UserProfileModal({
           .from("subjects")
           .select("id, name")
           .in("id", membershipData.subject_ids);
-
         membershipSubjects = subjectsData || [];
       }
 
@@ -139,11 +118,8 @@ export default function UserProfileModal({
         membership_tier: membershipData?.tier || null,
         membership_subjects: membershipSubjects,
       });
-
-      // Refresh follow data
       refreshFollowData();
     } catch (error: any) {
-      console.error("Error loading profile:", error);
       Toast.show({
         type: "error",
         text1: "Error",
@@ -154,10 +130,16 @@ export default function UserProfileModal({
     }
   };
 
+  // Close modal and tell parent to navigate
+  const handleNavigate = (path: string) => {
+    onClose();
+    if (onNavigateToPath) {
+      onNavigateToPath(path);
+    }
+  };
+
   const handleMessage = () => {
     if (!userId) return;
-
-    // Check DM permissions
     if (profile?.allow_dms === "nobody") {
       Toast.show({
         type: "error",
@@ -166,7 +148,6 @@ export default function UserProfileModal({
       });
       return;
     }
-
     if (profile?.allow_dms === "followers_only" && !isFollowing) {
       Toast.show({
         type: "error",
@@ -175,25 +156,7 @@ export default function UserProfileModal({
       });
       return;
     }
-
-    onClose();
-    setTimeout(() => {
-      router.push(`/dm/${userId}`);
-    }, 300);
-  };
-
-  const handleFollowersPress = () => {
-    onClose();
-    setTimeout(() => {
-      router.push(`/followers/${userId}`);
-    }, 300);
-  };
-
-  const handleFollowingPress = () => {
-    onClose();
-    setTimeout(() => {
-      router.push(`/following/${userId}`);
-    }, 300);
+    handleNavigate(`/dm/${userId}`);
   };
 
   if (!visible) return null;
@@ -206,7 +169,6 @@ export default function UserProfileModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black">
-        {/* Header */}
         <View className="bg-neutral-900 p-4 pt-12 border-b border-neutral-800">
           <View className="flex-row items-center justify-between">
             <Text className="text-2xl font-bold text-cyan-400">
@@ -224,7 +186,6 @@ export default function UserProfileModal({
           </View>
         ) : profile ? (
           <ScrollView className="flex-1">
-            {/* Profile Header */}
             <View className="items-center p-6 bg-neutral-900">
               <ProfilePicture
                 imageUrl={profile.profile_picture_url}
@@ -235,13 +196,11 @@ export default function UserProfileModal({
               <Text className="text-white text-2xl font-bold mt-4">
                 {profile.first_name} {profile.last_name}
               </Text>
-
               {profile.bio && (
                 <Text className="text-gray-400 text-center mt-2 px-4">
                   {profile.bio}
                 </Text>
               )}
-
               {profile.school_name && (
                 <View className="flex-row items-center mt-2">
                   <Ionicons name="school-outline" size={16} color="#9CA3AF" />
@@ -250,7 +209,6 @@ export default function UserProfileModal({
                   </Text>
                 </View>
               )}
-
               {profile.years_experience !== null && (
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={16} color="#9CA3AF" />
@@ -261,8 +219,6 @@ export default function UserProfileModal({
                   </Text>
                 </View>
               )}
-
-              {/* Action Buttons */}
               {currentUserId !== userId && (
                 <View className="flex-row gap-3 mt-6 w-full px-4">
                   <TouchableOpacity
@@ -272,7 +228,6 @@ export default function UserProfileModal({
                     <Ionicons name="mail" size={20} color="#fff" />
                     <Text className="text-white font-bold ml-2">Message</Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
                     className={`flex-1 py-3 rounded-xl flex-row items-center justify-center ${
                       isFollowing
@@ -301,11 +256,10 @@ export default function UserProfileModal({
               )}
             </View>
 
-            {/* Follow Stats */}
             <View className="flex-row bg-neutral-900 border-t border-b border-neutral-800 mt-4">
               <TouchableOpacity
                 className="flex-1 items-center py-4 border-r border-neutral-800"
-                onPress={handleFollowersPress}
+                onPress={() => handleNavigate(`/followers/${userId}`)}
               >
                 <Text className="text-white text-2xl font-bold">
                   {followersCount}
@@ -314,10 +268,9 @@ export default function UserProfileModal({
                   {followersCount === 1 ? "Follower" : "Followers"}
                 </Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 className="flex-1 items-center py-4"
-                onPress={handleFollowingPress}
+                onPress={() => handleNavigate(`/following/${userId}`)}
               >
                 <Text className="text-white text-2xl font-bold">
                   {followingCount}
@@ -326,12 +279,10 @@ export default function UserProfileModal({
               </TouchableOpacity>
             </View>
 
-            {/* Activity Stats */}
             <View className="bg-neutral-900 p-6 mt-4">
               <Text className="text-lg font-bold text-cyan-400 mb-4">
                 Activity
               </Text>
-
               <View className="flex-row justify-around">
                 <View className="items-center">
                   <Text className="text-white text-2xl font-bold">
@@ -341,7 +292,6 @@ export default function UserProfileModal({
                     {profile.resource_count === 1 ? "Resource" : "Resources"}
                   </Text>
                 </View>
-
                 <View className="items-center">
                   <Text className="text-white text-2xl font-bold">
                     {profile.comment_count}
@@ -353,14 +303,12 @@ export default function UserProfileModal({
               </View>
             </View>
 
-            {/* Professional Info */}
             {(profile.membership_tier ||
               profile.membership_subjects.length > 0) && (
               <View className="bg-neutral-900 p-6 mt-4">
                 <Text className="text-lg font-bold text-cyan-400 mb-4">
                   Professional Info
                 </Text>
-
                 {profile.membership_tier && (
                   <View className="mb-4">
                     <Text className="text-gray-400 text-xs mb-2">
@@ -375,7 +323,6 @@ export default function UserProfileModal({
                     </View>
                   </View>
                 )}
-
                 {profile.membership_subjects.length > 0 && (
                   <View>
                     <Text className="text-gray-400 text-xs mb-2">Subjects</Text>
@@ -395,6 +342,7 @@ export default function UserProfileModal({
                 )}
               </View>
             )}
+            <View style={{ height: 40 }} />
           </ScrollView>
         ) : (
           <View className="flex-1 items-center justify-center p-6">
@@ -408,7 +356,6 @@ export default function UserProfileModal({
           </View>
         )}
       </View>
-
       <Toast />
     </Modal>
   );

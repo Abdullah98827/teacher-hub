@@ -17,6 +17,7 @@ import {
 import Toast from "react-native-toast-message";
 import { WebView } from "react-native-webview";
 import CommentsModal from "../../components/CommentsModal";
+import EALAdapterModal from "../../components/EALAdapterModal";
 import LogoHeader from "../../components/logoHeader";
 import RatingModal from "../../components/RatingModal";
 import ReportModal from "../../components/ReportModal";
@@ -86,6 +87,7 @@ export default function ResourcesScreen() {
 
   // Translation modal state
   const [showTranslationModal, setShowTranslationModal] = useState(false);
+  const [showEALModal, setShowEALModal] = useState(false);
 
   // Modal states
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(
@@ -838,8 +840,22 @@ export default function ResourcesScreen() {
                 <Ionicons name="download-outline" size={26} color="#22d3ee" />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => setShowTranslationModal(true)}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowPreview(false);
+                  setTimeout(() => setShowTranslationModal(true), 400);
+                }}
+              >
                 <Ionicons name="language-outline" size={26} color="#22d3ee" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  setShowPreview(false);
+                  setTimeout(() => setShowEALModal(true), 400);
+                }}
+              >
+                <Ionicons name="sparkles-outline" size={26} color="#22d3ee" />
               </TouchableOpacity>
             </View>
           </View>
@@ -861,10 +877,16 @@ export default function ResourcesScreen() {
       </Modal>
 
       {/* Translation Modal Component */}
-      {/* Translation Modal Component */}
       <TranslationModal
         visible={showTranslationModal}
         onClose={() => setShowTranslationModal(false)}
+        resourceId={selectedResource?.id ?? ""}
+      />
+
+      {/* EAL Adapter Modal Component */}
+      <EALAdapterModal
+        visible={showEALModal}
+        onClose={() => setShowEALModal(false)}
         resourceId={selectedResource?.id ?? ""}
       />
 
@@ -951,6 +973,11 @@ export default function ResourcesScreen() {
         onClose={() => {
           setShowProfileModal(false);
           setProfileUserId(null);
+        }}
+        onNavigateToPath={(path) => {
+          setShowProfileModal(false);
+          setProfileUserId(null);
+          setTimeout(() => router.push(path as any), 400);
         }}
       />
 
