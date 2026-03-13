@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface AccessToggleProps {
   label: string;
@@ -22,9 +23,10 @@ export default function AccessToggle({
   privateDescription,
   icon = "chatbubbles",
 }: AccessToggleProps) {
+  const { textMuted } = useAppTheme();
   return (
     <View className="mb-4">
-      <Text className="text-gray-400 text-sm mb-3">{label}</Text>
+      <Text className={`${textMuted} text-sm mb-3`}>{label}</Text>
       <TouchableOpacity
         className={`p-4 rounded-lg border-2 ${
           isPublic
@@ -54,7 +56,7 @@ export default function AccessToggle({
               >
                 {isPublic ? publicLabel : privateLabel}
               </Text>
-              <Text className="text-gray-500 text-xs">
+              <Text className={`${textMuted} text-xs`}>
                 {isPublic ? publicDescription : privateDescription}
               </Text>
             </View>

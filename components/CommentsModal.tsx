@@ -55,6 +55,7 @@ export default function CommentsModal({
     textSecondary,
     textMuted,
     placeholderColor,
+    isDark,
   } = useAppTheme();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -456,7 +457,7 @@ export default function CommentsModal({
         <View className={`${bgCard} p-4 pt-12 border-b ${border}`}>
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose} className="p-2">
-              <Ionicons name="close" size={28} color="#fff" />
+              <Ionicons name="close" size={28} color={isDark ? "#fff" : "#111827"} />
             </TouchableOpacity>
             <Text className={`${textPrimary} font-bold text-lg flex-1 text-center mr-10`}>
               Comments
@@ -468,7 +469,7 @@ export default function CommentsModal({
         </View>
 
         {showDmSuggestion && dmSuggestionUsers && (
-          <View className="bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border-b border-cyan-500/30 p-4">
+          <View className={`border-b border-cyan-500/30 p-4 ${bgCard}`}>
             <View className="flex-row items-start">
               <View className="bg-cyan-500/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                 <Ionicons name="chatbubbles" size={20} color="#22d3ee" />
@@ -476,11 +477,11 @@ export default function CommentsModal({
               <View className="flex-1">
                 <View className="flex-row items-center mb-1">
                   <Ionicons name="star" size={16} color="#22d3ee" />
-                  <Text className="text-white font-semibold ml-1">
+                  <Text className={`${textPrimary} font-semibold ml-1`}>
                     Great conversation!
                   </Text>
                 </View>
-                <Text className="text-gray-300 text-sm mb-3">
+                <Text className={`${textSecondary} text-sm mb-3`}>
                   You`re having an active discussion. Consider moving to direct
                   messages for a more personal chat.
                 </Text>
@@ -495,7 +496,7 @@ export default function CommentsModal({
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    className="bg-neutral-800 px-4 py-2.5 rounded-lg"
+                    className={`${bgCardAlt} px-4 py-2.5 rounded-lg`}
                     onPress={() => setShowDmSuggestion(false)}
                   >
                     <Text className={`${textMuted} font-semibold text-sm`}>
@@ -535,7 +536,7 @@ export default function CommentsModal({
         )}
 
         {replyToId && replyToUser && (
-          <View className="bg-cyan-900/20 px-4 py-2 flex-row items-center justify-between border-t border-cyan-800">
+          <View className={`${bgCardAlt} px-4 py-2 flex-row items-center justify-between border-t ${border}`}>
             <Text className="text-cyan-400 text-sm">
               Replying to {replyToUser}
             </Text>

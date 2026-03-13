@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface ReportCardProps {
   report: {
@@ -14,6 +15,7 @@ interface ReportCardProps {
 }
 
 export default function ReportCard({ report, onPress }: ReportCardProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -59,7 +61,7 @@ export default function ReportCard({ report, onPress }: ReportCardProps) {
 
   return (
     <TouchableOpacity
-      className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800 active:opacity-70"
+      className={`${bgCard} rounded-xl p-4 mb-3 border ${border} active:opacity-70`}
       onPress={onPress}
     >
       {/* Status badge and chevron */}
@@ -78,16 +80,16 @@ export default function ReportCard({ report, onPress }: ReportCardProps) {
       <View className="mb-3">
         <View className="flex-row items-center mb-1">
           <Ionicons name="alert-circle" size={14} color="#ef4444" />
-          <Text className="text-gray-500 text-xs ml-1.5">Reason</Text>
+          <Text className={`${textMuted} text-xs ml-1.5`}>Reason</Text>
         </View>
-        <Text className="text-white font-bold">{report.reason}</Text>
+        <Text className={`${textPrimary} font-bold`}>{report.reason}</Text>
       </View>
 
       {/* Resource */}
-      <View className="bg-neutral-800/50 rounded-lg p-3 mb-3">
+      <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
         <View className="flex-row items-center mb-1">
           <Ionicons name="document-text" size={14} color="#6B7280" />
-          <Text className="text-gray-500 text-xs ml-1.5">Resource</Text>
+          <Text className={`${textMuted} text-xs ml-1.5`}>Resource</Text>
         </View>
         <Text className="text-gray-300" numberOfLines={1}>
           {report.resource.title}
@@ -95,14 +97,14 @@ export default function ReportCard({ report, onPress }: ReportCardProps) {
       </View>
 
       {/* Footer */}
-      <View className="flex-row items-center justify-between border-t border-neutral-800 pt-2">
+      <View className={`flex-row items-center justify-between border-t ${border} pt-2`}>
         <View className="flex-row items-center">
           <Ionicons name="person" size={12} color="#6B7280" />
-          <Text className="text-gray-500 text-xs ml-1">
+          <Text className={`${textMuted} text-xs ml-1`}>
             {report.reporter.first_name} {report.reporter.last_name}
           </Text>
         </View>
-        <Text className="text-gray-600 text-xs">
+        <Text className={`${textMuted} text-xs`}>
           {formatDate(report.created_at)}
         </Text>
       </View>

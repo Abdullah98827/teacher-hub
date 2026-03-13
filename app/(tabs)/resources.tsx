@@ -58,6 +58,7 @@ export default function ResourcesScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const {
+    bg,
     bgCard,
     bgCardAlt,
     bgInput,
@@ -67,6 +68,7 @@ export default function ResourcesScreen() {
     textSecondary,
     textMuted,
     placeholderColor,
+    isDark,
   } = useAppTheme();
 
   const [resources, setResources] = useState<Resource[]>([]);
@@ -526,7 +528,7 @@ export default function ResourcesScreen() {
                 color="#22d3ee"
               />
             </View>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               {activeTab === "browse"
                 ? "No resources available yet"
                 : activeTab === "saved"
@@ -786,13 +788,13 @@ export default function ResourcesScreen() {
         transparent={false}
         onRequestClose={() => setShowPreview(false)}
       >
-        <View className="flex-1 bg-black">
+        <View className={`flex-1 ${bg}`}>
           <View className={`${bgCard} p-4 pt-12 flex-row items-center justify-between`}>
             <TouchableOpacity
               className="p-2"
               onPress={() => setShowPreview(false)}
             >
-              <Ionicons name="close" size={28} color="#fff" />
+              <Ionicons name="close" size={28} color={isDark ? "#fff" : "#111827"} />
             </TouchableOpacity>
             <Text
               className={`${textPrimary} font-bold text-lg flex-1 text-center`}
@@ -838,7 +840,7 @@ export default function ResourcesScreen() {
               renderLoading={() => (
                 <View className="flex-1 items-center justify-center">
                   <ActivityIndicator size="large" color="#22d3ee" />
-                  <Text className="text-gray-400 mt-2">Loading preview...</Text>
+                  <Text className={`${textMuted} mt-2`}>Loading preview...</Text>
                 </View>
               )}
             />

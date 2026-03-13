@@ -2,12 +2,14 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Image, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function Index() {
   const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { bg } = useAppTheme();
 
   useEffect(() => {
     // Safety timeout: redirect after 3 seconds if session check takes too long
@@ -54,7 +56,7 @@ export default function Index() {
   if (isChecking) {
     return (
       <View
-        className="flex-1 justify-center items-center bg-neutral-950"
+        className={`flex-1 justify-center items-center ${bg}`}
         style={{ paddingTop: insets.top }}
       >
         <Image

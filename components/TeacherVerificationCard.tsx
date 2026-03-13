@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import useAppTheme from "../hooks/useAppTheme";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface TeacherVerificationCardProps {
   teacher: {

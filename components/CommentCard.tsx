@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 import ProfilePicture from "./ProfilePicture";
 import StatusBadge from "./StatusBadge";
 
@@ -23,6 +24,7 @@ export default function CommentCard({
   onRestore,
   onDelete,
 }: CommentCardProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -36,7 +38,7 @@ export default function CommentCard({
   };
 
   return (
-    <View className="bg-neutral-900 rounded-xl mb-3 border border-neutral-800 p-4">
+    <View className={`${bgCard} rounded-xl mb-3 border ${border} p-4`}>
       {/* Header with user and status */}
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-2">
@@ -48,11 +50,11 @@ export default function CommentCard({
               lastName={comment.last_name}
               size="sm"
             />
-            <Text className="text-white font-semibold">
+            <Text className={`${textPrimary} font-semibold`}>
               {comment.first_name} {comment.last_name}
             </Text>
           </View>
-          <Text className="text-gray-500 text-xs ml-10">
+          <Text className={`${textMuted} text-xs ml-10`}>
             {formatDate(comment.created_at)}
           </Text>
         </View>
@@ -60,14 +62,14 @@ export default function CommentCard({
       </View>
 
       {/* Comment text */}
-      <View className="bg-neutral-800/50 rounded-lg p-3 mb-3">
+      <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
         <Text className="text-gray-300 leading-5">{comment.comment_text}</Text>
       </View>
 
       {/* Resource info */}
       <View className="flex-row items-center mb-3">
         <Ionicons name="document-text" size={14} color="#6B7280" />
-        <Text className="text-gray-500 text-xs ml-1.5">
+        <Text className={`${textMuted} text-xs ml-1.5`}>
           {comment.resource_title}
         </Text>
       </View>

@@ -210,7 +210,7 @@ export default function ReportModal({
                           className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
                             selectedReason === reason.id
                               ? "bg-red-600/20"
-                              : "bg-neutral-700"
+                              : bgCardAlt
                           }`}
                         >
                           <Ionicons

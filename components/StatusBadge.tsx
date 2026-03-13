@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface StatusBadgeProps {
   status:
@@ -19,6 +20,7 @@ export default function StatusBadge({
   size = "md",
   showIcon = false,
 }: StatusBadgeProps) {
+  const { bgCardAlt, border, textMuted } = useAppTheme();
   const getStyles = () => {
     switch (status) {
       case "pending":
@@ -54,9 +56,9 @@ export default function StatusBadge({
         };
       default:
         return {
-          bg: "bg-neutral-800",
-          border: "border-neutral-700",
-          text: "text-gray-400",
+          bg: bgCardAlt,
+          border: border,
+          text: textMuted,
           icon: "ellipse" as const,
         };
     }

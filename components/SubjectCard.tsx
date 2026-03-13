@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface SubjectCardProps {
   subject: {
@@ -35,6 +36,7 @@ export default function SubjectCard({
 }: SubjectCardProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -46,12 +48,12 @@ export default function SubjectCard({
   };
 
   return (
-    <View className="bg-neutral-900 rounded-xl p-4 mb-3 border border-neutral-800">
+    <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
       {/* Header */}
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-3">
           <View className="flex-row items-center gap-2 mb-1 flex-wrap">
-            <Text className="text-white font-bold text-xl">{subject.name}</Text>
+            <Text className={`${textPrimary} font-bold text-xl`}>{subject.name}</Text>
             {subject.is_public ? (
               <View className="bg-green-500/20 px-2 py-1 rounded-full">
                 <Text className="text-green-400 text-xs font-bold">
@@ -74,7 +76,7 @@ export default function SubjectCard({
             )}
           </View>
           {subject.description && (
-            <Text className="text-gray-400 text-sm" numberOfLines={2}>
+            <Text className={`${textSecondary} text-sm`} numberOfLines={2}>
               {subject.description}
             </Text>
           )}
@@ -83,7 +85,7 @@ export default function SubjectCard({
         {/* Menu Button */}
         <View>
           <TouchableOpacity
-            className="w-10 h-10 rounded-lg items-center justify-center bg-neutral-800"
+            className={`w-10 h-10 rounded-lg items-center justify-center ${bgCardAlt}`}
             onPress={() => setMenuOpen(!menuOpen)}
             disabled={isDeleting}
           >
@@ -91,16 +93,16 @@ export default function SubjectCard({
           </TouchableOpacity>
 
           {menuOpen && (
-            <View className="absolute right-0 top-12 bg-neutral-800 rounded-lg border border-neutral-700 shadow-lg z-50 min-w-[160px]">
+            <View className={`absolute right-0 top-12 ${bgCardAlt} rounded-lg border ${border} shadow-lg z-50 min-w-[160px]`}>
               <TouchableOpacity
-                className="flex-row items-center px-4 py-3 border-b border-neutral-700"
+                className={`flex-row items-center px-4 py-3 border-b ${border}`}
                 onPress={() => {
                   setMenuOpen(false);
                   onEdit();
                 }}
               >
                 <Ionicons name="pencil" size={18} color="#22d3ee" />
-                <Text className="text-white ml-3">Edit</Text>
+                <Text className={`${textPrimary} ml-3`}>Edit</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -121,7 +123,7 @@ export default function SubjectCard({
       {/* Group Chat Card */}
       {subject.groupChat && (
         <TouchableOpacity
-          className="bg-neutral-800/50 rounded-lg p-3 mb-3 active:opacity-70"
+          className={`${bgCardAlt} rounded-lg p-3 mb-3 active:opacity-70`}
           onPress={() => router.push(`/group-chat/${subject.groupChat!.id}`)}
         >
           <View className="flex-row items-center mb-1">
@@ -131,7 +133,7 @@ export default function SubjectCard({
             </Text>
           </View>
           {subject.groupChat.description && (
-            <Text className="text-gray-500 text-xs ml-6" numberOfLines={1}>
+            <Text className={`${textMuted} text-xs ml-6`} numberOfLines={1}>
               {subject.groupChat.description}
             </Text>
           )}
@@ -141,24 +143,24 @@ export default function SubjectCard({
       {/* Stats */}
       <View className="flex-row flex-wrap gap-3 mb-3">
         <TouchableOpacity
-          className="bg-neutral-800 px-3 py-2 rounded-lg flex-row items-center active:opacity-70"
+          className={`${bgCardAlt} px-3 py-2 rounded-lg flex-row items-center active:opacity-70`}
           onPress={onViewSubscribers}
         >
           <Ionicons name="people" size={14} color="#22d3ee" />
           <Text className="text-cyan-400 text-sm font-semibold ml-1.5">
             {subject.subscriberCount}
           </Text>
-          <Text className="text-gray-500 text-xs ml-1">
+          <Text className={`${textMuted} text-xs ml-1`}>
             {subject.is_public ? "can access" : "subscribers"}
           </Text>
         </TouchableOpacity>
 
-        <View className="bg-neutral-800 px-3 py-2 rounded-lg flex-row items-center">
+        <View className={`${bgCardAlt} px-3 py-2 rounded-lg flex-row items-center`}>
           <Ionicons name="chatbubble" size={14} color="#22d3ee" />
           <Text className="text-cyan-400 text-sm font-semibold ml-1.5">
             {subject.messageCount}
           </Text>
-          <Text className="text-gray-500 text-xs ml-1">messages</Text>
+          <Text className={`${textMuted} text-xs ml-1`}>messages</Text>
         </View>
 
         {subject.deletedMessageCount > 0 && (
@@ -167,14 +169,14 @@ export default function SubjectCard({
             <Text className="text-red-400 text-sm font-semibold ml-1.5">
               {subject.deletedMessageCount}
             </Text>
-            <Text className="text-gray-500 text-xs ml-1">deleted</Text>
+            <Text className={`${textMuted} text-xs ml-1`}>deleted</Text>
           </View>
         )}
       </View>
 
       {/* Footer */}
-      <View className="border-t border-neutral-800 pt-2">
-        <Text className="text-gray-600 text-xs">
+      <View className={`border-t ${border} pt-2`}>
+        <Text className={`${textMuted} text-xs`}>
           Created {formatDate(subject.created_at)}
         </Text>
       </View>

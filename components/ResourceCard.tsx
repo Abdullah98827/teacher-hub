@@ -55,7 +55,8 @@ export default function ResourceCard({
   onViewProfile, // NEW
   showActions = false,
 }: ResourceCardProps) {
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, border, textPrimary, textSecondary, textMuted, isDark } = useAppTheme();
+
   const categoryIcons = {
     powerpoint: "easel",
     worksheet: "document-text",
@@ -68,15 +69,15 @@ export default function ResourceCard({
     lesson_plan: "#10b981",
   };
 
-  const statusColors = {
-    pending: "bg-orange-900",
-    approved: "bg-green-900",
-    rejected: "bg-red-900",
+  const statusBgColors = {
+    pending: isDark ? "bg-orange-900" : "bg-orange-100",
+    approved: isDark ? "bg-green-900" : "bg-green-100",
+    rejected: isDark ? "bg-red-900" : "bg-red-100",
   };
 
   const statusTextColors = {
     pending: "text-orange-400",
-    approved: "text-green-400",
+    approved: isDark ? "text-green-400" : "text-green-600",
     rejected: "text-red-400",
   };
 
@@ -130,7 +131,7 @@ export default function ResourceCard({
           </View>
 
           {status && (
-            <View className={`px-3 py-1 rounded-full ${statusColors[status]}`}>
+            <View className={`px-3 py-1 rounded-full ${statusBgColors[status]}`}>
               <Text className={`text-xs font-bold ${statusTextColors[status]}`}>
                 {status.toUpperCase()}
               </Text>

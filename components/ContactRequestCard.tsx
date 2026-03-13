@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
-import useAppTheme from "../hooks/useAppTheme";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface ContactRequestCardProps {
   request: {
@@ -34,7 +34,7 @@ export default function ContactRequestCard({
   const isResolved = request.status === "resolved";
 
   return (
-    <View className="bg-neutral-900 rounded-xl mb-3 border border-neutral-800 p-4">
+    <View className={`${bgCard} rounded-xl mb-3 border ${border} p-4`}>
       {/* Status and date */}
       <View className="flex-row items-center justify-between mb-3">
         <View
@@ -57,19 +57,19 @@ export default function ContactRequestCard({
             </Text>
           </View>
         </View>
-        <Text className="text-gray-500 text-xs">
+        <Text className={`${textMuted} text-xs`}>
           {formatDate(request.created_at)}
         </Text>
       </View>
 
       {/* Email with verification */}
       <View className="mb-3">
-        <Text className="text-gray-500 text-xs mb-1">From</Text>
+        <Text className={`${textMuted} text-xs mb-1`}>From</Text>
         <View className="flex-row items-center gap-2">
           <View className="bg-cyan-500/20 w-8 h-8 rounded-full items-center justify-center">
             <Ionicons name="mail" size={16} color="#22d3ee" />
           </View>
-          <Text className="text-white font-semibold flex-1">
+          <Text className={`${textPrimary} font-semibold flex-1`}>
             {request.email}
           </Text>
           {request.verified !== undefined && (
@@ -89,10 +89,10 @@ export default function ContactRequestCard({
       </View>
 
       {/* Message */}
-      <View className="bg-neutral-800/50 rounded-lg p-3 mb-3">
+      <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
         <View className="flex-row items-center mb-2">
           <Ionicons name="chatbox-ellipses" size={14} color="#6B7280" />
-          <Text className="text-gray-500 text-xs ml-1.5">Message</Text>
+          <Text className={`${textMuted} text-xs ml-1.5`}>Message</Text>
         </View>
         <Text className="text-gray-300 leading-5">{request.message}</Text>
       </View>

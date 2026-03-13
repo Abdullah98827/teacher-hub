@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface EmptyStateProps {
   icon?: string;
@@ -6,10 +7,11 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({ icon = "📭", message }: EmptyStateProps) {
+  const { bgCard, border, textSecondary } = useAppTheme();
   return (
-    <View className="bg-neutral-900 p-8 rounded-xl border border-neutral-800">
+    <View className={`${bgCard} p-8 rounded-xl border ${border}`}>
       <Text className="text-center text-6xl mb-4">{icon}</Text>
-      <Text className="text-center text-gray-400">{message}</Text>
+      <Text className={`text-center ${textSecondary}`}>{message}</Text>
     </View>
   );
 }

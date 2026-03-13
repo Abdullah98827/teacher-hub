@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { supabase } from "../supabase";
+import { useAppTheme } from "../hooks/useAppTheme";
 import ProfilePicture from "./ProfilePicture";
 
 interface Activity {
@@ -37,6 +38,7 @@ export default function ActivityFeed({
   limit = 20,
 }: ActivityFeedProps) {
   const router = useRouter();
+  const { bgCard, border, textPrimary, textSecondary, textMuted } = useAppTheme();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -155,7 +157,7 @@ export default function ActivityFeed({
 
     return (
       <TouchableOpacity
-        className="bg-neutral-900 p-4 rounded-xl mb-3 border border-neutral-800"
+        className={`${bgCard} p-4 rounded-xl mb-3 border ${border}`}
         onPress={() => handleActivityPress(item)}
         activeOpacity={0.7}
       >
@@ -176,10 +178,10 @@ export default function ActivityFeed({
           </View>
 
           <View className="flex-1">
-            <Text className="text-gray-300 text-sm leading-5">
+            <Text className={`${textSecondary} text-sm leading-5`}>
               {getActivityText(item)}
             </Text>
-            <Text className="text-gray-500 text-xs mt-1">
+            <Text className={`${textMuted} text-xs mt-1`}>
               {formatTime(item.created_at)}
             </Text>
           </View>
@@ -202,10 +204,10 @@ export default function ActivityFeed({
         <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
           <Ionicons name="pulse" size={32} color="#22d3ee" />
         </View>
-        <Text className="text-white font-bold text-lg mb-1">
+        <Text className={`${textPrimary} font-bold text-lg mb-1`}>
           No Activity Yet
         </Text>
-        <Text className="text-gray-400 text-center text-sm px-8">
+        <Text className={`${textSecondary} text-center text-sm px-8`}>
           Follow teachers to see their activities here
         </Text>
         <TouchableOpacity

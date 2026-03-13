@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
-import useAppTheme from "../hooks/useAppTheme";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface MembershipCardProps {
   membership: {
