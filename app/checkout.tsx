@@ -11,10 +11,19 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 export default function CheckoutScreen() {
   const router = useRouter();
+  const {
+    bgCard,
+    bgInput,
+    border,
+    textPrimary,
+    textSecondary,
+    placeholderColor,
+  } = useAppTheme();
   const [loading, setLoading] = useState(false);
   const [tier, setTier] = useState<string | null>(null);
   const [subjectNames, setSubjectNames] = useState<string[]>([]);
@@ -115,107 +124,106 @@ export default function CheckoutScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Text className="text-white text-2xl font-bold mb-4">
+        <Text className={`${textPrimary} text-2xl font-bold mb-4`}>
           Confirm Your Membership
         </Text>
-        <Text className="text-gray-400 text-sm mb-4">
+        <Text className={`${textSecondary} text-sm mb-4`}>
           🔒 Secure Stripe-style Checkout
         </Text>
 
-        <View className="bg-neutral-900 p-4 rounded-xl mb-6 border border-neutral-700">
+        <View className={`${bgCard} p-4 rounded-xl mb-6 ${border} border`}>
           <Text className="text-cyan-400 text-lg font-semibold mb-2">
             Tier:{" "}
             {tier === "single"
               ? "Single Subject (£9.99)"
               : "Multi Subject (£16.99)"}
           </Text>
-          <Text className="text-white font-semibold mb-1">Subjects:</Text>
+          <Text className={`${textPrimary} font-semibold mb-1`}>Subjects:</Text>
           {subjectNames.map((name) => (
-            <Text key={name} className="text-gray-300 ml-2 mb-1">
+            <Text key={name} className={`${textSecondary} ml-2 mb-1`}>
               • {name}
             </Text>
           ))}
-          <Text className="text-white mt-4 font-semibold">
+          <Text className={`${textPrimary} mt-4 font-semibold`}>
             Total: {tier === "single" ? "£9.99" : "£16.99"}
           </Text>
         </View>
 
-        <Text className="text-white text-lg font-semibold mb-2">
+        <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
           Cardholder Name
         </Text>
         <TextInput
           placeholder="First Name"
-          placeholderTextColor="#888"
+          placeholderTextColor={placeholderColor}
           value={firstName}
           onChangeText={setFirstName}
-          className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
         <TextInput
           placeholder="Last Name"
-          placeholderTextColor="#888"
+          placeholderTextColor={placeholderColor}
           value={lastName}
           onChangeText={setLastName}
-          className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
 
-        <Text className="text-white text-lg font-semibold mb-2">
+        <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
           Card Details
         </Text>
         <TextInput
           placeholder="Card Number"
-          placeholderTextColor="#888"
+          placeholderTextColor={placeholderColor}
           value={cardNumber}
           keyboardType="numeric"
           onChangeText={(text) => {
-            // this only allow numbers, and max 16 digits
             const cleaned = text.replace(/\D/g, "").slice(0, 16);
             setCardNumber(cleaned);
           }}
-          className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
         <View className="flex-row gap-4">
           <TextInput
             placeholder="MM/YY"
-            placeholderTextColor="#888"
+            placeholderTextColor={placeholderColor}
             value={expiry}
             onChangeText={setExpiry}
             keyboardType="numeric"
-            className="flex-1 bg-neutral-800 text-white p-3 rounded-xl mb-3"
+            className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
           />
           <TextInput
             placeholder="CVV"
-            placeholderTextColor="#888"
+            placeholderTextColor={placeholderColor}
             value={cvv}
             onChangeText={setCvv}
             keyboardType="numeric"
             secureTextEntry
-            className="flex-1 bg-neutral-800 text-white p-3 rounded-xl mb-3"
+            className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
           />
         </View>
 
-        <Text className="text-white text-lg font-semibold mb-2">
+        <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
           Billing Address
         </Text>
         <TextInput
           placeholder="Address"
-          placeholderTextColor="#888"
+          placeholderTextColor={placeholderColor}
           value={address}
           onChangeText={setAddress}
-          className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
         <TextInput
           placeholder="City"
-          placeholderTextColor="#888"
+          placeholderTextColor={placeholderColor}
           value={city}
           onChangeText={setCity}
-          className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
         <TextInput
           placeholder="Postcode"
-          placeholderTextColor="#888"
+          placeholderTextColor={placeholderColor}
           value={postcode}
           onChangeText={setPostcode}
-          className="bg-neutral-800 text-white p-3 rounded-xl mb-3"
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
 
         <TouchableOpacity
@@ -234,7 +242,7 @@ export default function CheckoutScreen() {
 
         <View className="flex-row justify-between mt-6">
           <TouchableOpacity
-            className="flex-1 bg-neutral-800 p-3 rounded-xl mr-2 active:scale-95"
+            className={`flex-1 ${bgInput} p-3 rounded-xl mr-2 active:scale-95`}
             onPress={() => router.push("/contact")}
           >
             <Text className="text-center text-cyan-400 font-medium">
@@ -243,14 +251,14 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className="flex-1 bg-neutral-700 p-3 rounded-xl ml-2 active:scale-95"
+            className={`flex-1 ${bgCard} p-3 rounded-xl ml-2 active:scale-95`}
             onPress={() => router.back()}
           >
-            <Text className="text-center text-white font-medium">Back</Text>
+            <Text className={`text-center ${textPrimary} font-medium`}>Back</Text>
           </TouchableOpacity>
         </View>
 
-        <Text className="text-center text-gray-500 text-xs mt-6">
+        <Text className={`text-center ${textSecondary} text-xs mt-6`}>
           Powered by Teacher Hub
         </Text>
       </ScrollView>

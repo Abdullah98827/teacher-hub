@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 interface ReportModalProps {
@@ -69,6 +70,8 @@ export default function ReportModal({
   const [selectedReason, setSelectedReason] = useState("");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const { bgCard, bgCardAlt, bgInput, border, borderInput, textPrimary, textSecondary, textMuted, placeholderColor } = useAppTheme();
 
   const handleClose = () => {
     setSelectedReason("");
@@ -147,20 +150,20 @@ export default function ReportModal({
       >
         <View className="flex-1 bg-black/80 justify-center items-center p-4">
           <View
-            className="bg-neutral-900 rounded-2xl w-full max-w-md border-2 border-neutral-700"
+            className={`${bgCard} rounded-2xl w-full max-w-md border-2 ${border}`}
             style={{ maxHeight: "80%" }}
           >
-            <View className="flex-row items-center justify-between p-4 border-b border-neutral-800">
+            <View className={`flex-row items-center justify-between p-4 border-b ${border}`}>
               <View className="flex-row items-center flex-1 pr-2">
                 <View className="bg-red-600/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="flag" size={20} color="#ef4444" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white font-bold text-lg">
+                  <Text className={`${textPrimary} font-bold text-lg`}>
                     Report Resource
                   </Text>
                   <Text
-                    className="text-gray-400 text-xs mt-1"
+                    className={`${textMuted} text-xs mt-1`}
                     numberOfLines={1}
                   >
                     {resourceTitle}
@@ -169,7 +172,7 @@ export default function ReportModal({
               </View>
               <TouchableOpacity
                 onPress={handleClose}
-                className="bg-neutral-800 w-10 h-10 rounded-full items-center justify-center"
+                className={`${bgCardAlt} w-10 h-10 rounded-full items-center justify-center`}
               >
                 <Ionicons name="close" size={24} color="#ffffff" />
               </TouchableOpacity>
@@ -187,14 +190,14 @@ export default function ReportModal({
                 </View>
 
                 {/* Reasons */}
-                <Text className="text-white font-semibold mb-3 text-sm">
+                <Text className={`${textPrimary} font-semibold mb-3 text-sm`}>
                   Select a reason:
                 </Text>
                 <View className="gap-2 mb-4">
                   {REPORT_REASONS.map((reason) => (
                     <TouchableOpacity
                       key={reason.id}
-                      className={`bg-neutral-800 rounded-xl p-3 border-2 ${
+                      className={`${bgCardAlt} rounded-xl p-3 border-2 ${
                         selectedReason === reason.id
                           ? "border-red-600"
                           : "border-transparent"
@@ -225,12 +228,12 @@ export default function ReportModal({
                             className={`font-semibold mb-1 text-sm ${
                               selectedReason === reason.id
                                 ? "text-red-400"
-                                : "text-white"
+                                : textPrimary
                             }`}
                           >
                             {reason.label}
                           </Text>
-                          <Text className="text-gray-400 text-xs">
+                          <Text className={`${textMuted} text-xs`}>
                             {reason.description}
                           </Text>
                         </View>
@@ -247,13 +250,13 @@ export default function ReportModal({
                 </View>
 
                 {/* Additional Details */}
-                <Text className="text-white font-semibold mb-2 text-sm">
+                <Text className={`${textPrimary} font-semibold mb-2 text-sm`}>
                   Additional details (optional):
                 </Text>
                 <TextInput
-                  className="bg-neutral-800 text-white px-3 py-3 rounded-xl border border-neutral-700 mb-2 text-sm"
+                  className={`${bgInput} ${textPrimary} px-3 py-3 rounded-xl border ${borderInput} mb-2 text-sm`}
                   placeholder="Provide more information..."
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={placeholderColor}
                   value={description}
                   onChangeText={setDescription}
                   multiline
@@ -264,7 +267,7 @@ export default function ReportModal({
                 />
 
                 {/* Character count */}
-                <Text className="text-gray-500 text-xs text-right mb-4">
+                <Text className={`${textMuted} text-xs text-right mb-4`}>
                   {description.length}/500
                 </Text>
 
@@ -292,7 +295,7 @@ export default function ReportModal({
                   disabled={submitting}
                   activeOpacity={0.7}
                 >
-                  <Text className="text-gray-400 text-center text-sm">
+                  <Text className={`${textSecondary} text-center text-sm`}>
                     Cancel
                   </Text>
                 </TouchableOpacity>

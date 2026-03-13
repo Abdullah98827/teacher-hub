@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
 interface RatingModalProps {
@@ -30,6 +31,8 @@ export default function RatingModal({
   const [selectedRating, setSelectedRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const { bgCard, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   const fetchUserRating = useCallback(async () => {
     if (!resourceId) return;
@@ -143,18 +146,18 @@ export default function RatingModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/70 justify-center items-center px-5">
-        <View className="bg-neutral-900 rounded-2xl w-full max-w-md border border-neutral-800">
+        <View className={`${bgCard} rounded-2xl w-full max-w-md border ${border}`}>
           {/* Header */}
-          <View className="p-5 border-b border-neutral-800">
+          <View className={`p-5 border-b ${border}`}>
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-white font-bold text-xl">
+              <Text className={`${textPrimary} font-bold text-xl`}>
                 Rate Resource
               </Text>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
-            <Text className="text-gray-400 text-sm" numberOfLines={2}>
+            <Text className={`${textMuted} text-sm`} numberOfLines={2}>
               {resourceTitle}
             </Text>
           </View>
@@ -166,7 +169,7 @@ export default function RatingModal({
             </View>
           ) : (
             <View className="p-6">
-              <Text className="text-white text-center text-lg mb-6">
+              <Text className={`${textPrimary} text-center text-lg mb-6`}>
                 How would you rate this resource?
               </Text>
 
@@ -218,7 +221,7 @@ export default function RatingModal({
                 onPress={onClose}
                 disabled={submitting}
               >
-                <Text className="text-gray-400 text-center">Cancel</Text>
+                <Text className={`${textSecondary} text-center`}>Cancel</Text>
               </TouchableOpacity>
             </View>
           )}

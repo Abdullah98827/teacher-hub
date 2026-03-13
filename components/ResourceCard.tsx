@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Text, TouchableOpacity, View } from "react-native";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface ResourceCardProps {
   title: string;
@@ -54,6 +55,7 @@ export default function ResourceCard({
   onViewProfile, // NEW
   showActions = false,
 }: ResourceCardProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
   const categoryIcons = {
     powerpoint: "easel",
     worksheet: "document-text",
@@ -101,7 +103,7 @@ export default function ResourceCard({
 
   return (
     <TouchableOpacity
-      className="bg-neutral-900 rounded-xl mb-4 border border-neutral-800"
+      className={`${bgCard} rounded-xl mb-4 ${border} border`}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -137,11 +139,11 @@ export default function ResourceCard({
         </View>
 
         {/* Title */}
-        <Text className="text-white text-lg font-bold mb-2">{title}</Text>
+        <Text className={`${textPrimary} text-lg font-bold mb-2`}>{title}</Text>
 
         {/* Description */}
         {description && (
-          <Text className="text-gray-400 text-sm mb-3" numberOfLines={2}>
+          <Text className={`${textSecondary} text-sm mb-3`} numberOfLines={2}>
             {description}
           </Text>
         )}
@@ -155,7 +157,7 @@ export default function ResourceCard({
             <Text className="text-yellow-400 font-bold text-sm mr-1">
               {averageRating.toFixed(1)}
             </Text>
-            <Text className="text-gray-500 text-xs">({ratingCount})</Text>
+            <Text className={`${textMuted} text-xs`}>({ratingCount})</Text>
           </View>
         )}
 
@@ -170,19 +172,19 @@ export default function ResourceCard({
           {/* Views */}
           <View className="flex-row items-center">
             <Ionicons name="eye" size={16} color="#9CA3AF" />
-            <Text className="text-gray-400 text-xs ml-1">{views}</Text>
+            <Text className={`${textMuted} text-xs ml-1`}>{views}</Text>
           </View>
 
           {/* Downloads */}
           <View className="flex-row items-center">
             <Ionicons name="download" size={16} color="#9CA3AF" />
-            <Text className="text-gray-400 text-xs ml-1">{downloads}</Text>
+            <Text className={`${textMuted} text-xs ml-1`}>{downloads}</Text>
           </View>
 
           {/* Comments */}
           <View className="flex-row items-center">
             <Ionicons name="chatbubble" size={16} color="#9CA3AF" />
-            <Text className="text-gray-400 text-xs ml-1">{commentCount}</Text>
+            <Text className={`${textMuted} text-xs ml-1`}>{commentCount}</Text>
           </View>
         </View>
 
@@ -190,7 +192,7 @@ export default function ResourceCard({
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center">
             <Ionicons name="time" size={14} color="#6B7280" />
-            <Text className="text-gray-500 text-xs ml-1">{createdAt}</Text>
+            <Text className={`${textMuted} text-xs ml-1`}>{createdAt}</Text>
           </View>
 
           {/* NEW: Clickable uploader name */}
@@ -210,7 +212,7 @@ export default function ResourceCard({
                 className={`text-xs ml-1 ${
                   uploadedById && onViewProfile
                     ? "text-cyan-400 font-semibold"
-                    : "text-gray-500"
+                    : textSecondary
                 }`}
               >
                 {uploadedBy}
@@ -220,7 +222,7 @@ export default function ResourceCard({
         </View>
 
         {/* Action Buttons Row */}
-        <View className="flex-row items-center justify-between pt-3 border-t border-neutral-800">
+        <View className={`flex-row items-center justify-between pt-3 border-t ${border}`}>
           {/* Comment Button */}
           {onComment && (
             <TouchableOpacity
@@ -228,7 +230,7 @@ export default function ResourceCard({
               onPress={onComment}
             >
               <Ionicons name="chatbubble-outline" size={18} color="#22d3ee" />
-              <Text className="text-gray-400 text-xs ml-1 font-semibold">
+              <Text className={`${textMuted} text-xs ml-1 font-semibold`}>
                 Comment
               </Text>
             </TouchableOpacity>
@@ -241,7 +243,7 @@ export default function ResourceCard({
               onPress={onRate}
             >
               <Ionicons name="star-outline" size={18} color="#fbbf24" />
-              <Text className="text-gray-400 text-xs ml-1 font-semibold">
+              <Text className={`${textMuted} text-xs ml-1 font-semibold`}>
                 Rate
               </Text>
             </TouchableOpacity>
@@ -260,7 +262,7 @@ export default function ResourceCard({
               />
               <Text
                 className={`text-xs ml-1 font-semibold ${
-                  isBookmarked ? "text-cyan-400" : "text-gray-400"
+                  isBookmarked ? "text-cyan-400" : textMuted
                 }`}
               >
                 {isBookmarked ? "Saved" : "Save"}
@@ -275,7 +277,7 @@ export default function ResourceCard({
               onPress={onShare}
             >
               <Ionicons name="share-outline" size={18} color="#9CA3AF" />
-              <Text className="text-gray-400 text-xs ml-1 font-semibold">
+              <Text className={`${textMuted} text-xs ml-1 font-semibold`}>
                 Share
               </Text>
             </TouchableOpacity>
@@ -294,7 +296,7 @@ export default function ResourceCard({
 
         {/* Edit/Delete Actions (for own resources) */}
         {showActions && (
-          <View className="flex-row gap-2 mt-3 pt-3 border-t border-neutral-800">
+          <View className={`flex-row gap-2 mt-3 pt-3 border-t ${border}`}>
             {onEdit && (
               <TouchableOpacity
                 className="flex-1 bg-cyan-600 py-2 rounded-lg flex-row items-center justify-center"

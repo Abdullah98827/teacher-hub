@@ -19,6 +19,7 @@ import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
 import { useAuth } from "../../contexts/AuthContext";
+import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { deleteFile } from "../../utils/storage";
@@ -40,6 +41,7 @@ export default function AdminResourcesScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
+  const { bgCardAlt, bgCard, bgInput, border, borderInput, textPrimary, textSecondary, textMuted } = useAppTheme();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -311,7 +313,7 @@ export default function AdminResourcesScreen() {
             <Text className="text-white text-xl font-bold mb-2">
               No Resources
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               No {filter !== "all" ? filter : ""} resources found
             </Text>
           </View>
@@ -319,12 +321,12 @@ export default function AdminResourcesScreen() {
           <>
             {/* Advanced filters toggle */}
             <TouchableOpacity
-              className="bg-neutral-800 p-3 rounded-xl mb-3 flex-row items-center justify-between"
+              className={`${bgCardAlt} p-3 rounded-xl mb-3 flex-row items-center justify-between`}
               onPress={() => setShowFilters(!showFilters)}
             >
               <View className="flex-row items-center">
                 <Ionicons name="options" size={20} color="#22d3ee" />
-                <Text className="text-white font-semibold ml-2">
+                <Text className={`${textPrimary} font-semibold ml-2`}>
                   Advanced Filters
                 </Text>
               </View>
@@ -337,7 +339,7 @@ export default function AdminResourcesScreen() {
 
             {/* Advanced filters panel */}
             {showFilters && (
-              <View className="bg-neutral-900 p-4 rounded-xl mb-3 border border-neutral-800">
+              <View className={`${bgCard} p-4 rounded-xl mb-3 border ${border}`}>
                 <SearchBar
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -346,7 +348,7 @@ export default function AdminResourcesScreen() {
 
                 {/* Category filter */}
                 <View className="mb-3">
-                  <Text className="text-white font-semibold mb-2">
+                  <Text className={`${textPrimary} font-semibold mb-2`}>
                     Category
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
@@ -357,7 +359,7 @@ export default function AdminResourcesScreen() {
                           className={`px-3 py-2 rounded-lg ${
                             selectedCategory === cat
                               ? "bg-cyan-500"
-                              : "bg-neutral-800"
+                              : bgCardAlt
                           }`}
                           onPress={() => setSelectedCategory(cat)}
                         >
@@ -365,7 +367,7 @@ export default function AdminResourcesScreen() {
                             className={`font-semibold text-sm ${
                               selectedCategory === cat
                                 ? "text-white"
-                                : "text-gray-400"
+                                : textSecondary
                             }`}
                           >
                             {cat === "all"
@@ -384,14 +386,14 @@ export default function AdminResourcesScreen() {
 
                 {/* Subject filter */}
                 <View className="mb-3">
-                  <Text className="text-white font-semibold mb-2">Subject</Text>
+                  <Text className={`${textPrimary} font-semibold mb-2`}>Subject</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View className="flex-row gap-2">
                       <TouchableOpacity
                         className={`px-3 py-2 rounded-lg ${
                           selectedSubject === "all"
                             ? "bg-cyan-500"
-                            : "bg-neutral-800"
+                            : bgCardAlt
                         }`}
                         onPress={() => setSelectedSubject("all")}
                       >
@@ -399,7 +401,7 @@ export default function AdminResourcesScreen() {
                           className={`font-semibold text-sm ${
                             selectedSubject === "all"
                               ? "text-white"
-                              : "text-gray-400"
+                              : textSecondary
                           }`}
                         >
                           All
@@ -411,7 +413,7 @@ export default function AdminResourcesScreen() {
                           className={`px-3 py-2 rounded-lg ${
                             selectedSubject === subject
                               ? "bg-cyan-500"
-                              : "bg-neutral-800"
+                              : bgCardAlt
                           }`}
                           onPress={() => setSelectedSubject(subject)}
                         >
@@ -419,7 +421,7 @@ export default function AdminResourcesScreen() {
                             className={`font-semibold text-sm ${
                               selectedSubject === subject
                                 ? "text-white"
-                                : "text-gray-400"
+                                : textSecondary
                             }`}
                           >
                             {subject}
@@ -432,7 +434,7 @@ export default function AdminResourcesScreen() {
 
                 {/* Sort options */}
                 <View className="mb-3">
-                  <Text className="text-white font-semibold mb-2">Sort By</Text>
+                  <Text className={`${textPrimary} font-semibold mb-2`}>Sort By</Text>
                   <View className="flex-row gap-2">
                     {[
                       { value: "newest", label: "Newest" },
@@ -444,7 +446,7 @@ export default function AdminResourcesScreen() {
                         className={`px-3 py-2 rounded-lg ${
                           sortBy === sort.value
                             ? "bg-cyan-500"
-                            : "bg-neutral-800"
+                            : bgCardAlt
                         }`}
                         onPress={() => setSortBy(sort.value as any)}
                       >
@@ -452,7 +454,7 @@ export default function AdminResourcesScreen() {
                           className={`font-semibold text-sm ${
                             sortBy === sort.value
                               ? "text-white"
-                              : "text-gray-400"
+                              : textSecondary
                           }`}
                         >
                           {sort.label}
@@ -481,7 +483,7 @@ export default function AdminResourcesScreen() {
             )}
 
             {/* Results count */}
-            <Text className="text-gray-400 text-sm mb-3">
+            <Text className={`${textMuted} text-sm mb-3`}>
               Showing {finalFilteredResources.length} of{" "}
               {filteredResources.length} resources
             </Text>
@@ -494,7 +496,7 @@ export default function AdminResourcesScreen() {
                 <Text className="text-white text-lg font-bold mb-2">
                   No Matches
                 </Text>
-                <Text className="text-gray-400 text-center mb-4">
+                <Text className={`${textSecondary} text-center mb-4`}>
                   No resources match your filters
                 </Text>
                 <TouchableOpacity

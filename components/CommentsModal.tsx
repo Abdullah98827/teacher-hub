@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
 import UserProfileModal from "./UserProfileModal";
@@ -43,6 +44,18 @@ export default function CommentsModal({
   onClose,
 }: CommentsModalProps) {
   const router = useRouter();
+  const {
+    bg,
+    bgCard,
+    bgCardAlt,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    placeholderColor,
+  } = useAppTheme();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -349,7 +362,7 @@ export default function CommentsModal({
         key={comment.id}
         className={`mb-3 ${isReply ? "ml-8 border-l-2 border-cyan-500/30 pl-3" : ""}`}
       >
-        <View className="bg-neutral-800 rounded-xl p-4">
+        <View className={`${bgCardAlt} rounded-xl p-4`}>
           <View className="flex-row items-center justify-between mb-2">
             <TouchableOpacity
               className="flex-row items-center flex-1"
@@ -366,7 +379,7 @@ export default function CommentsModal({
                 <Text className="text-cyan-400 font-semibold text-sm">
                   {comment.first_name} {comment.last_name}
                 </Text>
-                <Text className="text-gray-500 text-xs">
+                <Text className={`${textMuted} text-xs`}>
                   {formatDate(comment.created_at)}
                 </Text>
               </View>
@@ -382,7 +395,7 @@ export default function CommentsModal({
             )}
           </View>
 
-          <Text className="text-gray-300 text-sm leading-5">
+          <Text className={`${textSecondary} text-sm leading-5`}>
             {comment.comment_text}
           </Text>
 
@@ -437,19 +450,19 @@ export default function CommentsModal({
       onRequestClose={onClose}
     >
       <KeyboardAvoidingView
-        className="flex-1 bg-black"
+        className={`flex-1 ${bg}`}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View className="bg-neutral-900 p-4 pt-12 border-b border-neutral-800">
+        <View className={`${bgCard} p-4 pt-12 border-b ${border}`}>
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose} className="p-2">
               <Ionicons name="close" size={28} color="#fff" />
             </TouchableOpacity>
-            <Text className="text-white font-bold text-lg flex-1 text-center mr-10">
+            <Text className={`${textPrimary} font-bold text-lg flex-1 text-center mr-10`}>
               Comments
             </Text>
           </View>
-          <Text className="text-gray-400 text-sm mt-2" numberOfLines={1}>
+          <Text className={`${textMuted} text-sm mt-2`} numberOfLines={1}>
             {resourceTitle}
           </Text>
         </View>
@@ -485,7 +498,7 @@ export default function CommentsModal({
                     className="bg-neutral-800 px-4 py-2.5 rounded-lg"
                     onPress={() => setShowDmSuggestion(false)}
                   >
-                    <Text className="text-gray-400 font-semibold text-sm">
+                    <Text className={`${textMuted} font-semibold text-sm`}>
                       Dismiss
                     </Text>
                   </TouchableOpacity>
@@ -504,10 +517,10 @@ export default function CommentsModal({
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="chatbubble-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">
+            <Text className={`${textPrimary} text-xl font-bold mb-2`}>
               No comments yet
             </Text>
-            <Text className="text-gray-400 text-center">
+            <Text className={`${textSecondary} text-center`}>
               Be the first to share your thoughts!
             </Text>
           </View>
@@ -537,12 +550,12 @@ export default function CommentsModal({
           </View>
         )}
 
-        <View className="bg-neutral-900 p-4 border-t border-neutral-800">
+        <View className={`${bgCard} p-4 border-t ${border}`}>
           <View className="flex-row items-end gap-2">
             <TextInput
-              className="flex-1 bg-neutral-800 text-white px-4 py-3 rounded-xl border border-neutral-700"
+              className={`flex-1 ${bgInput} ${textPrimary} px-4 py-3 rounded-xl border ${borderInput}`}
               placeholder="Add a comment..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={placeholderColor}
               value={commentText}
               onChangeText={setCommentText}
               multiline
@@ -587,23 +600,23 @@ export default function CommentsModal({
         onRequestClose={() => setShowDeleteConfirm(false)}
       >
         <View className="flex-1 bg-black/50 justify-center items-center p-5">
-          <View className="bg-neutral-900 rounded-2xl p-6 w-full max-w-sm">
-            <Text className="text-white text-xl font-bold mb-2">
+          <View className={`${bgCard} rounded-2xl p-6 w-full max-w-sm`}>
+            <Text className={`${textPrimary} text-xl font-bold mb-2`}>
               Delete Comment?
             </Text>
-            <Text className="text-gray-400 mb-6">
+            <Text className={`${textSecondary} mb-6`}>
               This action cannot be undone.
             </Text>
             <View className="flex-row gap-3">
               <TouchableOpacity
-                className="flex-1 bg-neutral-800 py-3 rounded-xl"
+                className={`flex-1 ${bgCardAlt} py-3 rounded-xl`}
                 onPress={() => {
                   setShowDeleteConfirm(false);
                   setDeleteCommentId(null);
                 }}
                 disabled={submitting}
               >
-                <Text className="text-white text-center font-bold">Cancel</Text>
+                <Text className={`${textPrimary} text-center font-bold`}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className={`flex-1 bg-red-600 py-3 rounded-xl ${

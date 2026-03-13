@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../hooks/useAppTheme";
 import { useFollow } from "../hooks/useFollow";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
@@ -54,6 +55,16 @@ export default function UserProfileModal({
     loading: followLoading,
     refresh: refreshFollowData,
   } = useFollow(userId);
+
+  const {
+    bg,
+    bgCard,
+    bgCardAlt,
+    border,
+    textPrimary,
+    textSecondary,
+    textMuted,
+  } = useAppTheme();
 
   useEffect(() => {
     getCurrentUser();
@@ -168,8 +179,8 @@ export default function UserProfileModal({
       transparent={false}
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-black">
-        <View className="bg-neutral-900 p-4 pt-12 border-b border-neutral-800">
+      <View className={`flex-1 ${bg}`}>
+        <View className={`${bgCard} p-4 pt-12 border-b ${border}`}>
           <View className="flex-row items-center justify-between">
             <Text className="text-2xl font-bold text-cyan-400">
               Teacher Profile
@@ -186,25 +197,25 @@ export default function UserProfileModal({
           </View>
         ) : profile ? (
           <ScrollView className="flex-1">
-            <View className="items-center p-6 bg-neutral-900">
+            <View className={`items-center p-6 ${bgCard}`}>
               <ProfilePicture
                 imageUrl={profile.profile_picture_url}
                 firstName={profile.first_name}
                 lastName={profile.last_name}
                 size="xl"
               />
-              <Text className="text-white text-2xl font-bold mt-4">
+              <Text className={`${textPrimary} text-2xl font-bold mt-4`}>
                 {profile.first_name} {profile.last_name}
               </Text>
               {profile.bio && (
-                <Text className="text-gray-400 text-center mt-2 px-4">
+                <Text className={`${textSecondary} text-center mt-2 px-4`}>
                   {profile.bio}
                 </Text>
               )}
               {profile.school_name && (
                 <View className="flex-row items-center mt-2">
                   <Ionicons name="school-outline" size={16} color="#9CA3AF" />
-                  <Text className="text-gray-400 ml-1">
+                  <Text className={`${textSecondary} ml-1`}>
                     {profile.school_name}
                   </Text>
                 </View>
@@ -212,7 +223,7 @@ export default function UserProfileModal({
               {profile.years_experience !== null && (
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={16} color="#9CA3AF" />
-                  <Text className="text-gray-400 ml-1">
+                  <Text className={`${textSecondary} ml-1`}>
                     {profile.years_experience}{" "}
                     {profile.years_experience === 1 ? "year" : "years"}{" "}
                     experience
@@ -231,7 +242,7 @@ export default function UserProfileModal({
                   <TouchableOpacity
                     className={`flex-1 py-3 rounded-xl flex-row items-center justify-center ${
                       isFollowing
-                        ? "bg-neutral-800 border border-cyan-600"
+                        ? `${bgCardAlt} border border-cyan-600`
                         : "bg-cyan-600"
                     }`}
                     onPress={toggleFollow}
@@ -256,15 +267,15 @@ export default function UserProfileModal({
               )}
             </View>
 
-            <View className="flex-row bg-neutral-900 border-t border-b border-neutral-800 mt-4">
+            <View className={`flex-row ${bgCard} border-t border-b ${border} mt-4`}>
               <TouchableOpacity
-                className="flex-1 items-center py-4 border-r border-neutral-800"
+                className={`flex-1 items-center py-4 border-r ${border}`}
                 onPress={() => handleNavigate(`/followers/${userId}`)}
               >
-                <Text className="text-white text-2xl font-bold">
+                <Text className={`${textPrimary} text-2xl font-bold`}>
                   {followersCount}
                 </Text>
-                <Text className="text-gray-400 text-sm">
+                <Text className={`${textSecondary} text-sm`}>
                   {followersCount === 1 ? "Follower" : "Followers"}
                 </Text>
               </TouchableOpacity>
@@ -272,31 +283,31 @@ export default function UserProfileModal({
                 className="flex-1 items-center py-4"
                 onPress={() => handleNavigate(`/following/${userId}`)}
               >
-                <Text className="text-white text-2xl font-bold">
+                <Text className={`${textPrimary} text-2xl font-bold`}>
                   {followingCount}
                 </Text>
-                <Text className="text-gray-400 text-sm">Following</Text>
+                <Text className={`${textSecondary} text-sm`}>Following</Text>
               </TouchableOpacity>
             </View>
 
-            <View className="bg-neutral-900 p-6 mt-4">
+            <View className={`${bgCard} p-6 mt-4`}>
               <Text className="text-lg font-bold text-cyan-400 mb-4">
                 Activity
               </Text>
               <View className="flex-row justify-around">
                 <View className="items-center">
-                  <Text className="text-white text-2xl font-bold">
+                  <Text className={`${textPrimary} text-2xl font-bold`}>
                     {profile.resource_count}
                   </Text>
-                  <Text className="text-gray-400 text-sm">
+                  <Text className={`${textSecondary} text-sm`}>
                     {profile.resource_count === 1 ? "Resource" : "Resources"}
                   </Text>
                 </View>
                 <View className="items-center">
-                  <Text className="text-white text-2xl font-bold">
+                  <Text className={`${textPrimary} text-2xl font-bold`}>
                     {profile.comment_count}
                   </Text>
-                  <Text className="text-gray-400 text-sm">
+                  <Text className={`${textSecondary} text-sm`}>
                     {profile.comment_count === 1 ? "Comment" : "Comments"}
                   </Text>
                 </View>
@@ -305,17 +316,17 @@ export default function UserProfileModal({
 
             {(profile.membership_tier ||
               profile.membership_subjects.length > 0) && (
-              <View className="bg-neutral-900 p-6 mt-4">
+              <View className={`${bgCard} p-6 mt-4`}>
                 <Text className="text-lg font-bold text-cyan-400 mb-4">
                   Professional Info
                 </Text>
                 {profile.membership_tier && (
                   <View className="mb-4">
-                    <Text className="text-gray-400 text-xs mb-2">
+                    <Text className={`${textMuted} text-xs mb-2`}>
                       Membership Tier
                     </Text>
-                    <View className="bg-neutral-800 px-4 py-2 rounded-lg">
-                      <Text className="text-white font-semibold">
+                    <View className={`${bgCardAlt} px-4 py-2 rounded-lg`}>
+                      <Text className={`${textPrimary} font-semibold`}>
                         {profile.membership_tier === "single"
                           ? "Single Subject"
                           : "Multi Subject"}
@@ -325,7 +336,7 @@ export default function UserProfileModal({
                 )}
                 {profile.membership_subjects.length > 0 && (
                   <View>
-                    <Text className="text-gray-400 text-xs mb-2">Subjects</Text>
+                    <Text className={`${textMuted} text-xs mb-2`}>Subjects</Text>
                     <View className="flex-row flex-wrap gap-2">
                       {profile.membership_subjects.map((subject) => (
                         <View
@@ -347,10 +358,10 @@ export default function UserProfileModal({
         ) : (
           <View className="flex-1 items-center justify-center p-6">
             <Ionicons name="person-outline" size={64} color="#6B7280" />
-            <Text className="text-white text-xl font-bold mt-4">
+            <Text className={`${textPrimary} text-xl font-bold mt-4`}>
               Profile Not Found
             </Text>
-            <Text className="text-gray-400 text-center mt-2">
+            <Text className={`${textSecondary} text-center mt-2`}>
               This profile could not be loaded
             </Text>
           </View>

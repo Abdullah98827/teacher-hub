@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
+import { useAppTheme } from "../hooks/useAppTheme";
 
 interface ShareModalProps {
   visible: boolean;
@@ -15,6 +16,8 @@ export default function ShareModal({
   resourceTitle,
   onClose,
 }: ShareModalProps) {
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+
   const handleCopyLink = () => {
     // For now, just showing a message
     // When i implement the chat, this will copy a shareable link
@@ -43,15 +46,15 @@ export default function ShareModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/70 justify-center items-center px-5">
-        <View className="bg-neutral-900 rounded-2xl w-full max-w-md border border-neutral-800">
+        <View className={`${bgCard} rounded-2xl w-full max-w-md border ${border}`}>
           {/* Header */}
-          <View className="p-5 border-b border-neutral-800">
+          <View className={`p-5 border-b ${border}`}>
             <View className="flex-row items-center justify-between mb-2">
               <View className="flex-row items-center">
                 <View className="bg-cyan-600/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="share-social" size={20} color="#22d3ee" />
                 </View>
-                <Text className="text-white font-bold text-xl">
+                <Text className={`${textPrimary} font-bold text-xl`}>
                   Share Resource
                 </Text>
               </View>
@@ -59,7 +62,7 @@ export default function ShareModal({
                 <Ionicons name="close" size={24} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
-            <Text className="text-gray-400 text-sm" numberOfLines={2}>
+            <Text className={`${textMuted} text-sm`} numberOfLines={2}>
               {resourceTitle}
             </Text>
           </View>
@@ -72,20 +75,20 @@ export default function ShareModal({
                 <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
                   <Ionicons name="chatbubbles" size={32} color="#22d3ee" />
                 </View>
-                <Text className="text-white font-bold text-lg mb-2 text-center">
+                <Text className={`${textPrimary} font-bold text-lg mb-2 text-center`}>
                   Share with Teachers
                 </Text>
-                <Text className="text-gray-300 text-sm text-center">
+                <Text className={`${textSecondary} text-sm text-center`}>
                   Share resources directly in subject groups and one-on-one
                   chats when our Community feature launches!
                 </Text>
               </View>
             </View>
 
-            {/* Share Options (Disabled for now) */}
+            {/* Share Options */}
             <View className="gap-3 mb-4">
               <TouchableOpacity
-                className="bg-neutral-800 rounded-xl p-4 flex-row items-center opacity-50"
+                className={`${bgCardAlt} rounded-xl p-4 flex-row items-center opacity-50`}
                 onPress={handleShareToChat}
                 disabled
               >
@@ -93,10 +96,10 @@ export default function ShareModal({
                   <Ionicons name="chatbubbles" size={24} color="#a855f7" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white font-semibold mb-1">
+                  <Text className={`${textPrimary} font-semibold mb-1`}>
                     Share to Group Chat
                   </Text>
-                  <Text className="text-gray-400 text-xs">
+                  <Text className={`${textMuted} text-xs`}>
                     Send to subject groups
                   </Text>
                 </View>
@@ -108,7 +111,7 @@ export default function ShareModal({
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="bg-neutral-800 rounded-xl p-4 flex-row items-center opacity-50"
+                className={`${bgCardAlt} rounded-xl p-4 flex-row items-center opacity-50`}
                 onPress={handleShareToChat}
                 disabled
               >
@@ -116,10 +119,10 @@ export default function ShareModal({
                   <Ionicons name="person" size={24} color="#3b82f6" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white font-semibold mb-1">
+                  <Text className={`${textPrimary} font-semibold mb-1`}>
                     Share to Teacher
                   </Text>
-                  <Text className="text-gray-400 text-xs">
+                  <Text className={`${textMuted} text-xs`}>
                     Send via direct message
                   </Text>
                 </View>
@@ -131,17 +134,17 @@ export default function ShareModal({
               </TouchableOpacity>
 
               <TouchableOpacity
-                className="bg-neutral-800 rounded-xl p-4 flex-row items-center"
+                className={`${bgCardAlt} rounded-xl p-4 flex-row items-center`}
                 onPress={handleCopyLink}
               >
                 <View className="bg-cyan-600/20 w-12 h-12 rounded-full items-center justify-center mr-4">
                   <Ionicons name="link" size={24} color="#22d3ee" />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-white font-semibold mb-1">
+                  <Text className={`${textPrimary} font-semibold mb-1`}>
                     Copy Link
                   </Text>
-                  <Text className="text-gray-400 text-xs">
+                  <Text className={`${textMuted} text-xs`}>
                     Share via other apps
                   </Text>
                 </View>
@@ -159,10 +162,10 @@ export default function ShareModal({
 
             {/* Close Button */}
             <TouchableOpacity
-              className="mt-5 py-4 bg-neutral-800 rounded-xl"
+              className={`mt-5 py-4 ${bgCardAlt} rounded-xl`}
               onPress={onClose}
             >
-              <Text className="text-white text-center font-semibold">
+              <Text className={`${textPrimary} text-center font-semibold`}>
                 Close
               </Text>
             </TouchableOpacity>
