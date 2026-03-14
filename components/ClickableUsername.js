@@ -1,4 +1,5 @@
-import { Text, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
+import { ThemedText } from './themed-text';
 
 export default function ClickableUsername({
   userId,
@@ -13,7 +14,7 @@ export default function ClickableUsername({
 
   return (
     <TouchableOpacity onPress={() => onPress(userId)} activeOpacity={0.7}>
-      <Text className={className}>{displayName}</Text>
+      <ThemedText className={className}>{displayName}</ThemedText>
     </TouchableOpacity>
   );
 }

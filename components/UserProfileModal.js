@@ -4,7 +4,6 @@ import {
     ActivityIndicator,
     Modal,
     ScrollView,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -13,6 +12,7 @@ import { useAppTheme } from "../hooks/useAppTheme";
 import { useFollow } from "../hooks/useFollow";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
+import { ThemedText } from './themed-text';
 
 export default function UserProfileModal({
   visible,
@@ -163,9 +163,9 @@ export default function UserProfileModal({
       <View className={`flex-1 ${bg}`}>
         <View className={`${bgCard} p-4 pt-12 border-b ${border}`}>
           <View className="flex-row items-center justify-between">
-            <Text className="text-2xl font-bold text-cyan-400">
+            <ThemedText className="text-2xl font-bold text-cyan-400">
               Teacher Profile
-            </Text>
+            </ThemedText>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={28} color="#22d3ee" />
             </TouchableOpacity>
@@ -185,30 +185,30 @@ export default function UserProfileModal({
                 lastName={profile.last_name}
                 size="xl"
               />
-              <Text className={`${textPrimary} text-2xl font-bold mt-4`}>
+              <ThemedText className={`${textPrimary} text-2xl font-bold mt-4`}>
                 {profile.first_name} {profile.last_name}
-              </Text>
+              </ThemedText>
               {profile.bio && (
-                <Text className={`${textSecondary} text-center mt-2 px-4`}>
+                <ThemedText className={`${textSecondary} text-center mt-2 px-4`}>
                   {profile.bio}
-                </Text>
+                </ThemedText>
               )}
               {profile.school_name && (
                 <View className="flex-row items-center mt-2">
                   <Ionicons name="school-outline" size={16} color="#9CA3AF" />
-                  <Text className={`${textSecondary} ml-1`}>
+                  <ThemedText className={`${textSecondary} ml-1`}>
                     {profile.school_name}
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
               {profile.years_experience !== null && (
                 <View className="flex-row items-center mt-1">
                   <Ionicons name="time-outline" size={16} color="#9CA3AF" />
-                  <Text className={`${textSecondary} ml-1`}>
+                  <ThemedText className={`${textSecondary} ml-1`}>
                     {profile.years_experience}{" "}
                     {profile.years_experience === 1 ? "year" : "years"}{" "}
                     experience
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
               {currentUserId !== userId && (
@@ -218,7 +218,7 @@ export default function UserProfileModal({
                     onPress={handleMessage}
                   >
                     <Ionicons name="mail" size={20} color="#fff" />
-                    <Text className="text-white font-bold ml-2">Message</Text>
+                    <ThemedText className="text-white font-bold ml-2">Message</ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
                     className={`flex-1 py-3 rounded-xl flex-row items-center justify-center ${
@@ -238,11 +238,11 @@ export default function UserProfileModal({
                           size={20}
                           color={isFollowing ? "#0e7490" : "#fff"}
                         />
-                        <Text
+                        <ThemedText
                           className={`font-bold ml-2 ${isFollowing ? "text-cyan-700" : "text-white"}`}
                         >
                           {isFollowing ? "Unfollow" : "Follow"}
-                        </Text>
+                        </ThemedText>
                       </>
                     )}
                   </TouchableOpacity>
@@ -257,44 +257,44 @@ export default function UserProfileModal({
                 className={`flex-1 items-center py-4 border-r ${border}`}
                 onPress={() => handleNavigate(`/followers/${userId}`)}
               >
-                <Text className={`${textPrimary} text-2xl font-bold`}>
+                <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                   {followersCount}
-                </Text>
-                <Text className={`${textSecondary} text-sm`}>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-sm`}>
                   {followersCount === 1 ? "Follower" : "Followers"}
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 items-center py-4"
                 onPress={() => handleNavigate(`/following/${userId}`)}
               >
-                <Text className={`${textPrimary} text-2xl font-bold`}>
+                <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                   {followingCount}
-                </Text>
-                <Text className={`${textSecondary} text-sm`}>Following</Text>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-sm`}>Following</ThemedText>
               </TouchableOpacity>
             </View>
 
             <View className={`${bgCard} p-6 mt-4`}>
-              <Text className="text-lg font-bold text-cyan-400 mb-4">
+              <ThemedText className="text-lg font-bold text-cyan-400 mb-4">
                 Activity
-              </Text>
+              </ThemedText>
               <View className="flex-row justify-around">
                 <View className="items-center">
-                  <Text className={`${textPrimary} text-2xl font-bold`}>
+                  <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                     {profile.resource_count}
-                  </Text>
-                  <Text className={`${textSecondary} text-sm`}>
+                  </ThemedText>
+                  <ThemedText className={`${textSecondary} text-sm`}>
                     {profile.resource_count === 1 ? "Resource" : "Resources"}
-                  </Text>
+                  </ThemedText>
                 </View>
                 <View className="items-center">
-                  <Text className={`${textPrimary} text-2xl font-bold`}>
+                  <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                     {profile.comment_count}
-                  </Text>
-                  <Text className={`${textSecondary} text-sm`}>
+                  </ThemedText>
+                  <ThemedText className={`${textSecondary} text-sm`}>
                     {profile.comment_count === 1 ? "Comment" : "Comments"}
-                  </Text>
+                  </ThemedText>
                 </View>
               </View>
             </View>
@@ -302,37 +302,37 @@ export default function UserProfileModal({
             {(profile.membership_tier ||
               profile.membership_subjects.length > 0) && (
               <View className={`${bgCard} p-6 mt-4`}>
-                <Text className="text-lg font-bold text-cyan-400 mb-4">
+                <ThemedText className="text-lg font-bold text-cyan-400 mb-4">
                   Professional Info
-                </Text>
+                </ThemedText>
                 {profile.membership_tier && (
                   <View className="mb-4">
-                    <Text className={`${textMuted} text-xs mb-2`}>
+                    <ThemedText className={`${textMuted} text-xs mb-2`}>
                       Membership Tier
-                    </Text>
+                    </ThemedText>
                     <View className={`${bgCardAlt} px-4 py-2 rounded-lg`}>
-                      <Text className={`${textPrimary} font-semibold`}>
+                      <ThemedText className={`${textPrimary} font-semibold`}>
                         {profile.membership_tier === "single"
                           ? "Single Subject"
                           : "Multi Subject"}
-                      </Text>
+                      </ThemedText>
                     </View>
                   </View>
                 )}
                 {profile.membership_subjects.length > 0 && (
                   <View>
-                    <Text className={`${textMuted} text-xs mb-2`}>
+                    <ThemedText className={`${textMuted} text-xs mb-2`}>
                       Subjects
-                    </Text>
+                    </ThemedText>
                     <View className="flex-row flex-wrap gap-2">
                       {profile.membership_subjects.map((subject) => (
                         <View
                           key={subject.id}
                           className="bg-cyan-600 px-3 py-1 rounded-full"
                         >
-                          <Text className="text-white text-xs">
+                          <ThemedText className="text-white text-xs">
                             {subject.name}
-                          </Text>
+                          </ThemedText>
                         </View>
                       ))}
                     </View>
@@ -345,12 +345,12 @@ export default function UserProfileModal({
         ) : (
           <View className="flex-1 items-center justify-center p-6">
             <Ionicons name="person-outline" size={64} color="#6B7280" />
-            <Text className={`${textPrimary} text-xl font-bold mt-4`}>
+            <ThemedText className={`${textPrimary} text-xl font-bold mt-4`}>
               Profile Not Found
-            </Text>
-            <Text className={`${textSecondary} text-center mt-2`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-center mt-2`}>
               This profile could not be loaded
-            </Text>
+            </ThemedText>
           </View>
         )}
       </View>

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function AccessToggle({
   label,
@@ -15,7 +16,7 @@ export default function AccessToggle({
   const { textMuted } = useAppTheme();
   return (
     <View className="mb-4">
-      <Text className={`${textMuted} text-sm mb-3`}>{label}</Text>
+      <ThemedText className={`${textMuted} text-sm mb-3`}>{label}</ThemedText>
       <TouchableOpacity
         className={`p-4 rounded-lg border-2 ${
           isPublic
@@ -38,16 +39,16 @@ export default function AccessToggle({
               />
             </View>
             <View className="flex-1">
-              <Text
+              <ThemedText
                 className={`font-bold text-lg ${
                   isPublic ? "text-green-400" : "text-purple-400"
                 }`}
               >
                 {isPublic ? publicLabel : privateLabel}
-              </Text>
-              <Text className={`${textMuted} text-xs`}>
+              </ThemedText>
+              <ThemedText className={`${textMuted} text-xs`}>
                 {isPublic ? publicDescription : privateDescription}
-              </Text>
+              </ThemedText>
             </View>
           </View>
           <View

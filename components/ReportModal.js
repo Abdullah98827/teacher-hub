@@ -6,13 +6,13 @@ import {
     Modal,
     Platform,
     ScrollView,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedText } from './themed-text';
 import { ThemedTextInput } from './themed-textinput';
 
 const REPORT_REASONS = [
@@ -164,15 +164,15 @@ export default function ReportModal({
                   <Ionicons name="flag" size={20} color="#ef4444" />
                 </View>
                 <View className="flex-1">
-                  <Text className={`${textPrimary} font-bold text-lg`}>
+                  <ThemedText className={`${textPrimary} font-bold text-lg`}>
                     Report Resource
-                  </Text>
-                  <Text
+                  </ThemedText>
+                  <ThemedText
                     className={`${textMuted} text-xs mt-1`}
                     numberOfLines={1}
                   >
                     {resourceTitle}
-                  </Text>
+                  </ThemedText>
                 </View>
               </View>
               <TouchableOpacity
@@ -186,15 +186,15 @@ export default function ReportModal({
             <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
               <View className="p-4">
                 <View className="bg-red-900/20 border border-red-800 rounded-xl p-3 mb-4">
-                  <Text className="text-red-400 text-xs leading-5">
+                  <ThemedText className="text-red-400 text-xs leading-5">
                     Please select a reason for reporting this resource. Our team
                     will review it and take appropriate action.
-                  </Text>
+                  </ThemedText>
                 </View>
 
-                <Text className={`${textPrimary} font-semibold mb-3 text-sm`}>
+                <ThemedText className={`${textPrimary} font-semibold mb-3 text-sm`}>
                   Select a reason:
-                </Text>
+                </ThemedText>
                 <View className="gap-2 mb-4">
                   {REPORT_REASONS.map((reason) => (
                     <TouchableOpacity
@@ -226,7 +226,7 @@ export default function ReportModal({
                           />
                         </View>
                         <View className="flex-1">
-                          <Text
+                          <ThemedText
                             className={`font-semibold mb-1 text-sm ${
                               selectedReason === reason.id
                                 ? "text-red-400"
@@ -234,10 +234,10 @@ export default function ReportModal({
                             }`}
                           >
                             {reason.label}
-                          </Text>
-                          <Text className={`${textMuted} text-xs`}>
+                          </ThemedText>
+                          <ThemedText className={`${textMuted} text-xs`}>
                             {reason.description}
-                          </Text>
+                          </ThemedText>
                         </View>
                         {selectedReason === reason.id && (
                           <Ionicons
@@ -251,9 +251,9 @@ export default function ReportModal({
                   ))}
                 </View>
 
-                <Text className={`${textPrimary} font-semibold mb-2 text-sm`}>
+                <ThemedText className={`${textPrimary} font-semibold mb-2 text-sm`}>
                   Additional details (optional):
-                </Text>
+                </ThemedText>
                 <ThemedTextInput
                   className={`${bgInput} ${textPrimary} px-3 py-3 rounded-xl border ${borderInput} mb-2 text-sm`}
                   placeholder="Provide more information..."
@@ -267,9 +267,9 @@ export default function ReportModal({
                   style={{ minHeight: 80 }}
                 />
 
-                <Text className={`${textMuted} text-xs text-right mb-4`}>
+                <ThemedText className={`${textMuted} text-xs text-right mb-4`}>
                   {description.length}/500
-                </Text>
+                </ThemedText>
 
                 <TouchableOpacity
                   className={`bg-red-600 py-3 rounded-xl mb-2 ${
@@ -282,9 +282,9 @@ export default function ReportModal({
                   {submitting ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text className="text-white text-center font-bold text-base">
+                    <ThemedText className="text-white text-center font-bold text-base">
                       Submit Report
-                    </Text>
+                    </ThemedText>
                   )}
                 </TouchableOpacity>
 
@@ -294,9 +294,9 @@ export default function ReportModal({
                   disabled={submitting}
                   activeOpacity={0.7}
                 >
-                  <Text className={`${textSecondary} text-center text-sm`}>
+                  <ThemedText className={`${textSecondary} text-center text-sm`}>
                     Cancel
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             </ScrollView>

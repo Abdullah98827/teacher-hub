@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     ScrollView,
-    Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { ThemedText } from '../../components/themed-text';
+import { ThemedTextInput } from '../../components/themed-textinput';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
@@ -219,17 +219,17 @@ export default function UploadResourceScreen() {
     <ScreenWrapper>
       <LogoHeader position="left" />
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
-        <Text className="text-3xl font-bold text-cyan-400 mb-2">
+        <ThemedText className="text-3xl font-bold text-cyan-400 mb-2">
           Upload Resource
-        </Text>
-        <Text className={`${textSecondary} mb-6`}>
+        </ThemedText>
+        <ThemedText className={`${textSecondary} mb-6`}>
           Share your materials. Get 20% off after 10 approved uploads!
-        </Text>
+        </ThemedText>
 
         {/* Title */}
         <View className="mb-4">
-          <Text className={`${textPrimary} font-semibold mb-2`}>Title *</Text>
-          <TextInput
+          <ThemedText className={`${textPrimary} font-semibold mb-2`}>Title *</ThemedText>
+          <ThemedTextInput
             className={`${bgInput} ${textPrimary} px-4 py-3 rounded-xl border ${borderInput}`}
             placeholder="e.g., Algebra Worksheet - Quadratic Equations"
             placeholderTextColor={placeholderColor}
@@ -240,10 +240,10 @@ export default function UploadResourceScreen() {
 
         {/* Description */}
         <View className="mb-4">
-          <Text className={`${textPrimary} font-semibold mb-2`}>
+          <ThemedText className={`${textPrimary} font-semibold mb-2`}>
             Description (Optional)
-          </Text>
-          <TextInput
+          </ThemedText>
+          <ThemedTextInput
             className={`${bgInput} ${textPrimary} px-4 py-3 rounded-xl border ${borderInput}`}
             placeholder="Brief description..."
             placeholderTextColor={placeholderColor}
@@ -257,7 +257,7 @@ export default function UploadResourceScreen() {
 
         {/* Subject Selection */}
         <View className="mb-4">
-          <Text className={`${textPrimary} font-semibold mb-2`}>Subject *</Text>
+          <ThemedText className={`${textPrimary} font-semibold mb-2`}>Subject *</ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View className="flex-row gap-2">
               {subjects.map((subject) => (
@@ -270,13 +270,13 @@ export default function UploadResourceScreen() {
                   }`}
                   onPress={() => setSelectedSubject(subject.id)}
                 >
-                  <Text
+                  <ThemedText
                     className={`font-semibold ${
                       selectedSubject === subject.id ? "text-white" : textSecondary
                     }`}
                   >
                     {subject.name}
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -285,9 +285,9 @@ export default function UploadResourceScreen() {
 
         {/* Category */}
         <View className="mb-4">
-          <Text className={`${textPrimary} font-semibold mb-2`}>
+          <ThemedText className={`${textPrimary} font-semibold mb-2`}>
             Category *
-          </Text>
+          </ThemedText>
           <View className="flex-row gap-2 flex-wrap">
             {categories.map((cat) => (
               <TouchableOpacity
@@ -304,13 +304,13 @@ export default function UploadResourceScreen() {
                   size={18}
                   color={selectedCategory === cat.value ? "#fff" : "#9CA3AF"}
                 />
-                <Text
+                <ThemedText
                   className={`ml-2 font-semibold ${
                     selectedCategory === cat.value ? "text-white" : textSecondary
                   }`}
                 >
                   {cat.label}
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
             ))}
           </View>
@@ -318,22 +318,22 @@ export default function UploadResourceScreen() {
 
         {/* File Picker */}
         <View className="mb-6">
-          <Text className={`${textPrimary} font-semibold mb-2`}>File *</Text>
+          <ThemedText className={`${textPrimary} font-semibold mb-2`}>File *</ThemedText>
           <TouchableOpacity
             className={`${bgInput} border ${borderInput} rounded-xl p-4 flex-row items-center justify-between`}
             onPress={pickDocument}
           >
             <View className="flex-row items-center flex-1">
               <Ionicons name="cloud-upload" size={24} color="#22d3ee" />
-              <Text className={`${textSecondary} ml-3 flex-1`} numberOfLines={1}>
+              <ThemedText className={`${textSecondary} ml-3 flex-1`} numberOfLines={1}>
                 {selectedFile ? selectedFile.name : "Choose a file..."}
-              </Text>
+              </ThemedText>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
-          <Text className={`${textSecondary} text-xs mt-1`}>
+          <ThemedText className={`${textSecondary} text-xs mt-1`}>
             Supported: PDF, PPT, PPTX, DOC, DOCX
-          </Text>
+          </ThemedText>
         </View>
 
         {/* Upload Button */}
@@ -345,12 +345,12 @@ export default function UploadResourceScreen() {
           {uploading ? (
             <View className="flex-row items-center justify-center">
               <ActivityIndicator color="#fff" />
-              <Text className="text-white font-bold ml-2">Uploading...</Text>
+              <ThemedText className="text-white font-bold ml-2">Uploading...</ThemedText>
             </View>
           ) : (
-            <Text className="text-white text-center font-bold text-lg">
+            <ThemedText className="text-white text-center font-bold text-lg">
               Upload Resource
-            </Text>
+            </ThemedText>
           )}
         </TouchableOpacity>
       </ScrollView>

@@ -7,13 +7,13 @@ import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ProfilePicture from "../../components/ProfilePicture";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { ThemedText } from '../../components/themed-text';
 import UserProfileModal from "../../components/UserProfileModal";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useFollow } from "../../hooks/useFollow";
@@ -34,28 +34,28 @@ function SuggestedUserCard({ user, onPress }) {
             size="md"
           />
           <View className="flex-1 ml-3">
-            <Text className={`${textPrimary} font-semibold text-base`}>
+            <ThemedText className={`${textPrimary} font-semibold text-base`}>
               {user.first_name} {user.last_name}
-            </Text>
+            </ThemedText>
             {user.bio && (
-              <Text className={`${textSecondary} text-sm mt-1`} numberOfLines={2}>
+              <ThemedText className={`${textSecondary} text-sm mt-1`} numberOfLines={2}>
                 {user.bio}
-              </Text>
+              </ThemedText>
             )}
             {user.school_name && (
               <View className="flex-row items-center mt-1">
                 <Ionicons name="school-outline" size={12} color="#9CA3AF" />
-                <Text className={`${textSecondary} text-xs ml-1`}>
+                <ThemedText className={`${textSecondary} text-xs ml-1`}>
                   {user.school_name}
-                </Text>
+                </ThemedText>
               </View>
             )}
             <View className="flex-row items-center mt-1">
               <Ionicons name="people-outline" size={12} color="#9CA3AF" />
-              <Text className={`${textSecondary} text-xs ml-1`}>
+              <ThemedText className={`${textSecondary} text-xs ml-1`}>
                 {user.followers_count ?? 0}{" "}
                 {(user.followers_count ?? 0) === 1 ? "follower" : "followers"}
-              </Text>
+              </ThemedText>
             </View>
           </View>
         </View>
@@ -76,9 +76,9 @@ function SuggestedUserCard({ user, onPress }) {
               size={18}
               color="#fff"
             />
-            <Text className="text-white font-semibold ml-2">
+            <ThemedText className="text-white font-semibold ml-2">
               {isFollowing ? "Following" : "Follow"}
-            </Text>
+            </ThemedText>
           </>
         )}
       </TouchableOpacity>
@@ -196,12 +196,12 @@ export default function SuggestedUsersScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-cyan-500 text-xl font-bold">
+            <ThemedText className="text-cyan-500 text-xl font-bold">
               Suggested Teachers
-            </Text>
-            <Text className={`${textSecondary} text-sm`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-sm`}>
               Based on your subjects
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </View>
@@ -215,12 +215,12 @@ export default function SuggestedUsersScreen() {
           <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
             <Ionicons name="search-outline" size={40} color="#22d3ee" />
           </View>
-          <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+          <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
             No Suggestions
-          </Text>
-          <Text className={`${textSecondary} text-center`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-center`}>
             We couldn`t find any teachers to suggest at this time. Check back later!
-          </Text>
+          </ThemedText>
         </View>
       ) : (
         <FlatList
@@ -244,6 +244,13 @@ export default function SuggestedUsersScreen() {
         onClose={() => {
           setShowProfileModal(false);
           setSelectedUserId(null);
+        }}
+        onNavigateToPath={(path) => {
+          setShowProfileModal(false);
+          setSelectedUserId(null);
+          setTimeout(() => {
+            router.push(path);
+          }, 300);
         }}
       />
       <Toast />

@@ -2,13 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -18,6 +17,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
+import { ThemedText } from '../../components/themed-text';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
@@ -282,10 +282,10 @@ export default function AdminResourcesScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="document-text-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">No Resources</Text>
-            <Text className={`${textSecondary} text-center`}>
+            <ThemedText className="text-white text-xl font-bold mb-2">No Resources</ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
               No {filter !== "all" ? filter : ""} resources found
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <>
@@ -295,9 +295,9 @@ export default function AdminResourcesScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="options" size={20} color="#22d3ee" />
-                <Text className={`${textPrimary} font-semibold ml-2`}>
+                <ThemedText className={`${textPrimary} font-semibold ml-2`}>
                   Advanced Filters
-                </Text>
+                </ThemedText>
               </View>
               <Ionicons
                 name={showFilters ? "chevron-up" : "chevron-down"}
@@ -315,7 +315,7 @@ export default function AdminResourcesScreen() {
                 />
 
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Category</Text>
+                  <ThemedText className={`${textPrimary} font-semibold mb-2`}>Category</ThemedText>
                   <View className="flex-row flex-wrap gap-2">
                     {["all", "powerpoint", "worksheet", "lesson_plan"].map((cat) => (
                       <TouchableOpacity
@@ -325,7 +325,7 @@ export default function AdminResourcesScreen() {
                         }`}
                         onPress={() => setSelectedCategory(cat)}
                       >
-                        <Text
+                        <ThemedText
                           className={`font-semibold text-sm ${
                             selectedCategory === cat ? "text-white" : textSecondary
                           }`}
@@ -337,14 +337,14 @@ export default function AdminResourcesScreen() {
                               : cat === "worksheet"
                                 ? "Worksheet"
                                 : "Lesson Plan"}
-                        </Text>
+                        </ThemedText>
                       </TouchableOpacity>
                     ))}
                   </View>
                 </View>
 
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Subject</Text>
+                  <ThemedText className={`${textPrimary} font-semibold mb-2`}>Subject</ThemedText>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View className="flex-row gap-2">
                       <TouchableOpacity
@@ -353,13 +353,13 @@ export default function AdminResourcesScreen() {
                         }`}
                         onPress={() => setSelectedSubject("all")}
                       >
-                        <Text
+                        <ThemedText
                           className={`font-semibold text-sm ${
                             selectedSubject === "all" ? "text-white" : textSecondary
                           }`}
                         >
                           All
-                        </Text>
+                        </ThemedText>
                       </TouchableOpacity>
                       {uniqueSubjects.map((subject) => (
                         <TouchableOpacity
@@ -369,13 +369,13 @@ export default function AdminResourcesScreen() {
                           }`}
                           onPress={() => setSelectedSubject(subject)}
                         >
-                          <Text
+                          <ThemedText
                             className={`font-semibold text-sm ${
                               selectedSubject === subject ? "text-white" : textSecondary
                             }`}
                           >
                             {subject}
-                          </Text>
+                          </ThemedText>
                         </TouchableOpacity>
                       ))}
                     </View>
@@ -383,7 +383,7 @@ export default function AdminResourcesScreen() {
                 </View>
 
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Sort By</Text>
+                  <ThemedText className={`${textPrimary} font-semibold mb-2`}>Sort By</ThemedText>
                   <View className="flex-row gap-2">
                     {[
                       { value: "newest", label: "Newest" },
@@ -397,13 +397,13 @@ export default function AdminResourcesScreen() {
                         }`}
                         onPress={() => setSortBy(sort.value)}
                       >
-                        <Text
+                        <ThemedText
                           className={`font-semibold text-sm ${
                             sortBy === sort.value ? "text-white" : textSecondary
                           }`}
                         >
                           {sort.label}
-                        </Text>
+                        </ThemedText>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -419,24 +419,24 @@ export default function AdminResourcesScreen() {
                   }}
                 >
                   <Ionicons name="close-circle" size={16} color="#ef4444" />
-                  <Text className="text-red-400 font-semibold ml-2">Clear All Filters</Text>
+                  <ThemedText className="text-red-400 font-semibold ml-2">Clear All Filters</ThemedText>
                 </TouchableOpacity>
               </View>
             )}
 
-            <Text className={`${textMuted} text-sm mb-3`}>
+            <ThemedText className={`${textMuted} text-sm mb-3`}>
               Showing {finalFilteredResources.length} of {filteredResources.length} resources
-            </Text>
+            </ThemedText>
 
             {finalFilteredResources.length === 0 ? (
               <View className="flex-1 items-center justify-center py-10">
                 <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
                   <Ionicons name="search" size={32} color="#22d3ee" />
                 </View>
-                <Text className="text-white text-lg font-bold mb-2">No Matches</Text>
-                <Text className={`${textSecondary} text-center mb-4`}>
+                <ThemedText className="text-white text-lg font-bold mb-2">No Matches</ThemedText>
+                <ThemedText className={`${textSecondary} text-center mb-4`}>
                   No resources match your filters
-                </Text>
+                </ThemedText>
                 <TouchableOpacity
                   className="bg-cyan-500 px-4 py-2 rounded-lg"
                   onPress={() => {
@@ -445,7 +445,7 @@ export default function AdminResourcesScreen() {
                     setSelectedSubject("all");
                   }}
                 >
-                  <Text className="text-white font-semibold">Clear Filters</Text>
+                  <ThemedText className="text-white font-semibold">Clear Filters</ThemedText>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -495,7 +495,7 @@ export default function AdminResourcesScreen() {
                             ) : (
                               <>
                                 <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                                <Text className="text-white font-bold ml-2">Approve</Text>
+                                <ThemedText className="text-white font-bold ml-2">Approve</ThemedText>
                               </>
                             )}
                           </TouchableOpacity>
@@ -513,7 +513,7 @@ export default function AdminResourcesScreen() {
                             disabled={isProcessing}
                           >
                             <Ionicons name="close-circle" size={18} color="#fff" />
-                            <Text className="text-white font-bold ml-2">Reject</Text>
+                            <ThemedText className="text-white font-bold ml-2">Reject</ThemedText>
                           </TouchableOpacity>
                         </>
                       )}

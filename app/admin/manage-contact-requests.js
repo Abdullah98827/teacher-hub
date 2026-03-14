@@ -5,7 +5,6 @@ import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
-    Text,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
@@ -15,6 +14,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
+import { ThemedText } from "../../components/themed-text";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
@@ -168,12 +168,12 @@ export default function ManageContactRequestsScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="mail-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">
+            <ThemedText className="text-white text-xl font-bold mb-2">
               No Requests
-            </Text>
-            <Text className={`${textSecondary} text-center`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
               No contact requests match your filter
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <FlatList

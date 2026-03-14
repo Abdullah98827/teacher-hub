@@ -4,19 +4,19 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ProfilePicture from "../../../components/ProfilePicture";
 import ScreenWrapper from "../../../components/ScreenWrapper";
+import { ThemedText } from '../../../components/themed-text';
 import UserProfileModal from "../../../components/UserProfileModal";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { supabase } from "../../../supabase";
-import { ThemedText } from '../../../components/themed-text';
 
 export default function FollowersScreen() {
   const params = useLocalSearchParams();

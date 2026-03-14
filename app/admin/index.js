@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { ThemedText } from "../../components/themed-text";
 import { useAppTheme } from "../../hooks/useAppTheme";
 
 export default function AdminHub() {
@@ -64,14 +65,14 @@ export default function AdminHub() {
     <ScreenWrapper>
       <LogoHeader />
       <View style={{ paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6 }}>
-        <Text
+        <ThemedText
           style={{
             fontSize: 13,
             color: isDark ? "#6b7280" : "#9ca3af",
           }}
         >
           Manage your Teacher-Hub platform
-        </Text>
+        </ThemedText>
       </View>
 
       <ScrollView
@@ -111,7 +112,7 @@ export default function AdminHub() {
             </View>
 
             <View style={{ flex: 1 }}>
-              <Text
+              <ThemedText
                 style={{
                   fontSize: 16,
                   fontWeight: "700",
@@ -119,8 +120,8 @@ export default function AdminHub() {
                 }}
               >
                 {label}
-              </Text>
-              <Text
+              </ThemedText>
+              <ThemedText
                 style={{
                   fontSize: 12,
                   marginTop: 1,
@@ -128,7 +129,7 @@ export default function AdminHub() {
                 }}
               >
                 {subtitle}
-              </Text>
+              </ThemedText>
             </View>
 
             <Ionicons name="chevron-forward" size={18} color={chevronColor} />
@@ -156,7 +157,7 @@ export default function AdminHub() {
           }}
         >
           <Ionicons name="arrow-back-outline" size={18} color={iconColor} />
-          <Text
+          <ThemedText
             style={{
               fontSize: 15,
               fontWeight: "600",
@@ -164,7 +165,7 @@ export default function AdminHub() {
             }}
           >
             Back to App
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
 
         <Toast />

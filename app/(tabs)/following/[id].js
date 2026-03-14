@@ -13,10 +13,10 @@ import {
 import Toast from "react-native-toast-message";
 import ProfilePicture from "../../../components/ProfilePicture";
 import ScreenWrapper from "../../../components/ScreenWrapper";
+import { ThemedText } from '../../../components/themed-text';
 import UserProfileModal from "../../../components/UserProfileModal";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { supabase } from "../../../supabase";
-import { ThemedText } from '../../../components/themed-text';
 
 export default function FollowingScreen() {
   const params = useLocalSearchParams();

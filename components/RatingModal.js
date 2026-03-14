@@ -3,13 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Modal,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedText } from './themed-text';
 
 export default function RatingModal({
   visible,
@@ -141,16 +141,16 @@ export default function RatingModal({
           {/* Header */}
           <View className={`p-5 border-b ${border}`}>
             <View className="flex-row items-center justify-between mb-2">
-              <Text className={`${textPrimary} font-bold text-xl`}>
+              <ThemedText className={`${textPrimary} font-bold text-xl`}>
                 Rate Resource
-              </Text>
+              </ThemedText>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
-            <Text className={`${textMuted} text-sm`} numberOfLines={2}>
+            <ThemedText className={`${textMuted} text-sm`} numberOfLines={2}>
               {resourceTitle}
-            </Text>
+            </ThemedText>
           </View>
 
           {/* Content */}
@@ -160,9 +160,9 @@ export default function RatingModal({
             </View>
           ) : (
             <View className="p-6">
-              <Text className={`${textPrimary} text-center text-lg mb-6`}>
+              <ThemedText className={`${textPrimary} text-center text-lg mb-6`}>
                 How would you rate this resource?
-              </Text>
+              </ThemedText>
 
               {/* Star Rating */}
               <View className="flex-row items-center justify-center mb-4">
@@ -184,9 +184,9 @@ export default function RatingModal({
               {/* Rating Label */}
               {selectedRating > 0 && (
                 <View className="bg-yellow-400/30 border-2 border-yellow-400 rounded-xl p-4 mb-6">
-                  <Text className="text-white text-center font-bold text-xl">
+                  <ThemedText className="text-white text-center font-bold text-xl">
                     {ratingLabels[selectedRating - 1]}
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
 
@@ -201,9 +201,9 @@ export default function RatingModal({
                 {submitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white text-center font-bold text-lg">
+                  <ThemedText className="text-white text-center font-bold text-lg">
                     Submit Rating
-                  </Text>
+                  </ThemedText>
                 )}
               </TouchableOpacity>
 
@@ -212,7 +212,7 @@ export default function RatingModal({
                 onPress={onClose}
                 disabled={submitting}
               >
-                <Text className={`${textSecondary} text-center`}>Cancel</Text>
+                <ThemedText className={`${textSecondary} text-center`}>Cancel</ThemedText>
               </TouchableOpacity>
             </View>
           )}

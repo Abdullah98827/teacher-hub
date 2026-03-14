@@ -3,22 +3,22 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { ThemedText } from '../../components/themed-text';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { ThemedText } from '../../components/themed-text';
 
 export default function GroupChatScreen() {
   const { id } = useLocalSearchParams();
@@ -321,7 +321,7 @@ export default function GroupChatScreen() {
               </ThemedText>
               {isAdmin && (
                 <View className="bg-purple-500/20 px-2 py-0.5 rounded">
-                  <ThemedText className="text-purple-400 text-xs font-bold">MOD</Text>
+                  <ThemedText className="text-purple-400 text-xs font-bold">MOD</ThemedText>
                 </View>
               )}
             </View>

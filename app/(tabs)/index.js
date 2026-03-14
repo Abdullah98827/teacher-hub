@@ -9,9 +9,9 @@ import {
 } from "react-native";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { ThemedText } from '../../components/themed-text';
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
-import { ThemedText } from '../../components/themed-text';
 
 export default function DashboardScreen() {
   const router = useRouter();

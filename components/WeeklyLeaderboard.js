@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
+import { ThemedText } from './themed-text';
 
 export default function WeeklyLeaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -55,10 +56,10 @@ export default function WeeklyLeaderboard() {
   if (leaderboard.length === 0) {
     return (
       <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
-        <Text className={`${textPrimary} text-lg font-bold mb-2`}>
+        <ThemedText className={`${textPrimary} text-lg font-bold mb-2`}>
           Top Contributors
-        </Text>
-        <Text className={textSecondary}>No activity yet. Be the first!</Text>
+        </ThemedText>
+        <ThemedText className={textSecondary}>No activity yet. Be the first!</ThemedText>
       </View>
     );
   }
@@ -66,12 +67,12 @@ export default function WeeklyLeaderboard() {
   return (
     <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
       <View className="mb-4">
-        <Text className={`${textPrimary} text-xl font-bold`}>
+        <ThemedText className={`${textPrimary} text-xl font-bold`}>
           Top Contributors
-        </Text>
-        <Text className={`${textSecondary} text-sm`}>
+        </ThemedText>
+        <ThemedText className={`${textSecondary} text-sm`}>
           This week&apos;s most active teachers
-        </Text>
+        </ThemedText>
       </View>
 
       <View>
@@ -97,9 +98,9 @@ export default function WeeklyLeaderboard() {
                       color={medal.color}
                     />
                   ) : (
-                    <Text className={`${textSecondary} font-bold text-xl`}>
+                    <ThemedText className={`${textSecondary} font-bold text-xl`}>
                       {entry.rank}
-                    </Text>
+                    </ThemedText>
                   )}
                 </View>
 
@@ -111,21 +112,21 @@ export default function WeeklyLeaderboard() {
                 />
 
                 <View className="flex-1 ml-3">
-                  <Text className={`${textPrimary} font-bold text-base`}>
+                  <ThemedText className={`${textPrimary} font-bold text-base`}>
                     {entry.first_name} {entry.last_name}
-                  </Text>
-                  <Text className={`${textSecondary} text-sm`}>
+                  </ThemedText>
+                  <ThemedText className={`${textSecondary} text-sm`}>
                     {entry.total_points} points
-                  </Text>
+                  </ThemedText>
                 </View>
 
                 <View className={`${bgCard} px-3 py-2 rounded-lg`}>
-                  <Text className="text-cyan-400 text-xs">
+                  <ThemedText className="text-cyan-400 text-xs">
                     {entry.resources_uploaded} resources
-                  </Text>
-                  <Text className="text-purple-400 text-xs">
+                  </ThemedText>
+                  <ThemedText className="text-purple-400 text-xs">
                     {entry.comments_made} comments
-                  </Text>
+                  </ThemedText>
                 </View>
               </View>
             </TouchableOpacity>
@@ -134,23 +135,23 @@ export default function WeeklyLeaderboard() {
       </View>
 
       <View className={`${bgCardAlt} p-4 rounded-lg mt-4`}>
-        <Text
+        <ThemedText
           className={`${textPrimary} text-sm font-semibold mb-2 text-center`}
         >
           How to Earn Points
-        </Text>
+        </ThemedText>
         <View className="flex-row justify-around">
           <View className="items-center">
-            <Text className="text-cyan-400 font-bold text-lg">+10</Text>
-            <Text className={`${textMuted} text-xs`}>Upload</Text>
+            <ThemedText className="text-cyan-400 font-bold text-lg">+10</ThemedText>
+            <ThemedText className={`${textMuted} text-xs`}>Upload</ThemedText>
           </View>
           <View className="items-center">
-            <Text className="text-purple-400 font-bold text-lg">+2</Text>
-            <Text className={`${textMuted} text-xs`}>Comment</Text>
+            <ThemedText className="text-purple-400 font-bold text-lg">+2</ThemedText>
+            <ThemedText className={`${textMuted} text-xs`}>Comment</ThemedText>
           </View>
           <View className="items-center">
-            <Text className={`${textMuted} font-bold text-lg`}>+5</Text>
-            <Text className={`${textMuted} text-xs`}>Rating</Text>
+            <ThemedText className={`${textMuted} font-bold text-lg`}>+5</ThemedText>
+            <ThemedText className={`${textMuted} text-xs`}>Rating</ThemedText>
           </View>
         </View>
       </View>

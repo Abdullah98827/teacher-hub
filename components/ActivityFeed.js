@@ -5,13 +5,13 @@ import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
+import { ThemedText } from './themed-text';
 
 export default function ActivityFeed({ userId, limit = 20 }) {
   const router = useRouter();
@@ -83,37 +83,37 @@ export default function ActivityFeed({ userId, limit = 20 }) {
       case "resource_upload":
         return (
           <>
-            <Text className="font-semibold">{name}</Text>
-            <Text> uploaded a new resource: </Text>
-            <Text className="font-semibold">{activity.resource_title}</Text>
+            <ThemedText className="font-semibold">{name}</ThemedText>
+            <ThemedText> uploaded a new resource: </ThemedText>
+            <ThemedText className="font-semibold">{activity.resource_title}</ThemedText>
           </>
         );
       case "comment":
         return (
           <>
-            <Text className="font-semibold">{name}</Text>
-            <Text> commented on </Text>
-            <Text className="font-semibold">{activity.resource_title}</Text>
+            <ThemedText className="font-semibold">{name}</ThemedText>
+            <ThemedText> commented on </ThemedText>
+            <ThemedText className="font-semibold">{activity.resource_title}</ThemedText>
           </>
         );
       case "follow":
         return (
           <>
-            <Text className="font-semibold">{name}</Text>
-            <Text> started following </Text>
-            <Text className="font-semibold">{activity.target_user_name}</Text>
+            <ThemedText className="font-semibold">{name}</ThemedText>
+            <ThemedText> started following </ThemedText>
+            <ThemedText className="font-semibold">{activity.target_user_name}</ThemedText>
           </>
         );
       case "rating":
         return (
           <>
-            <Text className="font-semibold">{name}</Text>
-            <Text> rated </Text>
-            <Text className="font-semibold">{activity.resource_title}</Text>
+            <ThemedText className="font-semibold">{name}</ThemedText>
+            <ThemedText> rated </ThemedText>
+            <ThemedText className="font-semibold">{activity.resource_title}</ThemedText>
           </>
         );
       default:
-        return <Text>{name} performed an activity</Text>;
+        return <ThemedText>{name} performed an activity</ThemedText>;
     }
   };
 
@@ -151,12 +151,12 @@ export default function ActivityFeed({ userId, limit = 20 }) {
           </View>
 
           <View className="flex-1">
-            <Text className={`${textSecondary} text-sm leading-5`}>
+            <ThemedText className={`${textSecondary} text-sm leading-5`}>
               {getActivityText(item)}
-            </Text>
-            <Text className={`${textMuted} text-xs mt-1`}>
+            </ThemedText>
+            <ThemedText className={`${textMuted} text-xs mt-1`}>
               {formatTime(item.created_at)}
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </TouchableOpacity>
@@ -177,15 +177,15 @@ export default function ActivityFeed({ userId, limit = 20 }) {
         <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
           <Ionicons name="pulse" size={32} color="#22d3ee" />
         </View>
-        <Text className={`${textPrimary} font-bold text-lg mb-1`}>No Activity Yet</Text>
-        <Text className={`${textSecondary} text-center text-sm px-8`}>
+        <ThemedText className={`${textPrimary} font-bold text-lg mb-1`}>No Activity Yet</ThemedText>
+        <ThemedText className={`${textSecondary} text-center text-sm px-8`}>
           Follow teachers to see their activities here
-        </Text>
+        </ThemedText>
         <TouchableOpacity
           className="bg-cyan-600 px-6 py-3 rounded-lg mt-4"
           onPress={() => router.push("/suggested-users")}
         >
-          <Text className="text-white font-semibold">Find Teachers</Text>
+          <ThemedText className="text-white font-semibold">Find Teachers</ThemedText>
         </TouchableOpacity>
       </View>
     );

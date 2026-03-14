@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function SubjectCard({
   subject,
@@ -31,34 +32,34 @@ export default function SubjectCard({
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-3">
           <View className="flex-row items-center gap-2 mb-1 flex-wrap">
-            <Text className={`${textPrimary} font-bold text-xl`}>
+            <ThemedText className={`${textPrimary} font-bold text-xl`}>
               {subject.name}
-            </Text>
+            </ThemedText>
             {subject.is_public ? (
               <View className="bg-green-500/20 px-2 py-1 rounded-full">
-                <Text className="text-green-400 text-xs font-bold">
+                <ThemedText className="text-green-400 text-xs font-bold">
                   PUBLIC SUBJECT
-                </Text>
+                </ThemedText>
               </View>
             ) : (
               <View className="bg-purple-500/20 px-2 py-1 rounded-full">
-                <Text className="text-purple-400 text-xs font-bold">
+                <ThemedText className="text-purple-400 text-xs font-bold">
                   PRIVATE SUBJECT
-                </Text>
+                </ThemedText>
               </View>
             )}
             {subject.groupChat?.is_public && (
               <View className="bg-green-500/20 px-2 py-1 rounded-full">
-                <Text className="text-green-400 text-xs font-bold">
+                <ThemedText className="text-green-400 text-xs font-bold">
                   PUBLIC CHAT
-                </Text>
+                </ThemedText>
               </View>
             )}
           </View>
           {subject.description && (
-            <Text className={`${textSecondary} text-sm`} numberOfLines={2}>
+            <ThemedText className={`${textSecondary} text-sm`} numberOfLines={2}>
               {subject.description}
-            </Text>
+            </ThemedText>
           )}
         </View>
 
@@ -84,7 +85,7 @@ export default function SubjectCard({
                 }}
               >
                 <Ionicons name="pencil" size={18} color="#22d3ee" />
-                <Text className={`${textPrimary} ml-3`}>Edit</Text>
+                <ThemedText className={`${textPrimary} ml-3`}>Edit</ThemedText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -95,7 +96,7 @@ export default function SubjectCard({
                 }}
               >
                 <Ionicons name="trash" size={18} color="#ef4444" />
-                <Text className="text-red-400 ml-3">Delete</Text>
+                <ThemedText className="text-red-400 ml-3">Delete</ThemedText>
               </TouchableOpacity>
             </View>
           )}
@@ -110,14 +111,14 @@ export default function SubjectCard({
         >
           <View className="flex-row items-center mb-1">
             <Ionicons name="chatbubbles" size={16} color="#22d3ee" />
-            <Text className="text-cyan-400 font-semibold ml-2">
+            <ThemedText className="text-cyan-400 font-semibold ml-2">
               {subject.groupChat.name}
-            </Text>
+            </ThemedText>
           </View>
           {subject.groupChat.description && (
-            <Text className={`${textMuted} text-xs ml-6`} numberOfLines={1}>
+            <ThemedText className={`${textMuted} text-xs ml-6`} numberOfLines={1}>
               {subject.groupChat.description}
-            </Text>
+            </ThemedText>
           )}
         </TouchableOpacity>
       )}
@@ -129,40 +130,40 @@ export default function SubjectCard({
           onPress={onViewSubscribers}
         >
           <Ionicons name="people" size={14} color="#22d3ee" />
-          <Text className="text-cyan-400 text-sm font-semibold ml-1.5">
+          <ThemedText className="text-cyan-400 text-sm font-semibold ml-1.5">
             {subject.subscriberCount}
-          </Text>
-          <Text className={`${textMuted} text-xs ml-1`}>
+          </ThemedText>
+          <ThemedText className={`${textMuted} text-xs ml-1`}>
             {subject.is_public ? "can access" : "subscribers"}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
 
         <View
           className={`${bgCardAlt} px-3 py-2 rounded-lg flex-row items-center`}
         >
           <Ionicons name="chatbubble" size={14} color="#22d3ee" />
-          <Text className="text-cyan-400 text-sm font-semibold ml-1.5">
+          <ThemedText className="text-cyan-400 text-sm font-semibold ml-1.5">
             {subject.messageCount}
-          </Text>
-          <Text className={`${textMuted} text-xs ml-1`}>messages</Text>
+          </ThemedText>
+          <ThemedText className={`${textMuted} text-xs ml-1`}>messages</ThemedText>
         </View>
 
         {subject.deletedMessageCount > 0 && (
           <View className="bg-red-500/20 px-3 py-2 rounded-lg flex-row items-center">
             <Ionicons name="alert-circle" size={14} color="#ef4444" />
-            <Text className="text-red-400 text-sm font-semibold ml-1.5">
+            <ThemedText className="text-red-400 text-sm font-semibold ml-1.5">
               {subject.deletedMessageCount}
-            </Text>
-            <Text className={`${textMuted} text-xs ml-1`}>deleted</Text>
+            </ThemedText>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>deleted</ThemedText>
           </View>
         )}
       </View>
 
       {/* Footer */}
       <View className={`border-t ${border} pt-2`}>
-        <Text className={`${textMuted} text-xs`}>
+        <ThemedText className={`${textMuted} text-xs`}>
           Created {formatDate(subject.created_at)}
-        </Text>
+        </ThemedText>
       </View>
     </View>
   );

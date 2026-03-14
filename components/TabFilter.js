@@ -1,5 +1,6 @@
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function TabFilter({ tabs, activeTab, onTabChange }) {
   const { bgCardAlt, textSecondary } = useAppTheme();
@@ -21,7 +22,7 @@ export default function TabFilter({ tabs, activeTab, onTabChange }) {
               style={{ paddingHorizontal: 16, paddingVertical: 10 }}
               onPress={() => onTabChange(tab.key)}
             >
-              <Text
+              <ThemedText
                 className={`font-semibold text-sm ${
                   activeTab === tab.key ? "text-white" : textSecondary
                 }`}
@@ -29,7 +30,7 @@ export default function TabFilter({ tabs, activeTab, onTabChange }) {
               >
                 {tab.label}
                 {tab.count !== undefined && ` (${tab.count})`}
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           ))}
         </View>

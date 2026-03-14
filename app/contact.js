@@ -9,9 +9,9 @@ import {
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../components/ScreenWrapper";
 import LogoHeader from "../components/logoHeader";
+import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
-import { ThemedTextInput } from '../components/themed-textinput';
 
 export default function ContactAdmin() {
   const [email, setEmail] = useState("");

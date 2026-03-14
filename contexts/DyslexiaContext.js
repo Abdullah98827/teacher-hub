@@ -1,6 +1,5 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { Appearance } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useEffect, useState } from 'react';
 
 export const DyslexiaContext = createContext({
   dyslexiaMode: false,

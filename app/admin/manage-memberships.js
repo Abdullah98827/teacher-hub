@@ -2,11 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -14,6 +13,7 @@ import MembershipCard from "../../components/MembershipCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
+import { ThemedText } from '../../components/themed-text';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
@@ -120,12 +120,12 @@ export default function ManageMembershipsScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="card-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">
+            <ThemedText className="text-white text-xl font-bold mb-2">
               No Memberships
-            </Text>
-            <Text className={`${textSecondary} text-center`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
               No memberships match your filter
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <FlatList

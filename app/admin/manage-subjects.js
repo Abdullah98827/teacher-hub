@@ -2,14 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AccessToggle from "../../components/AccessToggle";
@@ -18,10 +17,11 @@ import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SubjectCard from "../../components/SubjectCard";
 import SubscribersModal from "../../components/SubscribersModal";
+import { ThemedText } from '../../components/themed-text';
+import { ThemedTextInput } from "../../components/themed-textinput";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { ThemedTextInput } from "../../components/themed-textinput";
 
 export default function AdminSubjectManagementScreen() {
   const { role, loading: roleLoading } = useUserRole();
@@ -503,18 +503,18 @@ export default function AdminSubjectManagementScreen() {
         <View className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 mb-4 border border-cyan-500/20">
           <View className="flex-row justify-around">
             <View className="items-center">
-              <Text className="text-cyan-400 text-2xl font-bold">{totalMessages}</Text>
-              <Text className={`${textMuted} text-xs`}>Messages</Text>
+              <ThemedText className="text-cyan-400 text-2xl font-bold">{totalMessages}</ThemedText>
+              <ThemedText className={`${textMuted} text-xs`}>Messages</ThemedText>
             </View>
             <View className={`w-px ${border}`} />
             <View className="items-center">
-              <Text className="text-purple-400 text-2xl font-bold">{totalSubscribers}</Text>
-              <Text className={`${textMuted} text-xs`}>Subscribers</Text>
+              <ThemedText className="text-purple-400 text-2xl font-bold">{totalSubscribers}</ThemedText>
+              <ThemedText className={`${textMuted} text-xs`}>Subscribers</ThemedText>
             </View>
             <View className={`w-px ${border}`} />
             <View className="items-center">
-              <Text className="text-red-400 text-2xl font-bold">{totalDeleted}</Text>
-              <Text className={`${textMuted} text-xs`}>Deleted</Text>
+              <ThemedText className="text-red-400 text-2xl font-bold">{totalDeleted}</ThemedText>
+              <ThemedText className={`${textMuted} text-xs`}>Deleted</ThemedText>
             </View>
           </View>
         </View>
@@ -524,15 +524,15 @@ export default function AdminSubjectManagementScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="book" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">No Subjects</Text>
-            <Text className={`${textSecondary} text-center mb-4`}>
+            <ThemedText className="text-white text-xl font-bold mb-2">No Subjects</ThemedText>
+            <ThemedText className={`${textSecondary} text-center mb-4`}>
               Create your first subject with group chat
-            </Text>
+            </ThemedText>
             <TouchableOpacity
               className="bg-cyan-500 px-6 py-3 rounded-full"
               onPress={openCreateModal}
             >
-              <Text className="text-white font-semibold">Create Subject</Text>
+              <ThemedText className="text-white font-semibold">Create Subject</ThemedText>
             </TouchableOpacity>
           </View>
         ) : (
@@ -580,16 +580,16 @@ export default function AdminSubjectManagementScreen() {
         <View className="flex-1 bg-black/80 justify-end">
           <ScrollView className={`${bgCard} rounded-t-3xl p-6 max-h-[90%]`}>
             <View className="flex-row items-center justify-between mb-6">
-              <Text className={`${textPrimary} text-2xl font-bold`}>
+              <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                 {editingSubject ? "Edit Subject" : "Create Subject"}
-              </Text>
+              </ThemedText>
               <TouchableOpacity onPress={() => setShowModal(false)}>
                 <Ionicons name="close" size={28} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
             <View className="mb-4">
-              <Text className={`${textMuted} text-sm mb-2`}>Subject Name *</Text>
+              <ThemedText className={`${textMuted} text-sm mb-2`}>Subject Name *</ThemedText>
               <ThemedTextInput
                 className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="e.g., English, Mathematics, EAL Support"
@@ -600,7 +600,7 @@ export default function AdminSubjectManagementScreen() {
             </View>
 
             <View className="mb-4">
-              <Text className={`${textMuted} text-sm mb-2`}>Subject Description</Text>
+              <ThemedText className={`${textMuted} text-sm mb-2`}>Subject Description</ThemedText>
               <ThemedTextInput
                 className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="Brief description of the subject"
@@ -613,7 +613,7 @@ export default function AdminSubjectManagementScreen() {
             </View>
 
             <View className="mb-4">
-              <Text className={`${textMuted} text-sm mb-2`}>Group Chat Description</Text>
+              <ThemedText className={`${textMuted} text-sm mb-2`}>Group Chat Description</ThemedText>
               <ThemedTextInput
                 className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="e.g., Discuss lesson plans and teaching strategies"
@@ -625,9 +625,9 @@ export default function AdminSubjectManagementScreen() {
                 multiline
                 numberOfLines={2}
               />
-              <Text className={`${textMuted} text-xs mt-1`}>
+              <ThemedText className={`${textMuted} text-xs mt-1`}>
                 Group chat name will be &quot;{formData.name || "Subject"} Teachers Chat&quot;
-              </Text>
+              </ThemedText>
             </View>
 
             <AccessToggle
@@ -665,9 +665,9 @@ export default function AdminSubjectManagementScreen() {
               {saving ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="text-white text-center font-bold text-lg">
+                <ThemedText className="text-white text-center font-bold text-lg">
                   {editingSubject ? "Update Subject & Chat" : "Create Subject & Chat"}
-                </Text>
+                </ThemedText>
               )}
             </TouchableOpacity>
           </ScrollView>

@@ -3,11 +3,11 @@ import {
     ActivityIndicator,
     FlatList,
     Modal,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function SubscribersModal({
   visible,
@@ -29,10 +29,10 @@ export default function SubscribersModal({
         <View className={`${bgCard} rounded-t-3xl p-6 max-h-[80%]`}>
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-1">
-              <Text className={`${textPrimary} text-2xl font-bold`}>
+              <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                 Subscribers
-              </Text>
-              <Text className={`${textSecondary} text-sm`}>{subjectName}</Text>
+              </ThemedText>
+              <ThemedText className={`${textSecondary} text-sm`}>{subjectName}</ThemedText>
             </View>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={28} color="#6B7280" />
@@ -46,9 +46,9 @@ export default function SubscribersModal({
           ) : subscribers.length === 0 ? (
             <View className="items-center justify-center py-10">
               <Ionicons name="people-outline" size={48} color="#6B7280" />
-              <Text className={`${textSecondary} mt-4`}>
+              <ThemedText className={`${textSecondary} mt-4`}>
                 No subscribers yet
-              </Text>
+              </ThemedText>
             </View>
           ) : (
             <FlatList
@@ -62,10 +62,10 @@ export default function SubscribersModal({
                     <Ionicons name="person" size={20} color="#22d3ee" />
                   </View>
                   <View className="flex-1">
-                    <Text className={`${textPrimary} font-semibold`}>
+                    <ThemedText className={`${textPrimary} font-semibold`}>
                       {item.full_name}
-                    </Text>
-                    <Text className={`${textMuted} text-sm`}>{item.email}</Text>
+                    </ThemedText>
+                    <ThemedText className={`${textMuted} text-sm`}>{item.email}</ThemedText>
                   </View>
                 </View>
               )}

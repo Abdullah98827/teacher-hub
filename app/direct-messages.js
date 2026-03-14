@@ -6,13 +6,13 @@ import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
-    Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { ThemedText } from '../components/themed-text';
+import { ThemedTextInput } from '../components/themed-textinput';
 import { useAuth } from "../contexts/AuthContext";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
@@ -149,31 +149,31 @@ export default function DirectMessagesScreen() {
       activeOpacity={0.7}
     >
       <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mr-3">
-        <Text className="text-cyan-400 font-bold text-lg">
+        <ThemedText className="text-cyan-400 font-bold text-lg">
           {item.userName.charAt(0).toUpperCase()}
-        </Text>
+        </ThemedText>
       </View>
       <View className="flex-1">
         <View className="flex-row items-center justify-between mb-1">
-          <Text className={`${textPrimary} font-bold text-base`}>
+          <ThemedText className={`${textPrimary} font-bold text-base`}>
             {item.userName}
-          </Text>
-          <Text className={`${textSecondary} text-xs`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-xs`}>
             {formatTime(item.lastMessageTime)}
-          </Text>
+          </ThemedText>
         </View>
-        <Text
+        <ThemedText
           className={`text-sm ${item.unreadCount > 0 ? `${textPrimary} font-semibold` : textSecondary}`}
           numberOfLines={1}
         >
           {item.lastMessage}
-        </Text>
+        </ThemedText>
       </View>
       {item.unreadCount > 0 && (
         <View className="bg-cyan-500 w-6 h-6 rounded-full items-center justify-center ml-2">
-          <Text className="text-white text-xs font-bold">
+          <ThemedText className="text-white text-xs font-bold">
             {item.unreadCount > 9 ? "9+" : item.unreadCount}
-          </Text>
+          </ThemedText>
         </View>
       )}
     </TouchableOpacity>
@@ -189,13 +189,13 @@ export default function DirectMessagesScreen() {
       activeOpacity={0.7}
     >
       <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mr-3">
-        <Text className="text-cyan-400 font-bold text-lg">
+        <ThemedText className="text-cyan-400 font-bold text-lg">
           {item.first_name.charAt(0).toUpperCase()}
-        </Text>
+        </ThemedText>
       </View>
-      <Text className={`${textPrimary} font-semibold text-base`}>
+      <ThemedText className={`${textPrimary} font-semibold text-base`}>
         {item.first_name} {item.last_name}
-      </Text>
+      </ThemedText>
     </TouchableOpacity>
   );
 
@@ -219,9 +219,9 @@ export default function DirectMessagesScreen() {
             <TouchableOpacity className="mr-3" onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#22d3ee" />
             </TouchableOpacity>
-            <Text className="text-3xl font-bold text-cyan-400">
+            <ThemedText className="text-3xl font-bold text-cyan-400">
               {showNewChat ? "New Chat" : "Messages"}
-            </Text>
+            </ThemedText>
           </View>
           <TouchableOpacity
             className="bg-cyan-500 w-12 h-12 rounded-full items-center justify-center"
@@ -241,7 +241,7 @@ export default function DirectMessagesScreen() {
               className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl ${borderInput} border`}
             >
               <Ionicons name="search" size={20} color={placeholderColor} />
-              <TextInput
+              <ThemedTextInput
                 className={`flex-1 ${textPrimary} ml-2`}
                 placeholder="Search teachers..."
                 placeholderTextColor={placeholderColor}
@@ -261,24 +261,24 @@ export default function DirectMessagesScreen() {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View className="items-center py-10">
-                <Text className={textSecondary}>No teachers found</Text>
+                <ThemedText className={textSecondary}>No teachers found</ThemedText>
               </View>
             }
           />
         ) : conversations.length === 0 ? (
           <View className="flex-1 items-center justify-center">
             <Ionicons name="chatbubble-outline" size={60} color="#374151" />
-            <Text className={`${textPrimary} text-xl font-bold mt-4 mb-2`}>
+            <ThemedText className={`${textPrimary} text-xl font-bold mt-4 mb-2`}>
               No Messages Yet
-            </Text>
-            <Text className={`${textSecondary} text-center mb-6`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-center mb-6`}>
               Start a conversation with other teachers
-            </Text>
+            </ThemedText>
             <TouchableOpacity
               className="bg-cyan-500 px-6 py-3 rounded-full"
               onPress={() => setShowNewChat(true)}
             >
-              <Text className="text-white font-bold">New Message</Text>
+              <ThemedText className="text-white font-bold">New Message</ThemedText>
             </TouchableOpacity>
           </View>
         ) : (

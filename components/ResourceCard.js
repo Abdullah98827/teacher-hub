@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function ResourceCard({
   title,
@@ -95,12 +96,12 @@ export default function ResourceCard({
                 size={14}
                 color={categoryColors[category]}
               />
-              <Text
+              <ThemedText
                 className="text-xs font-bold ml-1"
                 style={{ color: categoryColors[category] }}
               >
                 {category.replace("_", " ").toUpperCase()}
-              </Text>
+              </ThemedText>
             </View>
           </View>
 
@@ -108,21 +109,21 @@ export default function ResourceCard({
             <View
               className={`px-3 py-1 rounded-full ${statusBgColors[status]}`}
             >
-              <Text className={`text-xs font-bold ${statusTextColors[status]}`}>
+              <ThemedText className={`text-xs font-bold ${statusTextColors[status]}`}>
                 {status.toUpperCase()}
-              </Text>
+              </ThemedText>
             </View>
           )}
         </View>
 
         {/* Title */}
-        <Text className={`${textPrimary} text-lg font-bold mb-2`}>{title}</Text>
+        <ThemedText className={`${textPrimary} text-lg font-bold mb-2`}>{title}</ThemedText>
 
         {/* Description */}
         {description && (
-          <Text className={`${textSecondary} text-sm mb-3`} numberOfLines={2}>
+          <ThemedText className={`${textSecondary} text-sm mb-3`} numberOfLines={2}>
             {description}
-          </Text>
+          </ThemedText>
         )}
 
         {/* Rating */}
@@ -131,32 +132,32 @@ export default function ResourceCard({
             <View className="flex-row items-center mr-2">
               {renderStars(averageRating)}
             </View>
-            <Text className="text-yellow-400 font-bold text-sm mr-1">
+            <ThemedText className="text-yellow-400 font-bold text-sm mr-1">
               {averageRating.toFixed(1)}
-            </Text>
-            <Text className={`${textMuted} text-xs`}>({ratingCount})</Text>
+            </ThemedText>
+            <ThemedText className={`${textMuted} text-xs`}>({ratingCount})</ThemedText>
           </View>
         )}
 
         {/* Subject */}
         <View className="flex-row items-center mb-3">
           <Ionicons name="school" size={16} color="#22d3ee" />
-          <Text className="text-cyan-400 text-sm ml-1">{subjectName}</Text>
+          <ThemedText className="text-cyan-400 text-sm ml-1">{subjectName}</ThemedText>
         </View>
 
         {/* Stats Row */}
         <View className="flex-row items-center gap-4 mb-3">
           <View className="flex-row items-center">
             <Ionicons name="eye" size={16} color="#9CA3AF" />
-            <Text className={`${textMuted} text-xs ml-1`}>{views}</Text>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>{views}</ThemedText>
           </View>
           <View className="flex-row items-center">
             <Ionicons name="download" size={16} color="#9CA3AF" />
-            <Text className={`${textMuted} text-xs ml-1`}>{downloads}</Text>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>{downloads}</ThemedText>
           </View>
           <View className="flex-row items-center">
             <Ionicons name="chatbubble" size={16} color="#9CA3AF" />
-            <Text className={`${textMuted} text-xs ml-1`}>{commentCount}</Text>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>{commentCount}</ThemedText>
           </View>
         </View>
 
@@ -164,7 +165,7 @@ export default function ResourceCard({
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center">
             <Ionicons name="time" size={14} color="#6B7280" />
-            <Text className={`${textMuted} text-xs ml-1`}>{createdAt}</Text>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>{createdAt}</ThemedText>
           </View>
 
           {uploadedBy && (
@@ -179,7 +180,7 @@ export default function ResourceCard({
               activeOpacity={uploadedById && onViewProfile ? 0.6 : 1}
             >
               <Ionicons name="person" size={14} color="#22d3ee" />
-              <Text
+              <ThemedText
                 className={`text-xs ml-1 ${
                   uploadedById && onViewProfile
                     ? "text-cyan-400 font-semibold"
@@ -187,80 +188,86 @@ export default function ResourceCard({
                 }`}
               >
                 {uploadedBy}
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Action Buttons Row */}
-        <View
-          className={`flex-row items-center justify-between pt-3 border-t ${border}`}
-        >
-          {onComment && (
-            <TouchableOpacity
-              className="flex-row items-center py-2 px-3"
-              onPress={onComment}
-            >
-              <Ionicons name="chatbubble-outline" size={18} color="#22d3ee" />
-              <Text className={`${textMuted} text-xs ml-1 font-semibold`}>
-                Comment
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {onRate && (
-            <TouchableOpacity
-              className="flex-row items-center py-2 px-3"
-              onPress={onRate}
-            >
-              <Ionicons name="star-outline" size={18} color="#fbbf24" />
-              <Text className={`${textMuted} text-xs ml-1 font-semibold`}>
-                Rate
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          {onBookmark && (
-            <TouchableOpacity
-              className="flex-row items-center py-2 px-3"
-              onPress={onBookmark}
-            >
-              <Ionicons
-                name={isBookmarked ? "bookmark" : "bookmark-outline"}
-                size={18}
-                color={isBookmarked ? "#22d3ee" : "#9CA3AF"}
-              />
-              <Text
-                className={`text-xs ml-1 font-semibold ${
-                  isBookmarked ? "text-cyan-400" : textMuted
-                }`}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View
+            className={`flex-row items-center pt-3 border-t ${border}`}
+            style={{ minWidth: 400 }} // Ensures enough width for all actions
+          >
+            {onComment && (
+              <TouchableOpacity
+                className="flex-row items-center py-2 px-3"
+                onPress={onComment}
               >
-                {isBookmarked ? "Saved" : "Save"}
-              </Text>
-            </TouchableOpacity>
-          )}
+                <Ionicons name="chatbubble-outline" size={18} color="#22d3ee" />
+                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                  Comment
+                </ThemedText>
+              </TouchableOpacity>
+            )}
 
-          {onShare && (
-            <TouchableOpacity
-              className="flex-row items-center py-2 px-3"
-              onPress={onShare}
-            >
-              <Ionicons name="share-outline" size={18} color="#9CA3AF" />
-              <Text className={`${textMuted} text-xs ml-1 font-semibold`}>
-                Share
-              </Text>
-            </TouchableOpacity>
-          )}
+            {onRate && (
+              <TouchableOpacity
+                className="flex-row items-center py-2 px-3"
+                onPress={onRate}
+              >
+                <Ionicons name="star-outline" size={18} color="#fbbf24" />
+                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                  Rate
+                </ThemedText>
+              </TouchableOpacity>
+            )}
 
-          {onReport && (
-            <TouchableOpacity
-              className="flex-row items-center py-2 px-3"
-              onPress={onReport}
-            >
-              <Ionicons name="flag-outline" size={18} color="#ef4444" />
-            </TouchableOpacity>
-          )}
-        </View>
+            {onBookmark && (
+              <TouchableOpacity
+                className="flex-row items-center py-2 px-3"
+                onPress={onBookmark}
+              >
+                <Ionicons
+                  name={isBookmarked ? "bookmark" : "bookmark-outline"}
+                  size={18}
+                  color={isBookmarked ? "#22d3ee" : "#9CA3AF"}
+                />
+                <ThemedText
+                  className={`text-xs ml-1 font-semibold ${
+                    isBookmarked ? "text-cyan-400" : textMuted
+                  }`}
+                >
+                  {isBookmarked ? "Saved" : "Save"}
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+
+            {onShare && (
+              <TouchableOpacity
+                className="flex-row items-center py-2 px-3"
+                onPress={onShare}
+              >
+                <Ionicons name="share-outline" size={18} color="#9CA3AF" />
+                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                  Share
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+
+            {onReport && (
+              <TouchableOpacity
+                className="flex-row items-center py-2 px-3"
+                onPress={onReport}
+              >
+                <Ionicons name="flag-outline" size={18} color="#ef4444" />
+                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                  Report
+                </ThemedText>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
 
         {/* Edit/Delete Actions */}
         {showActions && (
@@ -271,7 +278,7 @@ export default function ResourceCard({
                 onPress={onEdit}
               >
                 <Ionicons name="create" size={18} color="#fff" />
-                <Text className="text-white font-semibold ml-1">Edit</Text>
+                <ThemedText className="text-white font-semibold ml-1">Edit</ThemedText>
               </TouchableOpacity>
             )}
             {onDelete && (
@@ -280,7 +287,7 @@ export default function ResourceCard({
                 onPress={onDelete}
               >
                 <Ionicons name="trash" size={18} color="#fff" />
-                <Text className="text-white font-semibold ml-1">Delete</Text>
+                <ThemedText className="text-white font-semibold ml-1">Delete</ThemedText>
               </TouchableOpacity>
             )}
           </View>

@@ -2,14 +2,14 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
     ActivityIndicator,
-    Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { ThemedText } from '../components/themed-text';
+import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
@@ -90,18 +90,18 @@ export default function ChangePasswordScreen() {
       <LogoHeader position="left" />
       <View className="flex-1 items-center justify-center px-6">
         <View className="w-full max-w-md">
-          <Text className="text-3xl font-bold text-cyan-400 mb-2 text-center">
+          <ThemedText className="text-3xl font-bold text-cyan-400 mb-2 text-center">
             Change Password
-          </Text>
-          <Text className={`${textSecondary} text-center mb-6`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-center mb-6`}>
             Update your account password
-          </Text>
+          </ThemedText>
 
           <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               Current Password
-            </Text>
-            <TextInput
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               placeholder="Enter current password"
               value={currentPassword}
@@ -110,10 +110,10 @@ export default function ChangePasswordScreen() {
               placeholderTextColor={placeholderColor}
             />
 
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               New Password
-            </Text>
-            <TextInput
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               placeholder="Enter new password"
               value={newPassword}
@@ -122,10 +122,10 @@ export default function ChangePasswordScreen() {
               placeholderTextColor={placeholderColor}
             />
 
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               Confirm New Password
-            </Text>
-            <TextInput
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-6 rounded-lg`}
               placeholder="Confirm new password"
               value={confirmPassword}
@@ -142,9 +142,9 @@ export default function ChangePasswordScreen() {
               {loading ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text className="text-white text-center font-bold">
+                <ThemedText className="text-white text-center font-bold">
                   Change Password
-                </Text>
+                </ThemedText>
               )}
             </TouchableOpacity>
 
@@ -152,9 +152,9 @@ export default function ChangePasswordScreen() {
               className={`${bgInput} p-4 rounded-lg border ${borderInput}`}
               onPress={() => router.back()}
             >
-              <Text className="text-center text-cyan-400 font-semibold">
+              <ThemedText className="text-center text-cyan-400 font-semibold">
                 Cancel
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         </View>

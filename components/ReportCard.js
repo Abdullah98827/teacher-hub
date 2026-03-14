@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function ReportCard({ report, onPress }) {
   const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
@@ -59,9 +60,9 @@ export default function ReportCard({ report, onPress }) {
         <View
           className={`px-3 py-1.5 rounded-full ${colors.bg} border ${colors.border}`}
         >
-          <Text className={`text-xs font-bold ${colors.text}`}>
+          <ThemedText className={`text-xs font-bold ${colors.text}`}>
             {report.status.toUpperCase()}
-          </Text>
+          </ThemedText>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
       </View>
@@ -70,20 +71,20 @@ export default function ReportCard({ report, onPress }) {
       <View className="mb-3">
         <View className="flex-row items-center mb-1">
           <Ionicons name="alert-circle" size={14} color="#ef4444" />
-          <Text className={`${textMuted} text-xs ml-1.5`}>Reason</Text>
+          <ThemedText className={`${textMuted} text-xs ml-1.5`}>Reason</ThemedText>
         </View>
-        <Text className={`${textPrimary} font-bold`}>{report.reason}</Text>
+        <ThemedText className={`${textPrimary} font-bold`}>{report.reason}</ThemedText>
       </View>
 
       {/* Resource */}
       <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
         <View className="flex-row items-center mb-1">
           <Ionicons name="document-text" size={14} color="#6B7280" />
-          <Text className={`${textMuted} text-xs ml-1.5`}>Resource</Text>
+          <ThemedText className={`${textMuted} text-xs ml-1.5`}>Resource</ThemedText>
         </View>
-        <Text className={`${textSecondary}`} numberOfLines={1}>
+        <ThemedText className={`${textSecondary}`} numberOfLines={1}>
           {report.resource.title}
-        </Text>
+        </ThemedText>
       </View>
 
       {/* Footer */}
@@ -92,13 +93,13 @@ export default function ReportCard({ report, onPress }) {
       >
         <View className="flex-row items-center">
           <Ionicons name="person" size={12} color="#6B7280" />
-          <Text className={`${textMuted} text-xs ml-1`}>
+          <ThemedText className={`${textMuted} text-xs ml-1`}>
             {report.reporter.first_name} {report.reporter.last_name}
-          </Text>
+          </ThemedText>
         </View>
-        <Text className={`${textMuted} text-xs`}>
+        <ThemedText className={`${textMuted} text-xs`}>
           {formatDate(report.created_at)}
-        </Text>
+        </ThemedText>
       </View>
     </TouchableOpacity>
   );

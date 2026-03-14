@@ -4,9 +4,9 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { AuthProvider } from "../contexts/AuthContext";
+import { DyslexiaProvider } from '../contexts/DyslexiaContext';
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { supabase } from "../supabase";
-import { DyslexiaProvider } from '../contexts/DyslexiaContext';
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);

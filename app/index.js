@@ -1,7 +1,8 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Text, View } from "react-native";
+import { Image, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ThemedText } from "../components/themed-text";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 
@@ -63,7 +64,7 @@ export default function Index() {
           source={require("../assets/images/splash.png")}
           style={{ width: 120, height: 120, marginBottom: 16 }}
         />
-        <Text className="text-cyan-400 text-lg">Loading Teacher Hub...</Text>
+        <ThemedText className="text-cyan-400 text-lg">Loading Teacher Hub...</ThemedText>
       </View>
     );
   }

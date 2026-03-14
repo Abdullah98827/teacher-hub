@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -15,6 +14,7 @@ import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
+import { ThemedText } from "../../components/themed-text";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
@@ -32,6 +32,7 @@ export default function ManageCommentsScreen() {
   const { bgCardAlt, textPrimary, textSecondary } = useAppTheme();
 
   const fetchComments = useCallback(async () => {
+    setLoading(true); // Ensure loading state is set at the start
     const { data: commentsData, error } = await supabase
       .from("resource_comments")
       .select(
@@ -50,28 +51,48 @@ export default function ManageCommentsScreen() {
       return;
     }
 
-    const enrichedComments = await Promise.all(
-      (commentsData || []).map(async (comment) => {
-        const { data: userData } = await supabase
-          .from("teachers")
-          .select("first_name, last_name")
-          .eq("id", comment.user_id)
-          .single();
+    // Avoid unnecessary requests if no comments
+    if (!commentsData || commentsData.length === 0) {
+      setComments([]);
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
 
-        const { data: resourceData } = await supabase
-          .from("resources")
-          .select("title")
-          .eq("id", comment.resource_id)
-          .single();
+    // Batch fetch user and resource info for performance
+    const userIds = [...new Set(commentsData.map((c) => c.user_id))];
+    const resourceIds = [...new Set(commentsData.map((c) => c.resource_id))];
 
-        return {
-          ...comment,
-          first_name: userData?.first_name || "Unknown",
-          last_name: userData?.last_name || "",
-          resource_title: resourceData?.title || "Unknown Resource",
-        };
-      })
-    );
+    const [{ data: users }, { data: resources }] = await Promise.all([
+      supabase
+        .from("teachers")
+        .select("id, first_name, last_name")
+        .in("id", userIds),
+      supabase
+        .from("resources")
+        .select("id, title")
+        .in("id", resourceIds),
+    ]);
+
+    const userMap = (users || []).reduce((acc, u) => {
+      acc[u.id] = u;
+      return acc;
+    }, {});
+    const resourceMap = (resources || []).reduce((acc, r) => {
+      acc[r.id] = r;
+      return acc;
+    }, {});
+
+    const enrichedComments = (commentsData || []).map((comment) => {
+      const user = userMap[comment.user_id] || {};
+      const resource = resourceMap[comment.resource_id] || {};
+      return {
+        ...comment,
+        first_name: user.first_name || "Unknown",
+        last_name: user.last_name || "",
+        resource_title: resource.title || "Unknown Resource",
+      };
+    });
 
     setComments(enrichedComments);
     setLoading(false);
@@ -196,13 +217,13 @@ export default function ManageCommentsScreen() {
             size={18}
             color={showDeletedOnly ? "#ef4444" : "#9CA3AF"}
           />
-          <Text
+          <ThemedText
             className={`font-semibold ml-2 ${
               showDeletedOnly ? "text-red-400" : textSecondary
             }`}
           >
             {showDeletedOnly ? "Showing Deleted Only" : "Show Deleted Only"}
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
 
         {filteredComments.length === 0 ? (
@@ -210,14 +231,14 @@ export default function ManageCommentsScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="chatbubble-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+            <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
               No Comments
-            </Text>
-            <Text className={`${textSecondary} text-center`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
               {showDeletedOnly
                 ? "No deleted comments found"
                 : "No comments match your search"}
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <FlatList

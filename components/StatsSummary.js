@@ -1,5 +1,6 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 const colorMap = {
   cyan: "text-cyan-400",
@@ -19,10 +20,10 @@ export default function StatsSummary({ stats }) {
           <View key={index}>
             {index > 0 && <View className={`w-px ${border}`} />}
             <View className="items-center">
-              <Text className={`${colorMap[stat.color]} text-2xl font-bold`}>
+              <ThemedText className={`${colorMap[stat.color]} text-2xl font-bold`}>
                 {stat.value}
-              </Text>
-              <Text className={`${textMuted} text-xs`}>{stat.label}</Text>
+              </ThemedText>
+              <ThemedText className={`${textMuted} text-xs`}>{stat.label}</ThemedText>
             </View>
           </View>
         ))}

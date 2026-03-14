@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import ProfilePicture from "./ProfilePicture";
 import StatusBadge from "./StatusBadge";
+import { ThemedText } from './themed-text';
 
 export default function CommentCard({ comment, onRestore, onDelete }) {
   const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
@@ -32,30 +33,30 @@ export default function CommentCard({ comment, onRestore, onDelete }) {
               lastName={comment.last_name}
               size="sm"
             />
-            <Text className={`${textPrimary} font-semibold`}>
+            <ThemedText className={`${textPrimary} font-semibold`}>
               {comment.first_name} {comment.last_name}
-            </Text>
+            </ThemedText>
           </View>
-          <Text className={`${textMuted} text-xs ml-10`}>
+          <ThemedText className={`${textMuted} text-xs ml-10`}>
             {formatDate(comment.created_at)}
-          </Text>
+          </ThemedText>
         </View>
         {comment.is_deleted && <StatusBadge status="rejected" size="sm" />}
       </View>
 
       {/* Comment text */}
       <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
-        <Text className={`${textSecondary} leading-5`}>
+        <ThemedText className={`${textSecondary} leading-5`}>
           {comment.comment_text}
-        </Text>
+        </ThemedText>
       </View>
 
       {/* Resource info */}
       <View className="flex-row items-center mb-3">
         <Ionicons name="document-text" size={14} color="#6B7280" />
-        <Text className={`${textMuted} text-xs ml-1.5`}>
+        <ThemedText className={`${textMuted} text-xs ml-1.5`}>
           {comment.resource_title}
-        </Text>
+        </ThemedText>
       </View>
 
       {/* Action buttons */}
@@ -67,7 +68,7 @@ export default function CommentCard({ comment, onRestore, onDelete }) {
               onPress={onRestore}
             >
               <Ionicons name="refresh" size={16} color="#fff" />
-              <Text className="text-white font-semibold ml-2">Restore</Text>
+              <ThemedText className="text-white font-semibold ml-2">Restore</ThemedText>
             </TouchableOpacity>
           )}
           <TouchableOpacity
@@ -75,7 +76,7 @@ export default function CommentCard({ comment, onRestore, onDelete }) {
             onPress={onDelete}
           >
             <Ionicons name="trash" size={16} color="#fff" />
-            <Text className="text-white font-semibold ml-2">Delete Forever</Text>
+            <ThemedText className="text-white font-semibold ml-2">Delete Forever</ThemedText>
           </TouchableOpacity>
         </View>
       ) : (
@@ -84,7 +85,7 @@ export default function CommentCard({ comment, onRestore, onDelete }) {
           onPress={onDelete}
         >
           <Ionicons name="trash" size={16} color="#fff" />
-          <Text className="text-white font-semibold ml-2">Delete</Text>
+          <ThemedText className="text-white font-semibold ml-2">Delete</ThemedText>
         </TouchableOpacity>
       )}
     </View>

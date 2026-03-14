@@ -1,14 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -16,6 +15,7 @@ import ReportCard from "../../components/ReportCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
+import { ThemedText } from "../../components/themed-text";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 
@@ -166,10 +166,10 @@ export default function ManageReportsScreen() {
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="flag-outline" size={40} color="#22d3ee" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">No Reports</Text>
-            <Text className={`${textSecondary} text-center`}>
+            <ThemedText className="text-white text-xl font-bold mb-2">No Reports</ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
               No {filter !== "all" ? filter : ""} reports found
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <FlatList
@@ -210,9 +210,9 @@ export default function ManageReportsScreen() {
           <View className={`${bgCard} rounded-t-3xl max-h-[80%]`}>
             <ScrollView className="p-6">
               <View className="flex-row items-center justify-between mb-6">
-                <Text className={`${textPrimary} text-2xl font-bold`}>
+                <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                   Report Details
-                </Text>
+                </ThemedText>
                 <TouchableOpacity onPress={() => setShowDetailModal(false)}>
                   <Ionicons name="close" size={28} color="#6B7280" />
                 </TouchableOpacity>
@@ -230,7 +230,7 @@ export default function ManageReportsScreen() {
                             : "bg-green-500/20 border border-green-500/30"
                       }`}
                     >
-                      <Text
+                      <ThemedText
                         className={`text-xs font-bold ${
                           selectedReport.status === "pending"
                             ? "text-orange-400"
@@ -240,35 +240,35 @@ export default function ManageReportsScreen() {
                         }`}
                       >
                         {selectedReport.status.toUpperCase()}
-                      </Text>
+                      </ThemedText>
                     </View>
                   </View>
 
                   <View className="mb-4">
-                    <Text className={`${textMuted} text-xs mb-1`}>Reason</Text>
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Reason</ThemedText>
                     <View className={`${bgCardAlt} rounded-lg p-3`}>
-                      <Text className={`${textPrimary} font-semibold`}>
+                      <ThemedText className={`${textPrimary} font-semibold`}>
                         {selectedReport.reason}
-                      </Text>
+                      </ThemedText>
                     </View>
                   </View>
 
                   <View className="mb-4">
-                    <Text className={`${textMuted} text-xs mb-1`}>Resource</Text>
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Resource</ThemedText>
                     <View className={`${bgCardAlt} rounded-lg p-3`}>
-                      <Text className={textPrimary}>
+                      <ThemedText className={textPrimary}>
                         {selectedReport.resource.title}
-                      </Text>
+                      </ThemedText>
                     </View>
                   </View>
 
                   {selectedReport.description && (
                     <View className="mb-4">
-                      <Text className={`${textMuted} text-xs mb-1`}>Description</Text>
+                      <ThemedText className={`${textMuted} text-xs mb-1`}>Description</ThemedText>
                       <View className={`${bgCardAlt} rounded-lg p-3`}>
-                        <Text className={`${textPrimary} leading-5`}>
+                        <ThemedText className={`${textPrimary} leading-5`}>
                           {selectedReport.description}
-                        </Text>
+                        </ThemedText>
                       </View>
                     </View>
                   )}
@@ -278,14 +278,14 @@ export default function ManageReportsScreen() {
                   >
                     <View className="flex-row items-center">
                       <Ionicons name="person" size={16} color="#6B7280" />
-                      <Text className={`${textSecondary} text-sm ml-2`}>
+                      <ThemedText className={`${textSecondary} text-sm ml-2`}>
                         {selectedReport.reporter.first_name}{" "}
                         {selectedReport.reporter.last_name}
-                      </Text>
+                      </ThemedText>
                     </View>
-                    <Text className={`${textMuted} text-xs`}>
+                    <ThemedText className={`${textMuted} text-xs`}>
                       {formatDate(selectedReport.created_at)}
-                    </Text>
+                    </ThemedText>
                   </View>
 
                   {selectedReport.status === "pending" && (
@@ -304,9 +304,9 @@ export default function ManageReportsScreen() {
                         ) : (
                           <>
                             <Ionicons name="eye" size={18} color="#fff" />
-                            <Text className="text-white font-bold ml-2">
+                            <ThemedText className="text-white font-bold ml-2">
                               Mark as Reviewed
-                            </Text>
+                            </ThemedText>
                           </>
                         )}
                       </TouchableOpacity>
@@ -320,9 +320,9 @@ export default function ManageReportsScreen() {
                         disabled={updating}
                       >
                         <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                        <Text className="text-white font-bold ml-2">
+                        <ThemedText className="text-white font-bold ml-2">
                           Mark as Resolved
-                        </Text>
+                        </ThemedText>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -342,9 +342,9 @@ export default function ManageReportsScreen() {
                       ) : (
                         <>
                           <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                          <Text className="text-white font-bold ml-2">
+                          <ThemedText className="text-white font-bold ml-2">
                             Mark as Resolved
-                          </Text>
+                          </ThemedText>
                         </>
                       )}
                     </TouchableOpacity>
@@ -353,9 +353,9 @@ export default function ManageReportsScreen() {
                   {selectedReport.status === "resolved" && (
                     <View className="bg-green-500/20 border-2 border-green-500/30 py-4 rounded-lg flex-row items-center justify-center">
                       <Ionicons name="checkmark-circle" size={18} color="#22c55e" />
-                      <Text className="text-green-400 font-bold ml-2">
+                      <ThemedText className="text-green-400 font-bold ml-2">
                         Report Resolved
-                      </Text>
+                      </ThemedText>
                     </View>
                   )}
                 </>

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function StatusBadge({
   status,
@@ -91,9 +92,9 @@ export default function StatusBadge({
           style={{ marginRight: 4 }}
         />
       )}
-      <Text className={`font-bold ${styles.text} ${sizeStyles.text}`}>
+      <ThemedText className={`font-bold ${styles.text} ${sizeStyles.text}`}>
         {label}
-      </Text>
+      </ThemedText>
     </View>
   );
 }

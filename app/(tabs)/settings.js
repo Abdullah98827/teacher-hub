@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState, useContext } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Modal,
@@ -13,13 +13,13 @@ import Toast from "react-native-toast-message";
 import ConfirmModal from "../../components/ConfirmModal";
 import LogoHeader from "../../components/logoHeader";
 import ProfilePicture from "../../components/ProfilePicture";
+import { ThemedText } from '../../components/themed-text';
+import { DyslexiaContext } from '../../contexts/DyslexiaContext';
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { deleteProfilePicture } from "../../utils/profilePictureHelpers";
-import { DyslexiaContext } from '../../contexts/DyslexiaContext';
-import { ThemedText } from '../../components/themed-text';
 
 export default function SettingsScreen() {
   const [profile, setProfile] = useState({

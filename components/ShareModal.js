@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Modal, Text, TouchableOpacity, View } from "react-native";
+import { Modal, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function ShareModal({
   visible,
@@ -48,17 +49,17 @@ export default function ShareModal({
                 <View className="bg-cyan-600/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="share-social" size={20} color="#22d3ee" />
                 </View>
-                <Text className={`${textPrimary} font-bold text-xl`}>
+                <ThemedText className={`${textPrimary} font-bold text-xl`}>
                   Share Resource
-                </Text>
+                </ThemedText>
               </View>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
-            <Text className={`${textMuted} text-sm`} numberOfLines={2}>
+            <ThemedText className={`${textMuted} text-sm`} numberOfLines={2}>
               {resourceTitle}
-            </Text>
+            </ThemedText>
           </View>
 
           {/* Content */}
@@ -68,15 +69,15 @@ export default function ShareModal({
                 <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
                   <Ionicons name="chatbubbles" size={32} color="#22d3ee" />
                 </View>
-                <Text
+                <ThemedText
                   className={`${textPrimary} font-bold text-lg mb-2 text-center`}
                 >
                   Share with Teachers
-                </Text>
-                <Text className={`${textSecondary} text-sm text-center`}>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-sm text-center`}>
                   Share resources directly in subject groups and one-on-one
                   chats when our Community feature launches!
-                </Text>
+                </ThemedText>
               </View>
             </View>
 
@@ -90,17 +91,17 @@ export default function ShareModal({
                   <Ionicons name="chatbubbles" size={24} color="#a855f7" />
                 </View>
                 <View className="flex-1">
-                  <Text className={`${textPrimary} font-semibold mb-1`}>
+                  <ThemedText className={`${textPrimary} font-semibold mb-1`}>
                     Share to Group Chat
-                  </Text>
-                  <Text className={`${textMuted} text-xs`}>
+                  </ThemedText>
+                  <ThemedText className={`${textMuted} text-xs`}>
                     Send to subject groups
-                  </Text>
+                  </ThemedText>
                 </View>
                 <View className="bg-yellow-600/20 px-2 py-1 rounded">
-                  <Text className="text-yellow-400 text-xs font-bold">
+                  <ThemedText className="text-yellow-400 text-xs font-bold">
                     Soon
-                  </Text>
+                  </ThemedText>
                 </View>
               </TouchableOpacity>
 
@@ -113,17 +114,17 @@ export default function ShareModal({
                   <Ionicons name="person" size={24} color="#3b82f6" />
                 </View>
                 <View className="flex-1">
-                  <Text className={`${textPrimary} font-semibold mb-1`}>
+                  <ThemedText className={`${textPrimary} font-semibold mb-1`}>
                     Share to Teacher
-                  </Text>
-                  <Text className={`${textMuted} text-xs`}>
+                  </ThemedText>
+                  <ThemedText className={`${textMuted} text-xs`}>
                     Send via direct message
-                  </Text>
+                  </ThemedText>
                 </View>
                 <View className="bg-yellow-600/20 px-2 py-1 rounded">
-                  <Text className="text-yellow-400 text-xs font-bold">
+                  <ThemedText className="text-yellow-400 text-xs font-bold">
                     Soon
-                  </Text>
+                  </ThemedText>
                 </View>
               </TouchableOpacity>
 
@@ -135,31 +136,31 @@ export default function ShareModal({
                   <Ionicons name="link" size={24} color="#22d3ee" />
                 </View>
                 <View className="flex-1">
-                  <Text className={`${textPrimary} font-semibold mb-1`}>
+                  <ThemedText className={`${textPrimary} font-semibold mb-1`}>
                     Copy Link
-                  </Text>
-                  <Text className={`${textMuted} text-xs`}>
+                  </ThemedText>
+                  <ThemedText className={`${textMuted} text-xs`}>
                     Share via other apps
-                  </Text>
+                  </ThemedText>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
               </TouchableOpacity>
             </View>
 
             <View className="bg-cyan-900/20 border border-cyan-800 rounded-xl p-4">
-              <Text className="text-cyan-400 text-xs leading-5">
+              <ThemedText className="text-cyan-400 text-xs leading-5">
                 💡 The full sharing experience will be available when Community
                 features are released. Stay tuned!
-              </Text>
+              </ThemedText>
             </View>
 
             <TouchableOpacity
               className={`mt-5 py-4 ${bgCardAlt} rounded-xl`}
               onPress={onClose}
             >
-              <Text className={`${textPrimary} text-center font-semibold`}>
+              <ThemedText className={`${textPrimary} text-center font-semibold`}>
                 Close
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         </View>

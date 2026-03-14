@@ -23,6 +23,7 @@ import ReportModal from "../../components/ReportModal";
 import ResourceCard from "../../components/ResourceCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import ShareModal from "../../components/ShareModal";
+import { ThemedText } from '../../components/themed-text';
 import TranslationModal from "../../components/TranslationModal";
 import UserProfileModal from "../../components/UserProfileModal";
 import { useAuth } from "../../contexts/AuthContext";
@@ -35,7 +36,6 @@ import {
     trackResourceView,
 } from "../../utils/resourceHelpers";
 import { deleteFile, getSignedUrl } from "../../utils/storage";
-import { ThemedText } from '../../components/themed-text';
 
 export default function ResourcesScreen() {
   const { user } = useAuth();

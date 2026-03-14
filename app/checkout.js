@@ -10,9 +10,9 @@ import {
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
-import { ThemedTextInput } from '../components/themed-textinput';
 
 export default function CheckoutScreen() {
   const router = useRouter();

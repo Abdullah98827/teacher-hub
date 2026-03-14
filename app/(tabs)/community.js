@@ -12,13 +12,13 @@ import {
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
+import { ThemedText } from '../../components/themed-text';
 import TrendingResources from "../../components/TrendingResources";
 import WeeklyLeaderboard from "../../components/WeeklyLeaderboard";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { ThemedText } from '../../components/themed-text';
 
 export default function CommunityScreen() {
   const { user } = useAuth();

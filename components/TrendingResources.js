@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
+import { ThemedText } from './themed-text';
 
 export default function TrendingResources() {
   const router = useRouter();
@@ -181,19 +182,19 @@ export default function TrendingResources() {
   if (resources.length === 0) {
     return (
       <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
-        <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+        <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
           Trending Resources
-        </Text>
-        <Text className={`${textSecondary} mb-4`}>
+        </ThemedText>
+        <ThemedText className={`${textSecondary} mb-4`}>
           No trending resources yet.
-        </Text>
+        </ThemedText>
         <TouchableOpacity
           className="bg-cyan-600 p-3 rounded-lg"
           onPress={() => router.push("/(tabs)/resources")}
         >
-          <Text className="text-white font-semibold text-center">
+          <ThemedText className="text-white font-semibold text-center">
             Browse Resources
-          </Text>
+          </ThemedText>
         </TouchableOpacity>
       </View>
     );
@@ -202,10 +203,10 @@ export default function TrendingResources() {
   return (
     <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
       <View className="mb-4">
-        <Text className={`${textPrimary} text-xl font-bold`}>
+        <ThemedText className={`${textPrimary} text-xl font-bold`}>
           Trending Resources
-        </Text>
-        <Text className={`${textSecondary} text-sm`}>Most popular content</Text>
+        </ThemedText>
+        <ThemedText className={`${textSecondary} text-sm`}>Most popular content</ThemedText>
       </View>
 
       <View>
@@ -223,36 +224,36 @@ export default function TrendingResources() {
                   backgroundColor: `${getCategoryColor(resource.category)}20`,
                 }}
               >
-                <Text
+                <ThemedText
                   className="text-xs font-bold"
                   style={{ color: getCategoryColor(resource.category) }}
                 >
                   {getCategoryName(resource.category)}
-                </Text>
+                </ThemedText>
               </View>
 
               <View className="bg-cyan-500/20 px-2 py-1 rounded-full">
-                <Text className="text-cyan-400 text-xs font-bold">
+                <ThemedText className="text-cyan-400 text-xs font-bold">
                   #{index + 1}
-                </Text>
+                </ThemedText>
               </View>
             </View>
 
-            <Text
+            <ThemedText
               className={`${textPrimary} font-bold text-base mb-2`}
               numberOfLines={2}
             >
               {resource.title}
-            </Text>
+            </ThemedText>
 
             <View
               className={`px-3 py-1 rounded-lg mb-3 self-start ${isDark ? "bg-cyan-900/40" : "bg-cyan-100"}`}
             >
-              <Text
+              <ThemedText
                 className={`text-xs font-semibold ${isDark ? "text-cyan-400" : "text-cyan-700"}`}
               >
                 {resource.subject_name}
-              </Text>
+              </ThemedText>
             </View>
 
             <View
@@ -261,30 +262,30 @@ export default function TrendingResources() {
               <View className="flex-row items-center gap-3">
                 <View className="flex-row items-center">
                   <Ionicons name="eye" size={14} color="#9CA3AF" />
-                  <Text className={`${textMuted} text-xs ml-1`}>
+                  <ThemedText className={`${textMuted} text-xs ml-1`}>
                     {resource.views_count}
-                  </Text>
+                  </ThemedText>
                 </View>
                 <View className="flex-row items-center">
                   <Ionicons name="download" size={14} color="#22d3ee" />
-                  <Text className={`${textMuted} text-xs ml-1`}>
+                  <ThemedText className={`${textMuted} text-xs ml-1`}>
                     {resource.downloads_count}
-                  </Text>
+                  </ThemedText>
                 </View>
                 {resource.rating_count > 0 && (
                   <View className="flex-row items-center">
                     <Ionicons name="star" size={14} color="#f59e0b" />
-                    <Text className={`${textMuted} text-xs ml-1`}>
+                    <ThemedText className={`${textMuted} text-xs ml-1`}>
                       {resource.rating_avg} ({resource.rating_count})
-                    </Text>
+                    </ThemedText>
                   </View>
                 )}
                 {resource.comment_count > 0 && (
                   <View className="flex-row items-center">
                     <Ionicons name="chatbubble" size={14} color="#a855f7" />
-                    <Text className={`${textMuted} text-xs ml-1`}>
+                    <ThemedText className={`${textMuted} text-xs ml-1`}>
                       {resource.comment_count}
-                    </Text>
+                    </ThemedText>
                   </View>
                 )}
               </View>
@@ -298,14 +299,14 @@ export default function TrendingResources() {
                   lastName={resource.uploader_last_name}
                   size="sm"
                 />
-                <Text className={`${textMuted} text-xs ml-2`} numberOfLines={1}>
+                <ThemedText className={`${textMuted} text-xs ml-2`} numberOfLines={1}>
                   {resource.uploader_first_name} {resource.uploader_last_name}
-                </Text>
+                </ThemedText>
               </View>
 
-              <Text className={`${textMuted} text-xs`}>
+              <ThemedText className={`${textMuted} text-xs`}>
                 {formatDate(resource.created_at)}
-              </Text>
+              </ThemedText>
             </View>
           </TouchableOpacity>
         ))}
@@ -315,9 +316,9 @@ export default function TrendingResources() {
         className="bg-cyan-600 p-3 rounded-lg mt-2"
         onPress={() => router.push("/(tabs)/resources")}
       >
-        <Text className="text-white font-semibold text-center">
+        <ThemedText className="text-white font-semibold text-center">
           Browse All Resources
-        </Text>
+        </ThemedText>
       </TouchableOpacity>
     </View>
   );

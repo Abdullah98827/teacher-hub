@@ -1,12 +1,11 @@
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
-import { ThemedTextInput } from "../components/themed-textinput";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -125,7 +124,7 @@ export default function Login() {
             Login
           </Text>
 
-          <ThemedTextInput
+          <TextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-xl`}
             placeholder="Email"
             value={email}
@@ -136,7 +135,7 @@ export default function Login() {
             placeholderTextColor={placeholderColor}
           />
 
-          <ThemedTextInput
+          <TextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-xl`}
             placeholder="Password"
             value={password}

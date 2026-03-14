@@ -2,11 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    Text,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -14,6 +13,7 @@ import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TeacherVerificationCard from "../../components/TeacherVerificationCard";
+import { ThemedText } from '../../components/themed-text';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
@@ -185,10 +185,10 @@ export default function VerifyTeachersScreen() {
             <View className="bg-green-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="checkmark-circle" size={40} color="#22c55e" />
             </View>
-            <Text className="text-white text-xl font-bold mb-2">All Clear!</Text>
-            <Text className={`${textSecondary} text-center`}>
+            <ThemedText className="text-white text-xl font-bold mb-2">All Clear!</ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
               No pending teacher verifications
-            </Text>
+            </ThemedText>
           </View>
         ) : (
           <FlatList

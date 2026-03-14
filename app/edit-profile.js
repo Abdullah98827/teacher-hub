@@ -5,8 +5,6 @@ import {
     ActivityIndicator,
     Modal,
     ScrollView,
-    Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -15,6 +13,8 @@ import ConfirmModal from "../components/ConfirmModal";
 import LogoHeader from "../components/logoHeader";
 import ProfilePicture from "../components/ProfilePicture";
 import ScreenWrapper from "../components/ScreenWrapper";
+import { ThemedText } from '../components/themed-text';
+import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import {
@@ -228,12 +228,12 @@ export default function EditProfileScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-2xl font-bold text-cyan-400">
+            <ThemedText className="text-2xl font-bold text-cyan-400">
               Edit Profile
-            </Text>
-            <Text className={`${textSecondary} text-sm`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-sm`}>
               Update your personal information
-            </Text>
+            </ThemedText>
           </View>
         </View>
       </View>
@@ -241,9 +241,9 @@ export default function EditProfileScreen() {
       <ScrollView className="flex-1 px-6">
         {/* Profile Picture Section */}
         <View className={`${bgCard} rounded-xl p-6 mb-4 mt-6 border ${border}`}>
-          <Text className="text-lg font-bold text-cyan-400 mb-4 text-center">
+          <ThemedText className="text-lg font-bold text-cyan-400 mb-4 text-center">
             Profile Picture
-          </Text>
+          </ThemedText>
           <View className="items-center">
             <TouchableOpacity
               onPress={handlePictureClick}
@@ -262,9 +262,9 @@ export default function EditProfileScreen() {
                   }}
                 >
                   <ActivityIndicator size="large" color="#fff" />
-                  <Text className="text-white text-xs mt-2">
+                  <ThemedText className="text-white text-xs mt-2">
                     {uploadingPicture ? "Uploading..." : "Deleting..."}
-                  </Text>
+                  </ThemedText>
                 </View>
               ) : (
                 <>
@@ -289,26 +289,26 @@ export default function EditProfileScreen() {
               className="mt-3"
               disabled={uploadingPicture || deletingPicture}
             >
-              <Text className="text-cyan-400 text-sm text-center font-semibold">
+              <ThemedText className="text-cyan-400 text-sm text-center font-semibold">
                 {profilePictureUrl
                   ? "Tap to change or delete"
                   : "Tap to upload picture"}
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Basic Information */}
         <View className={`${bgCard} rounded-xl p-6 mb-4 border ${border}`}>
-          <Text className="text-lg font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-lg font-bold text-cyan-400 mb-4">
             Basic Information
-          </Text>
+          </ThemedText>
 
           <View className="mb-4">
-            <Text className={`${textSecondary} text-xs mb-2`}>
-              First Name <Text className="text-red-400">*</Text>
-            </Text>
-            <TextInput
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
+              First Name <ThemedText className="text-red-400">*</ThemedText>
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="First Name"
               value={firstName}
@@ -318,10 +318,10 @@ export default function EditProfileScreen() {
           </View>
 
           <View className="mb-4">
-            <Text className={`${textSecondary} text-xs mb-2`}>
-              Last Name <Text className="text-red-400">*</Text>
-            </Text>
-            <TextInput
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
+              Last Name <ThemedText className="text-red-400">*</ThemedText>
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="Last Name"
               value={lastName}
@@ -331,46 +331,46 @@ export default function EditProfileScreen() {
           </View>
 
           <View className="mb-4">
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               Email (Cannot be changed)
-            </Text>
+            </ThemedText>
             <View
               className={`${bgCardAlt} border ${borderInput} p-4 rounded-lg flex-row items-center`}
             >
               <Ionicons name="lock-closed" size={16} color="#6B7280" />
-              <Text className={`${textSecondary} ml-2 flex-1`}>{email}</Text>
+              <ThemedText className={`${textSecondary} ml-2 flex-1`}>{email}</ThemedText>
             </View>
           </View>
 
           <View>
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               Teacher Reference Number (Cannot be changed)
-            </Text>
+            </ThemedText>
             <View
               className={`${bgCardAlt} border ${borderInput} p-4 rounded-lg flex-row items-center`}
             >
               <Ionicons name="lock-closed" size={16} color="#6B7280" />
-              <Text className={`${textSecondary} ml-2 flex-1`}>{trn}</Text>
+              <ThemedText className={`${textSecondary} ml-2 flex-1`}>{trn}</ThemedText>
             </View>
           </View>
         </View>
 
         {/* Professional Information */}
         <View className={`${bgCard} rounded-xl p-6 mb-4 border ${border}`}>
-          <Text className="text-lg font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-lg font-bold text-cyan-400 mb-4">
             Professional Information
-          </Text>
+          </ThemedText>
 
           <View className="mb-4">
             <View className="flex-row justify-between items-center mb-2">
-              <Text className={`${textSecondary} text-xs`}>Bio (Optional)</Text>
-              <Text
+              <ThemedText className={`${textSecondary} text-xs`}>Bio (Optional)</ThemedText>
+              <ThemedText
                 className={`text-xs ${bio.length > 150 ? "text-red-400" : textSecondary}`}
               >
                 {bio.length}/150
-              </Text>
+              </ThemedText>
             </View>
-            <TextInput
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="Tell us about yourself..."
               value={bio}
@@ -384,10 +384,10 @@ export default function EditProfileScreen() {
           </View>
 
           <View className="mb-4">
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               School/Institution (Optional)
-            </Text>
-            <TextInput
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="e.g. Wellington Academy"
               value={schoolName}
@@ -397,10 +397,10 @@ export default function EditProfileScreen() {
           </View>
 
           <View>
-            <Text className={`${textSecondary} text-xs mb-2`}>
+            <ThemedText className={`${textSecondary} text-xs mb-2`}>
               Years of Teaching Experience (Optional)
-            </Text>
-            <TextInput
+            </ThemedText>
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 rounded-lg`}
               placeholder="e.g. 5"
               value={yearsExperience}
@@ -414,12 +414,12 @@ export default function EditProfileScreen() {
 
         {/* Privacy Settings */}
         <View className={`${bgCard} rounded-xl p-6 mb-4 border ${border}`}>
-          <Text className="text-lg font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-lg font-bold text-cyan-400 mb-4">
             Privacy Settings
-          </Text>
-          <Text className={`${textSecondary} text-xs mb-3`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-xs mb-3`}>
             Who can send you direct messages?
-          </Text>
+          </ThemedText>
 
           {["everyone", "followers_only", "nobody"].map((option) => {
             const isSelected = allowDms === option;
@@ -459,16 +459,16 @@ export default function EditProfileScreen() {
                       color={isSelected ? "#fff" : "#9CA3AF"}
                     />
                     <View className="ml-3 flex-1">
-                      <Text
+                      <ThemedText
                         className={`font-semibold ${isSelected ? "text-white" : textPrimary}`}
                       >
                         {title}
-                      </Text>
-                      <Text
+                      </ThemedText>
+                      <ThemedText
                         className={`text-xs ${isSelected ? "text-cyan-100" : textSecondary}`}
                       >
                         {sub}
-                      </Text>
+                      </ThemedText>
                     </View>
                   </View>
                   {isSelected && (
@@ -492,7 +492,7 @@ export default function EditProfileScreen() {
             ) : (
               <View className="flex-row items-center justify-center">
                 <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                <Text className="text-white font-bold ml-2">Save Changes</Text>
+                <ThemedText className="text-white font-bold ml-2">Save Changes</ThemedText>
               </View>
             )}
           </TouchableOpacity>
@@ -501,9 +501,9 @@ export default function EditProfileScreen() {
             className={`${bgInput} p-4 rounded-lg border ${borderInput}`}
             onPress={() => router.back()}
           >
-            <Text className="text-center text-cyan-400 font-semibold">
+            <ThemedText className="text-center text-cyan-400 font-semibold">
               Cancel
-            </Text>
+            </ThemedText>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -517,30 +517,30 @@ export default function EditProfileScreen() {
       >
         <View className="flex-1 bg-black/70 justify-center items-center">
           <View className={`${bgCard} rounded-xl p-6 mx-5 w-80 border ${border}`}>
-            <Text className={`text-xl font-bold ${textPrimary} mb-4 text-center`}>
+            <ThemedText className={`text-xl font-bold ${textPrimary} mb-4 text-center`}>
               Profile Picture
-            </Text>
+            </ThemedText>
             <TouchableOpacity
               className="bg-cyan-600 p-4 rounded-lg mb-3 flex-row items-center justify-center"
               onPress={handleChangeProfilePicture}
             >
               <Ionicons name="camera" size={20} color="#fff" />
-              <Text className="text-white font-bold ml-2">Change Picture</Text>
+              <ThemedText className="text-white font-bold ml-2">Change Picture</ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
               className="bg-red-600 p-4 rounded-lg mb-3 flex-row items-center justify-center"
               onPress={handleDeletePicture}
             >
               <Ionicons name="trash" size={20} color="#fff" />
-              <Text className="text-white font-bold ml-2">Delete Picture</Text>
+              <ThemedText className="text-white font-bold ml-2">Delete Picture</ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
               className={`${bgInput} p-4 rounded-lg border ${borderInput}`}
               onPress={() => setShowPictureModal(false)}
             >
-              <Text className={`${textPrimary} text-center font-semibold`}>
+              <ThemedText className={`${textPrimary} text-center font-semibold`}>
                 Cancel
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         </View>

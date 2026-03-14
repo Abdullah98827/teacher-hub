@@ -1,11 +1,11 @@
 import {
     ActivityIndicator,
     Modal,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedText } from './themed-text';
 
 export default function ConfirmModal({
   visible,
@@ -30,10 +30,10 @@ export default function ConfirmModal({
         <View
           className={`${bgCard} rounded-2xl p-6 w-full max-w-sm border ${border}`}
         >
-          <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+          <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
             {title}
-          </Text>
-          <Text className={`${textSecondary} mb-6`}>{message}</Text>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} mb-6`}>{message}</ThemedText>
           <View className="flex-row gap-3">
             <TouchableOpacity
               className={`flex-1 ${bgCardAlt} py-3 rounded-xl ${
@@ -42,9 +42,9 @@ export default function ConfirmModal({
               onPress={onCancel}
               disabled={isProcessing}
             >
-              <Text className={`${textPrimary} text-center font-bold`}>
+              <ThemedText className={`${textPrimary} text-center font-bold`}>
                 Cancel
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
             <TouchableOpacity
               className={`flex-1 ${confirmColor} py-3 rounded-xl ${
@@ -56,9 +56,9 @@ export default function ConfirmModal({
               {isProcessing ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text className="text-white text-center font-bold">
+                <ThemedText className="text-white text-center font-bold">
                   {confirmText}
-                </Text>
+                </ThemedText>
               )}
             </TouchableOpacity>
           </View>
