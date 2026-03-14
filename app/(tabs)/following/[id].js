@@ -1,0 +1,188 @@
+import LogoHeader from "@/components/logoHeader";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import {
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
+import Toast from "react-native-toast-message";
+import ProfilePicture from "../../../components/ProfilePicture";
+import ScreenWrapper from "../../../components/ScreenWrapper";
+import UserProfileModal from "../../../components/UserProfileModal";
+import { useAppTheme } from "../../../hooks/useAppTheme";
+import { supabase } from "../../../supabase";
+
+export default function FollowingScreen() {
+  const params = useLocalSearchParams();
+  const userId = params.id;
+  const router = useRouter();
+  const { bgCard, border, textPrimary, textSecondary } = useAppTheme();
+
+  const [following, setFollowing] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  const loadUserName = useCallback(async () => {
+    const { data } = await supabase
+      .from("teachers")
+      .select("first_name, last_name")
+      .eq("id", userId)
+      .single();
+
+    if (data) {
+      setUserName(`${data.first_name} ${data.last_name}`);
+    }
+  }, [userId]);
+
+  const loadFollowing = useCallback(async () => {
+    const { data, error } = await supabase.rpc("get_following", {
+      teacher_uuid: userId,
+      limit_count: 100,
+      offset_count: 0,
+    });
+
+    if (error) {
+      console.error("Error loading following:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load following list",
+      });
+    } else {
+      setFollowing(data || []);
+    }
+    setLoading(false);
+    setRefreshing(false);
+  }, [userId]);
+
+  useEffect(() => {
+    loadUserName();
+  }, [loadUserName]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadFollowing();
+    }, [loadFollowing])
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadFollowing();
+  }, [loadFollowing]);
+
+  const handleUserPress = (followingId) => {
+    setSelectedUserId(followingId);
+    setShowProfileModal(true);
+  };
+
+  const renderFollowing = ({ item }) => (
+    <TouchableOpacity
+      className={`flex-row items-center p-4 ${bgCard} mb-2 rounded-xl ${border} border`}
+      onPress={() => handleUserPress(item.id)}
+    >
+      <ProfilePicture
+        imageUrl={item.profile_picture_url}
+        firstName={item.first_name}
+        lastName={item.last_name}
+        size="md"
+      />
+      <View className="flex-1 ml-3">
+        <Text className={`${textPrimary} font-semibold text-base`}>
+          {item.first_name} {item.last_name}
+        </Text>
+        {item.bio && (
+          <Text className={`${textSecondary} text-sm mt-1`} numberOfLines={1}>
+            {item.bio}
+          </Text>
+        )}
+        <View className="flex-row items-center mt-1">
+          <Ionicons name="people-outline" size={14} color="#9CA3AF" />
+          <Text className={`${textSecondary} text-xs ml-1`}>
+            {item.followers_count}{" "}
+            {item.followers_count === 1 ? "follower" : "followers"}
+          </Text>
+        </View>
+      </View>
+      <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+    </TouchableOpacity>
+  );
+
+  return (
+    <ScreenWrapper>
+      <LogoHeader position="left" />
+      <View className={`${bgCard} p-4 pt-6 border-b ${border}`}>
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.push("/(tabs)/settings")}
+            className="mr-4"
+          >
+            <Ionicons name="arrow-back" size={24} color="#22d3ee" />
+          </TouchableOpacity>
+          <View className="flex-1">
+            <Text className={`${textPrimary} text-xl font-bold`}>Following</Text>
+            {userName && (
+              <Text className={`${textSecondary} text-sm`}>{userName}</Text>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {loading ? (
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#22d3ee" />
+        </View>
+      ) : following.length === 0 ? (
+        <View className="flex-1 items-center justify-center p-6">
+          <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+            <Ionicons name="people-outline" size={40} color="#22d3ee" />
+          </View>
+          <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+            Not Following Anyone
+          </Text>
+          <Text className={`${textSecondary} text-center`}>
+            This teacher isn`t following anyone yet
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={following}
+          renderItem={renderFollowing}
+          keyExtractor={(item) => item.id}
+          contentContainerClassName="p-4"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#22d3ee"
+            />
+          }
+        />
+      )}
+
+      <UserProfileModal
+        visible={showProfileModal}
+        userId={selectedUserId}
+        onClose={() => {
+          setShowProfileModal(false);
+          setSelectedUserId(null);
+        }}
+        onNavigateToPath={(path) => {
+          setShowProfileModal(false);
+          setSelectedUserId(null);
+          setTimeout(() => router.push(path), 400);
+        }}
+      />
+
+      <Toast />
+    </ScreenWrapper>
+  );
+}
