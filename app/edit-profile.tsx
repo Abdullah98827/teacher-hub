@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
   ScrollView,
   Text,
@@ -12,6 +11,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import ConfirmModal from "../components/ConfirmModal";
 import LogoHeader from "../components/logoHeader";
 import ProfilePicture from "../components/ProfilePicture";
 import ScreenWrapper from "../components/ScreenWrapper";
@@ -50,6 +50,7 @@ export default function EditProfileScreen() {
 
   // Modal state
   const [showPictureModal, setShowPictureModal] = useState(false);
+  const [showDeletePictureModal, setShowDeletePictureModal] = useState(false);
 
   const router = useRouter();
 
@@ -153,33 +154,19 @@ export default function EditProfileScreen() {
    * Handle delete profile picture
    */
   const handleDeletePicture = async () => {
-    if (!userId) return;
-
     setShowPictureModal(false);
+    setShowDeletePictureModal(true);
+  };
 
-    Alert.alert(
-      "Delete Profile Picture",
-      "Are you sure you want to delete your profile picture?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeletingPicture(true);
-            const success = await deleteProfilePicture(
-              userId,
-              profilePictureUrl
-            );
-            setDeletingPicture(false);
-
-            if (success) {
-              setProfilePictureUrl(null);
-            }
-          },
-        },
-      ]
-    );
+  const confirmDeletePicture = async () => {
+    if (!userId) return;
+    setDeletingPicture(true);
+    const success = await deleteProfilePicture(userId, profilePictureUrl);
+    setDeletingPicture(false);
+    setShowDeletePictureModal(false);
+    if (success) {
+      setProfilePictureUrl(null);
+    }
   };
 
   /**
@@ -636,6 +623,17 @@ export default function EditProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      <ConfirmModal
+        visible={showDeletePictureModal}
+        title="Delete Profile Picture"
+        message="Are you sure you want to delete your profile picture?"
+        confirmText="Delete"
+        confirmColor="bg-red-600"
+        isProcessing={deletingPicture}
+        onConfirm={confirmDeletePicture}
+        onCancel={() => setShowDeletePictureModal(false)}
+      />
 
       <Toast />
     </ScreenWrapper>

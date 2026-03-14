@@ -2,6 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { AuthProvider } from "../contexts/AuthContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { supabase } from "../supabase";
@@ -76,6 +77,9 @@ export default function RootLayout() {
               </Text>
             </View>
           )}
+
+          {/* Global toast renderer — must be last so it renders on top */}
+          <Toast />
         </SafeAreaProvider>
       </AuthProvider>
     </ThemeProvider>

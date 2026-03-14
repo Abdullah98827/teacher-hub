@@ -71,7 +71,7 @@ export default function ChangePasswordScreen() {
       Toast.show({
         type: "error",
         text1: "Update Failed",
-        text2: error.message,
+        text2: "Could not update password. Please try again.",
       });
     } else {
       Toast.show({

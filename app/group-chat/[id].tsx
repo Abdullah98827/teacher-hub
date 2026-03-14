@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -14,6 +13,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
@@ -48,9 +48,8 @@ export default function GroupChatScreen() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(
-    null
-  );
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   const isAdmin = role === "admin";
@@ -162,49 +161,36 @@ export default function GroupChatScreen() {
     };
   }, [id, fetchGroupChat, fetchMessages]);
 
-  const deleteMessage = async (messageId: string) => {
+  const deleteMessage = (messageId: string) => {
     if (!isAdmin) return;
+    setPendingDeleteId(messageId);
+  };
 
-    Alert.alert(
-      "Delete Message",
-      "Are you sure you want to delete this message? This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeletingMessageId(messageId);
+  const confirmDeleteMessage = async () => {
+    if (!pendingDeleteId) return;
+    setDeletingMessageId(pendingDeleteId);
+    setPendingDeleteId(null);
 
-            // Soft delete: set deleted_at and deleted_by
-            const { error } = await supabase
-              .from("group_messages")
-              .update({
-                deleted_at: new Date().toISOString(),
-                deleted_by: user?.id,
-              })
-              .eq("id", messageId);
+    const { error } = await supabase
+      .from("group_messages")
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: user?.id,
+      })
+      .eq("id", pendingDeleteId);
 
-            if (error) {
-              Toast.show({
-                type: "error",
-                text1: "Failed to delete message",
-                text2: error.message,
-              });
-            } else {
-              Toast.show({
-                type: "success",
-                text1: "Message deleted",
-              });
-              // Remove from UI
-              setMessages((prev) => prev.filter((m) => m.id !== messageId));
-            }
+    if (error) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to delete message",
+        text2: "Something went wrong. Please try again.",
+      });
+    } else {
+      Toast.show({ type: "success", text1: "Message deleted" });
+      setMessages((prev) => prev.filter((m) => m.id !== pendingDeleteId));
+    }
 
-            setDeletingMessageId(null);
-          },
-        },
-      ]
-    );
+    setDeletingMessageId(null);
   };
 
   const sendMessage = async () => {
@@ -448,6 +434,18 @@ export default function GroupChatScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <ConfirmModal
+        visible={!!pendingDeleteId}
+        title="Delete Message"
+        message="Are you sure you want to delete this message? This action cannot be undone."
+        confirmText="Delete"
+        confirmColor="bg-red-600"
+        isProcessing={!!deletingMessageId}
+        onConfirm={confirmDeleteMessage}
+        onCancel={() => setPendingDeleteId(null)}
+      />
+
       <Toast />
     </ScreenWrapper>
   );

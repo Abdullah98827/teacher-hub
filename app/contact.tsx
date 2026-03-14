@@ -73,7 +73,7 @@ export default function ContactAdmin() {
     });
 
     if (error) {
-      showToast("error", "Error", error.message);
+      showToast("error", "Error", "Could not send message. Please try again.");
     } else {
       showToast("success", "Message Sent", "An admin will respond shortly");
       setMessage("");

@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   RefreshControl,
@@ -16,6 +15,7 @@ import {
 import Toast from "react-native-toast-message";
 import AccessToggle from "../../components/AccessToggle";
 import AdminHeader from "../../components/AdminHeader";
+import ConfirmModal from "../../components/ConfirmModal";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SubjectCard from "../../components/SubjectCard";
 import SubscribersModal from "../../components/SubscribersModal";
@@ -65,6 +65,7 @@ export default function AdminSubjectManagementScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [pendingDeleteSubject, setPendingDeleteSubject] = useState<SubjectWithGroupChat | null>(null);
 
   // Subscribers modal state
   const [showSubscribersModal, setShowSubscribersModal] = useState(false);
@@ -173,11 +174,11 @@ export default function AdminSubjectManagementScreen() {
       );
 
       setSubjects(subjectsWithStats);
-    } catch (error: any) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Failed to load subjects",
-        text2: error.message,
+        text2: "Something went wrong. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -246,11 +247,11 @@ export default function AdminSubjectManagementScreen() {
           setSubscribers([]);
         }
       }
-    } catch (error: any) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Failed to load subscribers",
-        text2: error.message,
+        text2: "Something went wrong. Please try again.",
       });
     } finally {
       setLoadingSubscribers(false);
@@ -396,11 +397,11 @@ export default function AdminSubjectManagementScreen() {
 
       setShowModal(false);
       fetchSubjects();
-    } catch (error: any) {
+    } catch {
       Toast.show({
         type: "error",
         text1: editingSubject ? "Failed to update" : "Failed to create",
-        text2: error.message,
+        text2: "Something went wrong. Please try again.",
       });
     } finally {
       setSaving(false);
@@ -408,68 +409,47 @@ export default function AdminSubjectManagementScreen() {
   };
 
   const handleDeleteSubject = (subject: SubjectWithGroupChat) => {
-    const warnings = [];
-    if (subject.subscriberCount > 0 && !subject.is_public) {
-      warnings.push(`${subject.subscriberCount} teacher(s) are subscribed`);
+    setPendingDeleteSubject(subject);
+  };
+
+  const confirmDeleteSubject = async () => {
+    const subject = pendingDeleteSubject;
+    if (!subject) return;
+
+    setPendingDeleteSubject(null);
+    setDeletingId(subject.id);
+
+    try {
+      if (subject.groupChat) {
+        await supabase
+          .from("group_messages")
+          .delete()
+          .eq("group_chat_id", subject.groupChat.id);
+
+        await supabase
+          .from("group_chats")
+          .delete()
+          .eq("id", subject.groupChat.id);
+      }
+
+      await supabase.from("subjects").delete().eq("id", subject.id);
+
+      Toast.show({
+        type: "success",
+        text1: "Subject & group chat deleted",
+        text2: "All associated data has been removed",
+      });
+
+      setSubjects((prev) => prev.filter((s) => s.id !== subject.id));
+    } catch {
+      Toast.show({
+        type: "error",
+        text1: "Failed to delete",
+        text2: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setDeletingId(null);
     }
-    if (subject.messageCount > 0) {
-      warnings.push(`${subject.messageCount} message(s) will be lost`);
-    }
-
-    const warningText =
-      warnings.length > 0 ? `\n\nWarning:\n• ${warnings.join("\n• ")}` : "";
-
-    Alert.alert(
-      "Delete Subject & Group Chat",
-      `Are you sure you want to permanently delete:\n\n` +
-        `Subject: "${subject.name}"\n` +
-        `Group Chat: "${subject.groupChat?.name || "N/A"}"\n` +
-        `All messages and data` +
-        warningText +
-        `\n\nThis action CANNOT be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete Everything",
-          style: "destructive",
-          onPress: async () => {
-            setDeletingId(subject.id);
-
-            try {
-              if (subject.groupChat) {
-                await supabase
-                  .from("group_messages")
-                  .delete()
-                  .eq("group_chat_id", subject.groupChat.id);
-
-                await supabase
-                  .from("group_chats")
-                  .delete()
-                  .eq("id", subject.groupChat.id);
-              }
-
-              await supabase.from("subjects").delete().eq("id", subject.id);
-
-              Toast.show({
-                type: "success",
-                text1: "Subject & group chat deleted",
-                text2: "All associated data has been removed",
-              });
-
-              setSubjects((prev) => prev.filter((s) => s.id !== subject.id));
-            } catch (error: any) {
-              Toast.show({
-                type: "error",
-                text1: "Failed to delete",
-                text2: error.message,
-              });
-            } finally {
-              setDeletingId(null);
-            }
-          },
-        },
-      ]
-    );
   };
 
   // Loading states
@@ -724,6 +704,28 @@ export default function AdminSubjectManagementScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Delete subject confirmation */}
+      <ConfirmModal
+        visible={!!pendingDeleteSubject}
+        title="Delete Subject & Group Chat"
+        message={
+          pendingDeleteSubject
+            ? `Permanently delete "${pendingDeleteSubject.name}" and its group chat?\n\nAll messages and data will be lost. This action CANNOT be undone.` +
+              (pendingDeleteSubject.subscriberCount > 0
+                ? `\n\nWarning: ${pendingDeleteSubject.subscriberCount} teacher(s) are subscribed.`
+                : "") +
+              (pendingDeleteSubject.messageCount > 0
+                ? `\n${pendingDeleteSubject.messageCount} message(s) will be lost.`
+                : "")
+            : ""
+        }
+        confirmText="Delete Everything"
+        confirmColor="bg-red-600"
+        isProcessing={!!deletingId}
+        onConfirm={confirmDeleteSubject}
+        onCancel={() => setPendingDeleteSubject(null)}
+      />
 
       <Toast />
     </ScreenWrapper>

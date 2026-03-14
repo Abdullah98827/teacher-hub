@@ -1,7 +1,8 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Animated, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Text, TouchableOpacity, View } from "react-native";
+import ConfirmModal from "./ConfirmModal";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { useUserRole } from "../hooks/useUserRole";
 import { supabase } from "../supabase";
@@ -15,6 +16,8 @@ export default function LogoHeader({
   const { role } = useUserRole();
   const { isDark } = useAppTheme();
   const [isVerified, setIsVerified] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -52,18 +55,16 @@ export default function LogoHeader({
     }
   };
 
-  const handleSignOut = () => {
-    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign Out",
-        style: "destructive",
-        onPress: async () => {
-          await supabase.auth.signOut();
-          router.replace("/login");
-        },
-      },
-    ]);
+  const handleSignOut = async () => {
+    setShowSignOutModal(true);
+  };
+
+  const confirmSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    setSigningOut(false);
+    setShowSignOutModal(false);
+    router.replace("/login");
   };
 
   const isAdmin = role === "admin";
@@ -213,6 +214,17 @@ export default function LogoHeader({
           />
         </TouchableOpacity>
       </Animated.View>
+
+      <ConfirmModal
+        visible={showSignOutModal}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmText="Sign Out"
+        confirmColor="bg-red-600"
+        isProcessing={signingOut}
+        onConfirm={confirmSignOut}
+        onCancel={() => setShowSignOutModal(false)}
+      />
     </View>
   );
 }

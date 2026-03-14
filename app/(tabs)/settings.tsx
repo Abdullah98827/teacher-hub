@@ -3,9 +3,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Modal,
-  Platform,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -13,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import ConfirmModal from "../../components/ConfirmModal";
 import LogoHeader from "../../components/logoHeader";
 import ProfilePicture from "../../components/ProfilePicture";
 import { ThemePreference, useTheme } from "../../contexts/ThemeContext";
@@ -41,6 +40,7 @@ export default function SettingsScreen() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [deletingPicture, setDeletingPicture] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDeletePictureModal, setShowDeletePictureModal] = useState(false);
   const [showPictureModal, setShowPictureModal] = useState(false);
 
   const { role, loading: roleLoading } = useUserRole();
@@ -149,51 +149,28 @@ export default function SettingsScreen() {
   };
 
   const handleDeletePicture = async () => {
+    setShowPictureModal(false);
+    setShowDeletePictureModal(true);
+  };
+
+  const confirmDeletePicture = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
     if (!user) return;
 
-    setShowPictureModal(false);
+    setDeletingPicture(true);
+    const success = await deleteProfilePicture(user.id, profile.profilePictureUrl);
+    setDeletingPicture(false);
+    setShowDeletePictureModal(false);
 
-    Alert.alert(
-      "Delete Profile Picture",
-      "Are you sure you want to delete your profile picture?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeletingPicture(true);
-            const success = await deleteProfilePicture(
-              user.id,
-              profile.profilePictureUrl
-            );
-            setDeletingPicture(false);
-
-            if (success) {
-              setProfile((prev) => ({
-                ...prev,
-                profilePictureUrl: null,
-              }));
-            }
-          },
-        },
-      ]
-    );
+    if (success) {
+      setProfile((prev) => ({ ...prev, profilePictureUrl: null }));
+    }
   };
 
   const handleLogout = () => {
-    if (Platform.OS === "web") {
-      setShowLogoutModal(true);
-    } else {
-      Alert.alert("Logout", "Are you sure you want to logout?", [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", style: "destructive", onPress: executeLogout },
-      ]);
-    }
+    setShowLogoutModal(true);
   };
 
   const executeLogout = async () => {
@@ -204,7 +181,7 @@ export default function SettingsScreen() {
       Toast.show({
         type: "error",
         text1: "Logout Failed",
-        text2: error.message,
+        text2: "Something went wrong. Please try again.",
       });
       setLoggingOut(false);
     } else {
@@ -627,41 +604,29 @@ export default function SettingsScreen() {
         </View>
       </Modal>
 
-      {showLogoutModal && Platform.OS === "web" && (
-        <View className="absolute inset-0 bg-black/70 justify-center items-center z-50">
-          <View
-            className={`${bgCard} rounded-xl p-6 mx-5 max-w-sm border ${border}`}
-          >
-            <Text className={`text-xl font-bold ${textPrimary} mb-3`}>
-              Logout
-            </Text>
-            <Text className={`${textSecondary} mb-6`}>
-              Are you sure you want to logout?
-            </Text>
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                className={`flex-1 ${bgCardAlt} p-4 rounded-lg border ${border}`}
-                onPress={() => setShowLogoutModal(false)}
-              >
-                <Text className={`${textPrimary} text-center font-semibold`}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="flex-1 bg-red-600 p-4 rounded-lg"
-                onPress={() => {
-                  setShowLogoutModal(false);
-                  executeLogout();
-                }}
-              >
-                <Text className="text-white text-center font-bold">Logout</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+      {showLogoutModal && (
+        <ConfirmModal
+          visible={showLogoutModal}
+          title="Logout"
+          message="Are you sure you want to logout?"
+          confirmText="Logout"
+          confirmColor="bg-red-600"
+          isProcessing={loggingOut}
+          onConfirm={executeLogout}
+          onCancel={() => setShowLogoutModal(false)}
+        />
       )}
 
-      <Toast />
+      <ConfirmModal
+        visible={showDeletePictureModal}
+        title="Delete Profile Picture"
+        message="Are you sure you want to delete your profile picture?"
+        confirmText="Delete"
+        confirmColor="bg-red-600"
+        isProcessing={deletingPicture}
+        onConfirm={confirmDeletePicture}
+        onCancel={() => setShowDeletePictureModal(false)}
+      />
     </View>
   );
 }

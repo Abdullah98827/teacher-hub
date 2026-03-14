@@ -158,7 +158,7 @@ export default function Signup() {
     });
 
     if (profileError) {
-      showToast("error", "Profile Error", profileError.message);
+      showToast("error", "Profile Error", "Could not save profile. Please contact support.");
       setLoading(false);
       return;
     }
