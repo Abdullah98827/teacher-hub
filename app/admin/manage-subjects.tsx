@@ -65,7 +65,8 @@ export default function AdminSubjectManagementScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [pendingDeleteSubject, setPendingDeleteSubject] = useState<SubjectWithGroupChat | null>(null);
+  const [pendingDeleteSubject, setPendingDeleteSubject] =
+    useState<SubjectWithGroupChat | null>(null);
 
   // Subscribers modal state
   const [showSubscribersModal, setShowSubscribersModal] = useState(false);

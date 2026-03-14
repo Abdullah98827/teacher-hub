@@ -160,7 +160,10 @@ export default function SettingsScreen() {
     if (!user) return;
 
     setDeletingPicture(true);
-    const success = await deleteProfilePicture(user.id, profile.profilePictureUrl);
+    const success = await deleteProfilePicture(
+      user.id,
+      profile.profilePictureUrl
+    );
     setDeletingPicture(false);
     setShowDeletePictureModal(false);
 

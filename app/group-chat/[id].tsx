@@ -48,7 +48,9 @@ export default function GroupChatScreen() {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(
+    null
+  );
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
 

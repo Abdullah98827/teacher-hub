@@ -2,10 +2,10 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Text, TouchableOpacity, View } from "react-native";
-import ConfirmModal from "./ConfirmModal";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { useUserRole } from "../hooks/useUserRole";
 import { supabase } from "../supabase";
+import ConfirmModal from "./ConfirmModal";
 
 export default function LogoHeader({
   position = "left",
