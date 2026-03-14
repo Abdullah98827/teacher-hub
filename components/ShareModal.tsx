@@ -16,7 +16,8 @@ export default function ShareModal({
   resourceTitle,
   onClose,
 }: ShareModalProps) {
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
 
   const handleCopyLink = () => {
     // For now, just showing a message
@@ -46,7 +47,9 @@ export default function ShareModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/70 justify-center items-center px-5">
-        <View className={`${bgCard} rounded-2xl w-full max-w-md border ${border}`}>
+        <View
+          className={`${bgCard} rounded-2xl w-full max-w-md border ${border}`}
+        >
           {/* Header */}
           <View className={`p-5 border-b ${border}`}>
             <View className="flex-row items-center justify-between mb-2">
@@ -75,7 +78,9 @@ export default function ShareModal({
                 <View className="bg-cyan-500/20 w-16 h-16 rounded-full items-center justify-center mb-3">
                   <Ionicons name="chatbubbles" size={32} color="#22d3ee" />
                 </View>
-                <Text className={`${textPrimary} font-bold text-lg mb-2 text-center`}>
+                <Text
+                  className={`${textPrimary} font-bold text-lg mb-2 text-center`}
+                >
                   Share with Teachers
                 </Text>
                 <Text className={`${textSecondary} text-sm text-center`}>

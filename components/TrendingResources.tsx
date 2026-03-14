@@ -27,7 +27,15 @@ export default function TrendingResources() {
   const [resources, setResources] = useState<TrendingResource[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const {
+    bgCard,
+    bgCardAlt,
+    border,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    isDark,
+  } = useAppTheme();
 
   useEffect(() => {
     loadTrendingResources();
@@ -192,7 +200,9 @@ export default function TrendingResources() {
         <Text className={`${textPrimary} text-xl font-bold mb-2`}>
           Trending Resources
         </Text>
-        <Text className={`${textSecondary} mb-4`}>No trending resources yet.</Text>
+        <Text className={`${textSecondary} mb-4`}>
+          No trending resources yet.
+        </Text>
         <TouchableOpacity
           className="bg-cyan-600 p-3 rounded-lg"
           onPress={() => router.push("/(tabs)/resources")}
@@ -208,7 +218,9 @@ export default function TrendingResources() {
   return (
     <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
       <View className="mb-4">
-        <Text className={`${textPrimary} text-xl font-bold`}>Trending Resources</Text>
+        <Text className={`${textPrimary} text-xl font-bold`}>
+          Trending Resources
+        </Text>
         <Text className={`${textSecondary} text-sm`}>Most popular content</Text>
       </View>
 
@@ -249,13 +261,19 @@ export default function TrendingResources() {
               {resource.title}
             </Text>
 
-            <View className="bg-cyan-900/30 px-3 py-1 rounded-lg mb-3 self-start">
-              <Text className="text-cyan-400 text-xs font-semibold">
+            <View
+              className={`px-3 py-1 rounded-lg mb-3 self-start ${isDark ? "bg-cyan-900/40" : "bg-cyan-100"}`}
+            >
+              <Text
+                className={`text-xs font-semibold ${isDark ? "text-cyan-400" : "text-cyan-700"}`}
+              >
                 {resource.subject_name}
               </Text>
             </View>
 
-            <View className={`flex-row items-center justify-between mb-3 pb-3 border-b ${border}`}>
+            <View
+              className={`flex-row items-center justify-between mb-3 pb-3 border-b ${border}`}
+            >
               <View className="flex-row items-center gap-3">
                 <View className="flex-row items-center">
                   <Ionicons name="eye" size={14} color="#9CA3AF" />

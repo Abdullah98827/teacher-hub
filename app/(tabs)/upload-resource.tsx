@@ -28,7 +28,8 @@ type Category = "powerpoint" | "worksheet" | "lesson_plan";
 export default function UploadResourceScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { bgInput, borderInput, textPrimary, textSecondary, placeholderColor } = useAppTheme();
+  const { bgInput, borderInput, textPrimary, textSecondary, placeholderColor } =
+    useAppTheme();
 
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -285,7 +286,9 @@ export default function UploadResourceScreen() {
                 >
                   <Text
                     className={`font-semibold ${
-                      selectedSubject === subject.id ? "text-white" : textSecondary
+                      selectedSubject === subject.id
+                        ? "text-white"
+                        : textSecondary
                     }`}
                   >
                     {subject.name}
@@ -298,7 +301,9 @@ export default function UploadResourceScreen() {
 
         {/* Category */}
         <View className="mb-4">
-          <Text className={`${textPrimary} font-semibold mb-2`}>Category *</Text>
+          <Text className={`${textPrimary} font-semibold mb-2`}>
+            Category *
+          </Text>
           <View className="flex-row gap-2 flex-wrap">
             {categories.map((cat) => (
               <TouchableOpacity
@@ -317,7 +322,9 @@ export default function UploadResourceScreen() {
                 />
                 <Text
                   className={`ml-2 font-semibold ${
-                    selectedCategory === cat.value ? "text-white" : textSecondary
+                    selectedCategory === cat.value
+                      ? "text-white"
+                      : textSecondary
                   }`}
                 >
                   {cat.label}
@@ -336,7 +343,10 @@ export default function UploadResourceScreen() {
           >
             <View className="flex-row items-center flex-1">
               <Ionicons name="cloud-upload" size={24} color="#22d3ee" />
-              <Text className={`${textSecondary} ml-3 flex-1`} numberOfLines={1}>
+              <Text
+                className={`${textSecondary} ml-3 flex-1`}
+                numberOfLines={1}
+              >
                 {selectedFile ? selectedFile.name : "Choose a file..."}
               </Text>
             </View>

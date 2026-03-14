@@ -18,7 +18,8 @@ export default function ContactRequestCard({
   request,
   onMarkResolved,
 }: ContactRequestCardProps) {
-  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -94,7 +95,7 @@ export default function ContactRequestCard({
           <Ionicons name="chatbox-ellipses" size={14} color="#6B7280" />
           <Text className={`${textMuted} text-xs ml-1.5`}>Message</Text>
         </View>
-        <Text className="text-gray-300 leading-5">{request.message}</Text>
+        <Text className={`${textSecondary} leading-5`}>{request.message}</Text>
       </View>
 
       {/* Action button */}

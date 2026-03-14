@@ -136,7 +136,7 @@ export default function Membership() {
             {tier === "single" && (
               <Animated.Text
                 style={{ opacity: fadeAnim }}
-                className="text-gray-300 text-xs text-center mt-1"
+                className="text-cyan-100 text-xs text-center mt-1"
               >
                 {pricing.single}
               </Animated.Text>
@@ -157,7 +157,7 @@ export default function Membership() {
             {tier === "multi" && (
               <Animated.Text
                 style={{ opacity: fadeAnim }}
-                className="text-gray-300 text-xs text-center mt-1"
+                className="text-cyan-100 text-xs text-center mt-1"
               >
                 {pricing.multi}
               </Animated.Text>

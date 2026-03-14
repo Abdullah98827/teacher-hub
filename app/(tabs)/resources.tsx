@@ -62,7 +62,6 @@ export default function ResourcesScreen() {
     bgCard,
     bgCardAlt,
     bgInput,
-    border,
     borderInput,
     textPrimary,
     textSecondary,
@@ -536,7 +535,8 @@ export default function ResourcesScreen() {
                   : activeTab === "following"
                     ? "No resources from teachers you follow"
                     : "You haven't uploaded any resources"}
-            </Text>            {activeTab === "following" && displayResources.length === 0 && (
+            </Text>{" "}
+            {activeTab === "following" && displayResources.length === 0 && (
               <TouchableOpacity
                 className="bg-cyan-600 px-6 py-3 rounded-lg mt-4"
                 onPress={() => router.push("/suggested-users")}
@@ -569,9 +569,17 @@ export default function ResourcesScreen() {
             {showFilters && (
               <View className={`${bgCard} p-4 rounded-xl mb-3`}>
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Search</Text>
-                  <View className={`${bgInput} flex-row items-center px-3 py-2 rounded-xl ${borderInput} border`}>
-                    <Ionicons name="search" size={20} color={placeholderColor} />
+                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                    Search
+                  </Text>
+                  <View
+                    className={`${bgInput} flex-row items-center px-3 py-2 rounded-xl ${borderInput} border`}
+                  >
+                    <Ionicons
+                      name="search"
+                      size={20}
+                      color={placeholderColor}
+                    />
                     <TextInput
                       className={`flex-1 ${textPrimary} ml-2`}
                       placeholder="Search by title..."
@@ -607,7 +615,9 @@ export default function ResourcesScreen() {
                         >
                           <Text
                             className={`font-semibold ${
-                              selectedCategory === cat ? "text-white" : textSecondary
+                              selectedCategory === cat
+                                ? "text-white"
+                                : textSecondary
                             }`}
                           >
                             {cat === "all"
@@ -625,7 +635,9 @@ export default function ResourcesScreen() {
                 </View>
 
                 <View>
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Sort By</Text>
+                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                    Sort By
+                  </Text>
                   <View className="flex-row gap-2">
                     {[
                       { value: "newest", label: "Newest" },
@@ -789,12 +801,18 @@ export default function ResourcesScreen() {
         onRequestClose={() => setShowPreview(false)}
       >
         <View className={`flex-1 ${bg}`}>
-          <View className={`${bgCard} p-4 pt-12 flex-row items-center justify-between`}>
+          <View
+            className={`${bgCard} p-4 pt-12 flex-row items-center justify-between`}
+          >
             <TouchableOpacity
               className="p-2"
               onPress={() => setShowPreview(false)}
             >
-              <Ionicons name="close" size={28} color={isDark ? "#fff" : "#111827"} />
+              <Ionicons
+                name="close"
+                size={28}
+                color={isDark ? "#fff" : "#111827"}
+              />
             </TouchableOpacity>
             <Text
               className={`${textPrimary} font-bold text-lg flex-1 text-center`}
@@ -840,7 +858,9 @@ export default function ResourcesScreen() {
               renderLoading={() => (
                 <View className="flex-1 items-center justify-center">
                   <ActivityIndicator size="large" color="#22d3ee" />
-                  <Text className={`${textMuted} mt-2`}>Loading preview...</Text>
+                  <Text className={`${textMuted} mt-2`}>
+                    Loading preview...
+                  </Text>
                 </View>
               )}
             />
@@ -886,7 +906,9 @@ export default function ResourcesScreen() {
                 }}
                 disabled={isDeleting}
               >
-                <Text className={`${textPrimary} text-center font-bold`}>Cancel</Text>
+                <Text className={`${textPrimary} text-center font-bold`}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className={`flex-1 bg-red-600 py-3 rounded-xl ${isDeleting ? "opacity-50" : ""}`}

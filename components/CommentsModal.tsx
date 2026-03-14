@@ -457,9 +457,15 @@ export default function CommentsModal({
         <View className={`${bgCard} p-4 pt-12 border-b ${border}`}>
           <View className="flex-row items-center justify-between">
             <TouchableOpacity onPress={onClose} className="p-2">
-              <Ionicons name="close" size={28} color={isDark ? "#fff" : "#111827"} />
+              <Ionicons
+                name="close"
+                size={28}
+                color={isDark ? "#fff" : "#111827"}
+              />
             </TouchableOpacity>
-            <Text className={`${textPrimary} font-bold text-lg flex-1 text-center mr-10`}>
+            <Text
+              className={`${textPrimary} font-bold text-lg flex-1 text-center mr-10`}
+            >
               Comments
             </Text>
           </View>
@@ -536,7 +542,9 @@ export default function CommentsModal({
         )}
 
         {replyToId && replyToUser && (
-          <View className={`${bgCardAlt} px-4 py-2 flex-row items-center justify-between border-t ${border}`}>
+          <View
+            className={`${bgCardAlt} px-4 py-2 flex-row items-center justify-between border-t ${border}`}
+          >
             <Text className="text-cyan-400 text-sm">
               Replying to {replyToUser}
             </Text>
@@ -617,7 +625,9 @@ export default function CommentsModal({
                 }}
                 disabled={submitting}
               >
-                <Text className={`${textPrimary} text-center font-bold`}>Cancel</Text>
+                <Text className={`${textPrimary} text-center font-bold`}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 className={`flex-1 bg-red-600 py-3 rounded-xl ${

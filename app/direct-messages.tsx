@@ -242,7 +242,9 @@ export default function DirectMessagesScreen() {
 
         {showNewChat && (
           <View className="mb-4">
-            <View className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl ${borderInput} border`}>
+            <View
+              className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl ${borderInput} border`}
+            >
               <Ionicons name="search" size={20} color={placeholderColor} />
               <TextInput
                 className={`flex-1 ${textPrimary} ml-2`}

@@ -256,7 +256,9 @@ export default function DMChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {/* Header */}
-        <View className={`${bgCard} px-5 py-4 flex-row items-center border-b ${border}`}>
+        <View
+          className={`${bgCard} px-5 py-4 flex-row items-center border-b ${border}`}
+        >
           <TouchableOpacity className="mr-3" onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
@@ -265,7 +267,10 @@ export default function DMChatScreen() {
               {partnerName.charAt(0).toUpperCase()}
             </Text>
           </View>
-          <Text className={`${textPrimary} font-bold text-lg`} numberOfLines={1}>
+          <Text
+            className={`${textPrimary} font-bold text-lg`}
+            numberOfLines={1}
+          >
             {partnerName}
           </Text>
         </View>

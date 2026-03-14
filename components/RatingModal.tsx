@@ -32,7 +32,8 @@ export default function RatingModal({
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { bgCard, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
 
   const fetchUserRating = useCallback(async () => {
     if (!resourceId) return;
@@ -146,7 +147,9 @@ export default function RatingModal({
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-black/70 justify-center items-center px-5">
-        <View className={`${bgCard} rounded-2xl w-full max-w-md border ${border}`}>
+        <View
+          className={`${bgCard} rounded-2xl w-full max-w-md border ${border}`}
+        >
           {/* Header */}
           <View className={`p-5 border-b ${border}`}>
             <View className="flex-row items-center justify-between mb-2">

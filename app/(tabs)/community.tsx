@@ -49,8 +49,15 @@ export default function CommunityScreen() {
   >("chats");
 
   const isAdmin = role === "admin";
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary } =
-    useAppTheme();
+  const {
+    bgCard,
+    bgCardAlt,
+    border,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    isDark,
+  } = useAppTheme();
 
   const fetchGroupChats = useCallback(async () => {
     if (!user?.id) return;
@@ -217,7 +224,7 @@ export default function CommunityScreen() {
             </Text>{" "}
             {item.lastMessage.message}
           </Text>
-          <Text className="text-gray-600 text-xs mt-1">
+          <Text className={`${textMuted} text-xs mt-1`}>
             {formatTime(item.lastMessage.created_at)}
           </Text>
         </View>
@@ -272,7 +279,7 @@ export default function CommunityScreen() {
           </View>
 
           <TouchableOpacity
-            className="bg-cyan-900/30 rounded-xl p-4 mb-4 border border-cyan-500/30"
+            className={`rounded-xl p-4 mb-4 border ${isDark ? "bg-cyan-900/30 border-cyan-500/30" : "bg-cyan-50 border-cyan-200"}`}
             onPress={() => router.push("/suggested-users")}
             activeOpacity={0.7}
           >
@@ -284,11 +291,19 @@ export default function CommunityScreen() {
                 <Text className={`${textPrimary} font-bold text-lg`}>
                   Discover Teachers
                 </Text>
-                <Text className="text-cyan-400 text-sm">
+                <Text
+                  className={
+                    isDark ? "text-cyan-400 text-sm" : "text-cyan-600 text-sm"
+                  }
+                >
                   Find teachers in your subjects
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={24} color="#22d3ee" />
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={isDark ? "#22d3ee" : "#0891b2"}
+              />
             </View>
           </TouchableOpacity>
 

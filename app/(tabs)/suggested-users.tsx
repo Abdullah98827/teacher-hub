@@ -58,7 +58,10 @@ function SuggestedUserCard({
               {user.first_name} {user.last_name}
             </Text>
             {user.bio && (
-              <Text className={`${textSecondary} text-sm mt-1`} numberOfLines={2}>
+              <Text
+                className={`${textSecondary} text-sm mt-1`}
+                numberOfLines={2}
+              >
                 {user.bio}
               </Text>
             )}
@@ -214,7 +217,7 @@ export default function SuggestedUsersScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className={`${textPrimary} text-xl font-bold`}>
+            <Text className="text-cyan-500 text-xl font-bold">
               Suggested Teachers
             </Text>
             <Text className={`${textSecondary} text-sm`}>

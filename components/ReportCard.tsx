@@ -15,7 +15,8 @@ interface ReportCardProps {
 }
 
 export default function ReportCard({ report, onPress }: ReportCardProps) {
-  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -91,13 +92,15 @@ export default function ReportCard({ report, onPress }: ReportCardProps) {
           <Ionicons name="document-text" size={14} color="#6B7280" />
           <Text className={`${textMuted} text-xs ml-1.5`}>Resource</Text>
         </View>
-        <Text className="text-gray-300" numberOfLines={1}>
+        <Text className={`${textSecondary}`} numberOfLines={1}>
           {report.resource.title}
         </Text>
       </View>
 
       {/* Footer */}
-      <View className={`flex-row items-center justify-between border-t ${border} pt-2`}>
+      <View
+        className={`flex-row items-center justify-between border-t ${border} pt-2`}
+      >
         <View className="flex-row items-center">
           <Ionicons name="person" size={12} color="#6B7280" />
           <Text className={`${textMuted} text-xs ml-1`}>

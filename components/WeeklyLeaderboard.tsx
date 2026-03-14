@@ -21,7 +21,8 @@ export default function WeeklyLeaderboard() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
 
   useEffect(() => {
     loadLeaderboard();
@@ -79,7 +80,9 @@ export default function WeeklyLeaderboard() {
   return (
     <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
       <View className="mb-4">
-        <Text className={`${textPrimary} text-xl font-bold`}>Top Contributors</Text>
+        <Text className={`${textPrimary} text-xl font-bold`}>
+          Top Contributors
+        </Text>
         <Text className={`${textSecondary} text-sm`}>
           This week&apos;s most active teachers
         </Text>
@@ -145,7 +148,9 @@ export default function WeeklyLeaderboard() {
       </View>
 
       <View className={`${bgCardAlt} p-4 rounded-lg mt-4`}>
-        <Text className={`${textPrimary} text-sm font-semibold mb-2 text-center`}>
+        <Text
+          className={`${textPrimary} text-sm font-semibold mb-2 text-center`}
+        >
           How to Earn Points
         </Text>
         <View className="flex-row justify-around">
@@ -158,7 +163,7 @@ export default function WeeklyLeaderboard() {
             <Text className={`${textMuted} text-xs`}>Comment</Text>
           </View>
           <View className="items-center">
-            <Text className="text-gray-500 font-bold text-lg">+5</Text>
+            <Text className={`${textMuted} font-bold text-lg`}>+5</Text>
             <Text className={`${textMuted} text-xs`}>Rating</Text>
           </View>
         </View>

@@ -254,7 +254,9 @@ export default function CheckoutScreen() {
             className={`flex-1 ${bgCard} p-3 rounded-xl ml-2 active:scale-95`}
             onPress={() => router.back()}
           >
-            <Text className={`text-center ${textPrimary} font-medium`}>Back</Text>
+            <Text className={`text-center ${textPrimary} font-medium`}>
+              Back
+            </Text>
           </TouchableOpacity>
         </View>
 

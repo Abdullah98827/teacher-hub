@@ -71,7 +71,17 @@ export default function ReportModal({
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const { bgCard, bgCardAlt, bgInput, border, borderInput, textPrimary, textSecondary, textMuted, placeholderColor } = useAppTheme();
+  const {
+    bgCard,
+    bgCardAlt,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    textMuted,
+    placeholderColor,
+  } = useAppTheme();
 
   const handleClose = () => {
     setSelectedReason("");
@@ -153,7 +163,9 @@ export default function ReportModal({
             className={`${bgCard} rounded-2xl w-full max-w-md border-2 ${border}`}
             style={{ maxHeight: "80%" }}
           >
-            <View className={`flex-row items-center justify-between p-4 border-b ${border}`}>
+            <View
+              className={`flex-row items-center justify-between p-4 border-b ${border}`}
+            >
               <View className="flex-row items-center flex-1 pr-2">
                 <View className="bg-red-600/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                   <Ionicons name="flag" size={20} color="#ef4444" />

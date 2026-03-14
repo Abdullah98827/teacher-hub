@@ -30,7 +30,8 @@ export default function TeacherVerificationCard({
   onReject,
   processing,
 }: TeacherVerificationCardProps) {
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
   return (
     <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
       {/* Teacher info */}
@@ -55,7 +56,9 @@ export default function TeacherVerificationCard({
               Teacher Reference Number
             </Text>
           </View>
-          <Text className={`${textPrimary} font-bold text-lg`}>{teacher.trn}</Text>
+          <Text className={`${textPrimary} font-bold text-lg`}>
+            {teacher.trn}
+          </Text>
         </View>
 
         {/* Teacher pass photo */}

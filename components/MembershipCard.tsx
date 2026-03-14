@@ -39,7 +39,10 @@ export default function MembershipCard({ membership }: MembershipCardProps) {
             <View className="bg-cyan-500/20 w-8 h-8 rounded-full items-center justify-center">
               <Ionicons name="person" size={16} color="#22d3ee" />
             </View>
-            <Text className={`${textPrimary} font-semibold flex-1`} numberOfLines={1}>
+            <Text
+              className={`${textPrimary} font-semibold flex-1`}
+              numberOfLines={1}
+            >
               {membership.email}
             </Text>
           </View>
@@ -92,7 +95,7 @@ export default function MembershipCard({ membership }: MembershipCardProps) {
           <Ionicons name="book" size={14} color="#6B7280" />
           <Text className={`${textMuted} text-xs ml-1.5`}>Subjects</Text>
         </View>
-        <Text className="text-gray-300 leading-5">
+        <Text className={`${textPrimary} leading-5`}>
           {membership.subject_names?.length > 0
             ? membership.subject_names.join(", ")
             : "No subjects selected"}

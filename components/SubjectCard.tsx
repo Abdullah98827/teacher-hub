@@ -36,7 +36,8 @@ export default function SubjectCard({
 }: SubjectCardProps) {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -53,7 +54,9 @@ export default function SubjectCard({
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-3">
           <View className="flex-row items-center gap-2 mb-1 flex-wrap">
-            <Text className={`${textPrimary} font-bold text-xl`}>{subject.name}</Text>
+            <Text className={`${textPrimary} font-bold text-xl`}>
+              {subject.name}
+            </Text>
             {subject.is_public ? (
               <View className="bg-green-500/20 px-2 py-1 rounded-full">
                 <Text className="text-green-400 text-xs font-bold">
@@ -93,7 +96,9 @@ export default function SubjectCard({
           </TouchableOpacity>
 
           {menuOpen && (
-            <View className={`absolute right-0 top-12 ${bgCardAlt} rounded-lg border ${border} shadow-lg z-50 min-w-[160px]`}>
+            <View
+              className={`absolute right-0 top-12 ${bgCardAlt} rounded-lg border ${border} shadow-lg z-50 min-w-[160px]`}
+            >
               <TouchableOpacity
                 className={`flex-row items-center px-4 py-3 border-b ${border}`}
                 onPress={() => {
@@ -155,7 +160,9 @@ export default function SubjectCard({
           </Text>
         </TouchableOpacity>
 
-        <View className={`${bgCardAlt} px-3 py-2 rounded-lg flex-row items-center`}>
+        <View
+          className={`${bgCardAlt} px-3 py-2 rounded-lg flex-row items-center`}
+        >
           <Ionicons name="chatbubble" size={14} color="#22d3ee" />
           <Text className="text-cyan-400 text-sm font-semibold ml-1.5">
             {subject.messageCount}

@@ -55,7 +55,8 @@ export default function ResourceCard({
   onViewProfile, // NEW
   showActions = false,
 }: ResourceCardProps) {
-  const { bgCard, border, textPrimary, textSecondary, textMuted, isDark } = useAppTheme();
+  const { bgCard, border, textPrimary, textSecondary, textMuted, isDark } =
+    useAppTheme();
 
   const categoryIcons = {
     powerpoint: "easel",
@@ -131,7 +132,9 @@ export default function ResourceCard({
           </View>
 
           {status && (
-            <View className={`px-3 py-1 rounded-full ${statusBgColors[status]}`}>
+            <View
+              className={`px-3 py-1 rounded-full ${statusBgColors[status]}`}
+            >
               <Text className={`text-xs font-bold ${statusTextColors[status]}`}>
                 {status.toUpperCase()}
               </Text>
@@ -223,7 +226,9 @@ export default function ResourceCard({
         </View>
 
         {/* Action Buttons Row */}
-        <View className={`flex-row items-center justify-between pt-3 border-t ${border}`}>
+        <View
+          className={`flex-row items-center justify-between pt-3 border-t ${border}`}
+        >
           {/* Comment Button */}
           {onComment && (
             <TouchableOpacity

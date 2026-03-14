@@ -39,7 +39,7 @@ export default function DashboardScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const { bgCard, border, textPrimary, textSecondary } = useAppTheme();
+  const { bgCard, border, textPrimary, textSecondary, isDark } = useAppTheme();
 
   const fetchDashboardData = useCallback(async () => {
     const {
@@ -119,8 +119,10 @@ export default function DashboardScreen() {
       <LogoHeader position="left" />
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Welcome Card */}
-        <View className="bg-cyan-900/20 rounded-2xl p-6 mb-6 border border-cyan-800/50">
-          <Text className="text-3xl font-bold text-cyan-400 mb-2">
+        <View
+          className={`rounded-2xl p-6 mb-6 border ${isDark ? "bg-cyan-900/20 border-cyan-800/50" : "bg-cyan-50 border-cyan-200"}`}
+        >
+          <Text className="text-3xl font-bold text-cyan-500 mb-2">
             Hello {userProfile.firstName}!
           </Text>
           <Text className={`text-base ${textSecondary}`}>
@@ -133,26 +135,62 @@ export default function DashboardScreen() {
           Your Stats
         </Text>
         <View className="flex-row gap-3 mb-6">
-          <View className="flex-1 bg-blue-900/30 rounded-xl p-4 border border-blue-800">
-            <Ionicons name="cloud-upload" size={24} color="#3b82f6" />
+          <View
+            className={`flex-1 rounded-xl p-4 border ${isDark ? "bg-blue-900/30 border-blue-800" : "bg-blue-50 border-blue-200"}`}
+          >
+            <Ionicons
+              name="cloud-upload"
+              size={24}
+              color={isDark ? "#3b82f6" : "#2563eb"}
+            />
             <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.uploadedResources}
             </Text>
-            <Text className="text-blue-400 text-xs">Uploaded</Text>
+            <Text
+              className={
+                isDark ? "text-blue-400 text-xs" : "text-blue-600 text-xs"
+              }
+            >
+              Uploaded
+            </Text>
           </View>
-          <View className="flex-1 bg-green-900/30 rounded-xl p-4 border border-green-800">
-            <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
+          <View
+            className={`flex-1 rounded-xl p-4 border ${isDark ? "bg-green-900/30 border-green-800" : "bg-green-50 border-green-200"}`}
+          >
+            <Ionicons
+              name="checkmark-circle"
+              size={24}
+              color={isDark ? "#22c55e" : "#16a34a"}
+            />
             <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.approvedResources}
             </Text>
-            <Text className="text-green-400 text-xs">Approved</Text>
+            <Text
+              className={
+                isDark ? "text-green-400 text-xs" : "text-green-600 text-xs"
+              }
+            >
+              Approved
+            </Text>
           </View>
-          <View className="flex-1 bg-purple-900/30 rounded-xl p-4 border border-purple-800">
-            <Ionicons name="download" size={24} color="#a855f7" />
+          <View
+            className={`flex-1 rounded-xl p-4 border ${isDark ? "bg-purple-900/30 border-purple-800" : "bg-purple-50 border-purple-200"}`}
+          >
+            <Ionicons
+              name="download"
+              size={24}
+              color={isDark ? "#a855f7" : "#7c3aed"}
+            />
             <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.totalDownloads}
             </Text>
-            <Text className="text-purple-400 text-xs">Downloads</Text>
+            <Text
+              className={
+                isDark ? "text-purple-400 text-xs" : "text-purple-600 text-xs"
+              }
+            >
+              Downloads
+            </Text>
           </View>
         </View>
 
@@ -203,7 +241,7 @@ export default function DashboardScreen() {
 
           {isAdmin && (
             <TouchableOpacity
-              className="bg-red-900/30 rounded-xl p-4 flex-row items-center justify-between border border-red-800"
+              className={`rounded-xl p-4 flex-row items-center justify-between border ${isDark ? "bg-red-900/30 border-red-800" : "bg-red-50 border-red-200"}`}
               onPress={() => router.push("/admin/manage-resources")}
             >
               <View className="flex-row items-center">
@@ -223,8 +261,12 @@ export default function DashboardScreen() {
         </View>
 
         {/* Info Card */}
-        <View className="bg-cyan-900/20 rounded-xl p-5 mb-6 border border-cyan-800">
-          <Text className="text-cyan-400 font-bold text-base mb-2">
+        <View
+          className={`rounded-xl p-5 mb-6 border ${isDark ? "bg-cyan-900/20 border-cyan-800" : "bg-cyan-50 border-cyan-200"}`}
+        >
+          <Text
+            className={`font-bold text-base mb-2 ${isDark ? "text-cyan-400" : "text-cyan-600"}`}
+          >
             💡 Did You Know?
           </Text>
           <Text className={`${textSecondary} text-sm leading-5`}>

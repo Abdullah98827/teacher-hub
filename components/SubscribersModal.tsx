@@ -30,7 +30,8 @@ export default function SubscribersModal({
   subscribers,
   loading,
 }: SubscribersModalProps) {
-  const { bgCard, bgCardAlt, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
   return (
     <Modal
       visible={visible}
@@ -42,7 +43,9 @@ export default function SubscribersModal({
         <View className={`${bgCard} rounded-t-3xl p-6 max-h-[80%]`}>
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-1">
-              <Text className={`${textPrimary} text-2xl font-bold`}>Subscribers</Text>
+              <Text className={`${textPrimary} text-2xl font-bold`}>
+                Subscribers
+              </Text>
               <Text className={`${textSecondary} text-sm`}>{subjectName}</Text>
             </View>
             <TouchableOpacity onPress={onClose}>
@@ -57,14 +60,18 @@ export default function SubscribersModal({
           ) : subscribers.length === 0 ? (
             <View className="items-center justify-center py-10">
               <Ionicons name="people-outline" size={48} color="#6B7280" />
-              <Text className={`${textSecondary} mt-4`}>No subscribers yet</Text>
+              <Text className={`${textSecondary} mt-4`}>
+                No subscribers yet
+              </Text>
             </View>
           ) : (
             <FlatList
               data={subscribers}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <View className={`${bgCardAlt} rounded-lg p-4 mb-2 flex-row items-center`}>
+                <View
+                  className={`${bgCardAlt} rounded-lg p-4 mb-2 flex-row items-center`}
+                >
                   <View className="bg-cyan-500/20 w-10 h-10 rounded-full items-center justify-center mr-3">
                     <Ionicons name="person" size={20} color="#22d3ee" />
                   </View>

@@ -40,7 +40,8 @@ export default function ManageReportsScreen() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
 
   const fetchReports = useCallback(async () => {
     try {
@@ -279,7 +280,9 @@ export default function ManageReportsScreen() {
 
                   {/* Resource */}
                   <View className="mb-4">
-                    <Text className={`${textMuted} text-xs mb-1`}>Resource</Text>
+                    <Text className={`${textMuted} text-xs mb-1`}>
+                      Resource
+                    </Text>
                     <View className={`${bgCardAlt} rounded-lg p-3`}>
                       <Text className={textPrimary}>
                         {selectedReport.resource.title}
@@ -302,7 +305,9 @@ export default function ManageReportsScreen() {
                   )}
 
                   {/* Reporter info */}
-                  <View className={`flex-row items-center justify-between mb-6 p-3 ${bgCardAlt} rounded-lg`}>
+                  <View
+                    className={`flex-row items-center justify-between mb-6 p-3 ${bgCardAlt} rounded-lg`}
+                  >
                     <View className="flex-row items-center">
                       <Ionicons name="person" size={16} color="#6B7280" />
                       <Text className={`${textSecondary} text-sm ml-2`}>

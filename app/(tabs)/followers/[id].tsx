@@ -15,8 +15,8 @@ import Toast from "react-native-toast-message";
 import ProfilePicture from "../../../components/ProfilePicture";
 import ScreenWrapper from "../../../components/ScreenWrapper";
 import UserProfileModal from "../../../components/UserProfileModal";
-import { supabase } from "../../../supabase";
 import { useAppTheme } from "../../../hooks/useAppTheme";
+import { supabase } from "../../../supabase";
 
 interface Follower {
   id: string;
@@ -139,7 +139,9 @@ export default function FollowersScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className={`${textPrimary} text-xl font-bold`}>Followers</Text>
+            <Text className={`${textPrimary} text-xl font-bold`}>
+              Followers
+            </Text>
             {userName && (
               <Text className={`${textSecondary} text-sm`}>{userName}</Text>
             )}

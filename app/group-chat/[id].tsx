@@ -311,7 +311,9 @@ export default function GroupChatScreen() {
 
           <View
             className={`max-w-[75%] px-4 py-3 rounded-2xl ${
-              isOwnMessage ? "bg-cyan-500 rounded-br-sm" : `${bgCardAlt} rounded-bl-sm`
+              isOwnMessage
+                ? "bg-cyan-500 rounded-br-sm"
+                : `${bgCardAlt} rounded-bl-sm`
             }`}
           >
             <Text className={`${isOwnMessage ? "text-white" : textPrimary}`}>
@@ -364,13 +366,18 @@ export default function GroupChatScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
         {/* Header */}
-        <View className={`${bgCard} px-5 py-4 flex-row items-center border-b ${border}`}>
+        <View
+          className={`${bgCard} px-5 py-4 flex-row items-center border-b ${border}`}
+        >
           <TouchableOpacity className="mr-3" onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
             <View className="flex-row items-center gap-2">
-              <Text className={`${textPrimary} font-bold text-lg`} numberOfLines={1}>
+              <Text
+                className={`${textPrimary} font-bold text-lg`}
+                numberOfLines={1}
+              >
                 {groupChat?.name}
               </Text>
               {isAdmin && (

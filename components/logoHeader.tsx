@@ -20,7 +20,7 @@ export default function LogoHeader({
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 300,
+      duration: 400,
       useNativeDriver: true,
     }).start();
 
@@ -54,10 +54,7 @@ export default function LogoHeader({
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
+      { text: "Cancel", style: "cancel" },
       {
         text: "Sign Out",
         style: "destructive",
@@ -69,34 +66,124 @@ export default function LogoHeader({
     ]);
   };
 
-  const iconName = role === "admin" ? "shield-check" : "school-outline";
-  const iconColor = role === "admin" ? "#ef4444" : "#a855f7";
-  const isClickable = role === "admin" || (role === "teacher" && isVerified);
+  const isAdmin = role === "admin";
+  const isClickable = isAdmin || (role === "teacher" && isVerified);
+
+  // Theme-aware colours
+  const headerBg = isDark ? "#0a0f1a" : "#f0fafb";
+  const accentLine = "#06b6d4"; // cyan-500
+  const borderColor = isDark ? "rgba(6,182,212,0.15)" : "rgba(6,182,212,0.25)";
+
+  // Both roles share the cyan brand; shield icon distinguishes admin
+  const iconColor = isDark ? "#22d3ee" : "#0891b2";
 
   return (
     <View
-      className={`w-full px-5 py-4 flex-row items-center justify-between border-b ${isDark ? "border-neutral-900 bg-black" : "border-gray-100 bg-white"}`}
+      style={{
+        width: "100%",
+        backgroundColor: headerBg,
+        borderBottomWidth: 1,
+        borderBottomColor: borderColor,
+        paddingHorizontal: 20,
+        paddingVertical: 14,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
     >
+      {/* Accent line at top */}
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 2.5,
+          backgroundColor: accentLine,
+          opacity: isDark ? 0.7 : 0.9,
+        }}
+      />
+
       {/* Logo */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <TouchableOpacity
-          activeOpacity={isClickable ? 0.8 : 1}
+          activeOpacity={isClickable ? 0.75 : 1}
           onPress={handleLogoClick}
           disabled={!isClickable}
-          className="px-2 py-1 flex-row items-center gap-2"
+          style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
         >
-          <MaterialCommunityIcons name={iconName} size={24} color={iconColor} />
-          {role === "admin" ? (
-            <Text className="text-2xl font-bold text-red-500 tracking-wide">
-              Admin Hub
-            </Text>
+          {/* Icon badge — cyan for both roles; shield icon distinguishes admin */}
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              backgroundColor: isDark
+                ? "rgba(6,182,212,0.15)"
+                : "rgba(8,145,178,0.1)",
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 1,
+              borderColor: isDark
+                ? "rgba(6,182,212,0.3)"
+                : "rgba(8,145,178,0.25)",
+            }}
+          >
+            <MaterialCommunityIcons
+              name={isAdmin ? "shield-check" : "school-outline"}
+              size={20}
+              color={iconColor}
+            />
+          </View>
+
+          {/* Wordmark */}
+          {isAdmin ? (
+            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "800",
+                  letterSpacing: 0.3,
+                  color: isDark ? "#e2e8f0" : "#0f172a",
+                }}
+              >
+                Admin
+              </Text>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "800",
+                  letterSpacing: 0.3,
+                  color: isDark ? "#22d3ee" : "#0891b2",
+                  marginLeft: 5,
+                }}
+              >
+                Hub
+              </Text>
+            </View>
           ) : (
-            <Text
-              className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"} tracking-wide`}
-            >
-              Teacher
-              <Text className="text-purple-400">-Hub</Text>
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "800",
+                  letterSpacing: 0.3,
+                  color: isDark ? "#e2e8f0" : "#0f172a",
+                }}
+              >
+                Teacher
+              </Text>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: "800",
+                  letterSpacing: 0.3,
+                  color: isDark ? "#22d3ee" : "#0891b2",
+                }}
+              >
+                -Hub
+              </Text>
+            </View>
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -105,10 +192,25 @@ export default function LogoHeader({
       <Animated.View style={{ opacity: fadeAnim }}>
         <TouchableOpacity
           onPress={handleSignOut}
-          className="w-10 h-10 rounded-full bg-red-500/20 items-center justify-center"
           activeOpacity={0.7}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 19,
+            backgroundColor: isDark
+              ? "rgba(239,68,68,0.12)"
+              : "rgba(220,38,38,0.08)",
+            borderWidth: 1,
+            borderColor: isDark ? "rgba(239,68,68,0.3)" : "rgba(220,38,38,0.2)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <Ionicons name="log-out-outline" size={22} color="#ef4444" />
+          <Ionicons
+            name="log-out-outline"
+            size={20}
+            color={isDark ? "#f87171" : "#dc2626"}
+          />
         </TouchableOpacity>
       </Animated.View>
     </View>

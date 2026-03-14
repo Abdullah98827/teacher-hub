@@ -41,7 +41,16 @@ export default function AdminResourcesScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
-  const { bgCardAlt, bgCard, bgInput, border, borderInput, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const {
+    bgCardAlt,
+    bgCard,
+    bgInput,
+    border,
+    borderInput,
+    textPrimary,
+    textSecondary,
+    textMuted,
+  } = useAppTheme();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -339,7 +348,9 @@ export default function AdminResourcesScreen() {
 
             {/* Advanced filters panel */}
             {showFilters && (
-              <View className={`${bgCard} p-4 rounded-xl mb-3 border ${border}`}>
+              <View
+                className={`${bgCard} p-4 rounded-xl mb-3 border ${border}`}
+              >
                 <SearchBar
                   value={searchQuery}
                   onChangeText={setSearchQuery}
@@ -357,9 +368,7 @@ export default function AdminResourcesScreen() {
                         <TouchableOpacity
                           key={cat}
                           className={`px-3 py-2 rounded-lg ${
-                            selectedCategory === cat
-                              ? "bg-cyan-500"
-                              : bgCardAlt
+                            selectedCategory === cat ? "bg-cyan-500" : bgCardAlt
                           }`}
                           onPress={() => setSelectedCategory(cat)}
                         >
@@ -386,14 +395,14 @@ export default function AdminResourcesScreen() {
 
                 {/* Subject filter */}
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Subject</Text>
+                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                    Subject
+                  </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     <View className="flex-row gap-2">
                       <TouchableOpacity
                         className={`px-3 py-2 rounded-lg ${
-                          selectedSubject === "all"
-                            ? "bg-cyan-500"
-                            : bgCardAlt
+                          selectedSubject === "all" ? "bg-cyan-500" : bgCardAlt
                         }`}
                         onPress={() => setSelectedSubject("all")}
                       >
@@ -434,7 +443,9 @@ export default function AdminResourcesScreen() {
 
                 {/* Sort options */}
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>Sort By</Text>
+                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                    Sort By
+                  </Text>
                   <View className="flex-row gap-2">
                     {[
                       { value: "newest", label: "Newest" },
@@ -444,17 +455,13 @@ export default function AdminResourcesScreen() {
                       <TouchableOpacity
                         key={sort.value}
                         className={`px-3 py-2 rounded-lg ${
-                          sortBy === sort.value
-                            ? "bg-cyan-500"
-                            : bgCardAlt
+                          sortBy === sort.value ? "bg-cyan-500" : bgCardAlt
                         }`}
                         onPress={() => setSortBy(sort.value as any)}
                       >
                         <Text
                           className={`font-semibold text-sm ${
-                            sortBy === sort.value
-                              ? "text-white"
-                              : textSecondary
+                            sortBy === sort.value ? "text-white" : textSecondary
                           }`}
                         >
                           {sort.label}

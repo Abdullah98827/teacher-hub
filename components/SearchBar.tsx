@@ -19,8 +19,12 @@ export default function SearchBar({
 
   return (
     <View className="mb-4">
-      {label && <Text className={`${textPrimary} font-semibold mb-2`}>{label}</Text>}
-      <View className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl border ${borderInput}`}>
+      {label && (
+        <Text className={`${textPrimary} font-semibold mb-2`}>{label}</Text>
+      )}
+      <View
+        className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl border ${borderInput}`}
+      >
         <Ionicons name="search" size={20} color="#9CA3AF" />
         <TextInput
           className={`flex-1 ${textPrimary} ml-2`}

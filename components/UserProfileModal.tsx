@@ -267,7 +267,9 @@ export default function UserProfileModal({
               )}
             </View>
 
-            <View className={`flex-row ${bgCard} border-t border-b ${border} mt-4`}>
+            <View
+              className={`flex-row ${bgCard} border-t border-b ${border} mt-4`}
+            >
               <TouchableOpacity
                 className={`flex-1 items-center py-4 border-r ${border}`}
                 onPress={() => handleNavigate(`/followers/${userId}`)}
@@ -336,7 +338,9 @@ export default function UserProfileModal({
                 )}
                 {profile.membership_subjects.length > 0 && (
                   <View>
-                    <Text className={`${textMuted} text-xs mb-2`}>Subjects</Text>
+                    <Text className={`${textMuted} text-xs mb-2`}>
+                      Subjects
+                    </Text>
                     <View className="flex-row flex-wrap gap-2">
                       {profile.membership_subjects.map((subject) => (
                         <View

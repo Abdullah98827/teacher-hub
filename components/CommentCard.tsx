@@ -24,7 +24,8 @@ export default function CommentCard({
   onRestore,
   onDelete,
 }: CommentCardProps) {
-  const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -63,7 +64,9 @@ export default function CommentCard({
 
       {/* Comment text */}
       <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
-        <Text className="text-gray-300 leading-5">{comment.comment_text}</Text>
+        <Text className={`${textSecondary} leading-5`}>
+          {comment.comment_text}
+        </Text>
       </View>
 
       {/* Resource info */}

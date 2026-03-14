@@ -9,8 +9,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../supabase";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
 
 interface Activity {
@@ -38,7 +38,8 @@ export default function ActivityFeed({
   limit = 20,
 }: ActivityFeedProps) {
   const router = useRouter();
-  const { bgCard, border, textPrimary, textSecondary, textMuted } = useAppTheme();
+  const { bgCard, border, textPrimary, textSecondary, textMuted } =
+    useAppTheme();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
