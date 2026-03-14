@@ -6,13 +6,13 @@ import {
     Platform,
     ScrollView,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedTextInput } from '../components/themed-textinput';
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -152,14 +152,14 @@ export default function CheckoutScreen() {
         <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
           Cardholder Name
         </Text>
-        <TextInput
+        <ThemedTextInput
           placeholder="First Name"
           placeholderTextColor={placeholderColor}
           value={firstName}
           onChangeText={setFirstName}
           className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
-        <TextInput
+        <ThemedTextInput
           placeholder="Last Name"
           placeholderTextColor={placeholderColor}
           value={lastName}
@@ -170,7 +170,7 @@ export default function CheckoutScreen() {
         <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
           Card Details
         </Text>
-        <TextInput
+        <ThemedTextInput
           placeholder="Card Number"
           placeholderTextColor={placeholderColor}
           value={cardNumber}
@@ -182,7 +182,7 @@ export default function CheckoutScreen() {
           className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
         <View className="flex-row gap-4">
-          <TextInput
+          <ThemedTextInput
             placeholder="MM/YY"
             placeholderTextColor={placeholderColor}
             value={expiry}
@@ -190,7 +190,7 @@ export default function CheckoutScreen() {
             keyboardType="numeric"
             className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
           />
-          <TextInput
+          <ThemedTextInput
             placeholder="CVV"
             placeholderTextColor={placeholderColor}
             value={cvv}
@@ -204,21 +204,21 @@ export default function CheckoutScreen() {
         <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
           Billing Address
         </Text>
-        <TextInput
+        <ThemedTextInput
           placeholder="Address"
           placeholderTextColor={placeholderColor}
           value={address}
           onChangeText={setAddress}
           className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
-        <TextInput
+        <ThemedTextInput
           placeholder="City"
           placeholderTextColor={placeholderColor}
           value={city}
           onChangeText={setCity}
           className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
         />
-        <TextInput
+        <ThemedTextInput
           placeholder="Postcode"
           placeholderTextColor={placeholderColor}
           value={postcode}

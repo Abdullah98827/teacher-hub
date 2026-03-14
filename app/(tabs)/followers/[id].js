@@ -7,7 +7,6 @@ import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -17,6 +16,7 @@ import ScreenWrapper from "../../../components/ScreenWrapper";
 import UserProfileModal from "../../../components/UserProfileModal";
 import { useAppTheme } from "../../../hooks/useAppTheme";
 import { supabase } from "../../../supabase";
+import { ThemedText } from '../../../components/themed-text';
 
 export default function FollowersScreen() {
   const params = useLocalSearchParams();
@@ -95,20 +95,20 @@ export default function FollowersScreen() {
         size="md"
       />
       <View className="flex-1 ml-3">
-        <Text className={`${textPrimary} font-semibold text-base`}>
+        <ThemedText className={`${textPrimary} font-semibold text-base`}>
           {item.first_name} {item.last_name}
-        </Text>
+        </ThemedText>
         {item.bio && (
-          <Text className={`${textSecondary} text-sm mt-1`} numberOfLines={1}>
+          <ThemedText className={`${textSecondary} text-sm mt-1`} numberOfLines={1}>
             {item.bio}
-          </Text>
+          </ThemedText>
         )}
         <View className="flex-row items-center mt-1">
           <Ionicons name="people-outline" size={14} color="#9CA3AF" />
-          <Text className={`${textSecondary} text-xs ml-1`}>
+          <ThemedText className={`${textSecondary} text-xs ml-1`}>
             {item.followers_count ?? 0}{" "}
             {(item.followers_count ?? 0) === 1 ? "follower" : "followers"}
-          </Text>
+          </ThemedText>
         </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#6B7280" />
@@ -127,9 +127,9 @@ export default function FollowersScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className={`${textPrimary} text-xl font-bold`}>Followers</Text>
+            <ThemedText className={`${textPrimary} text-xl font-bold`}>Followers</ThemedText>
             {userName && (
-              <Text className={`${textSecondary} text-sm`}>{userName}</Text>
+              <ThemedText className={`${textSecondary} text-sm`}>{userName}</ThemedText>
             )}
           </View>
         </View>
@@ -144,12 +144,12 @@ export default function FollowersScreen() {
           <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
             <Ionicons name="people-outline" size={40} color="#22d3ee" />
           </View>
-          <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+          <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
             No Followers Yet
-          </Text>
-          <Text className={`${textSecondary} text-center`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-center`}>
             This teacher doesn`t have any followers yet
-          </Text>
+          </ThemedText>
         </View>
       ) : (
         <FlatList

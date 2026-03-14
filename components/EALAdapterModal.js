@@ -9,12 +9,12 @@ import {
     ScrollView,
     Share,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedTextInput } from './themed-textinput';
 
 const MAX_WORDS = 600;
 
@@ -677,7 +677,7 @@ export default function EALAdapterModal({ visible, onClose, resourceId }) {
             >
               Lesson or worksheet text
             </Text>
-            <TextInput
+            <ThemedTextInput
               style={{
                 backgroundColor: C.surface,
                 borderRadius: 10,
@@ -698,10 +698,7 @@ export default function EALAdapterModal({ visible, onClose, resourceId }) {
               placeholderTextColor={C.textMuted}
               multiline
               value={inputText}
-              onChangeText={(t) => {
-                setInputText(t);
-                setError("");
-              }}
+              onChangeText={setInputText}
             />
 
             <View
@@ -813,7 +810,7 @@ export default function EALAdapterModal({ visible, onClose, resourceId }) {
                     size={15}
                     color={C.textMuted}
                   />
-                  <TextInput
+                  <ThemedTextInput
                     style={{ flex: 1, color: C.textPrimary, fontSize: 14 }}
                     placeholder="Search…"
                     placeholderTextColor={C.textMuted}

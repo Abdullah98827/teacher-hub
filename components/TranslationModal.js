@@ -488,7 +488,7 @@ export default function TranslationModal({ visible, onClose, resourceId }) {
                   }}
                 >
                   <Ionicons name="search-outline" size={15} color={C.textMuted} />
-                  <TextInput
+                  <ThemedTextInput
                     style={{ flex: 1, color: C.textPrimary, fontSize: 14 }}
                     placeholder="Search…"
                     placeholderTextColor={C.textMuted}

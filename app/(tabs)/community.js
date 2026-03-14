@@ -6,7 +6,6 @@ import {
     FlatList,
     RefreshControl,
     ScrollView,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -19,6 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { ThemedText } from '../../components/themed-text';
 
 export default function CommunityScreen() {
   const { user } = useAuth();
@@ -158,9 +158,9 @@ export default function CommunityScreen() {
         <View className="bg-green-500/20 px-3 py-1 rounded-full self-start mb-2">
           <View className="flex-row items-center">
             <Ionicons name="globe" size={12} color="#22c55e" />
-            <Text className="text-green-400 text-xs font-bold ml-1">
+            <ThemedText className="text-green-400 text-xs font-bold ml-1">
               PUBLIC CHAT
-            </Text>
+            </ThemedText>
           </View>
         </View>
       )}
@@ -170,50 +170,50 @@ export default function CommunityScreen() {
           <Ionicons name="chatbubbles" size={24} color="#22d3ee" />
         </View>
         <View className="flex-1">
-          <Text
+          <ThemedText
             className={`${textPrimary} font-bold text-lg`}
             numberOfLines={1}
           >
             {item.name}
-          </Text>
+          </ThemedText>
           <View className="flex-row items-center gap-2">
-            <Text className="text-cyan-400 text-xs">
+            <ThemedText className="text-cyan-400 text-xs">
               {item.subject?.name || "Subject"}
-            </Text>
+            </ThemedText>
             {item.subject?.is_public && (
               <View className="bg-green-500/20 px-1.5 py-0.5 rounded">
-                <Text className="text-green-400 text-xs font-bold">
+                <ThemedText className="text-green-400 text-xs font-bold">
                   Public Resources
-                </Text>
+                </ThemedText>
               </View>
             )}
           </View>
         </View>
         {item.unreadCount > 0 && (
           <View className="bg-cyan-500 w-6 h-6 rounded-full items-center justify-center">
-            <Text className="text-white text-xs font-bold">
+            <ThemedText className="text-white text-xs font-bold">
               {item.unreadCount > 9 ? "9+" : item.unreadCount}
-            </Text>
+            </ThemedText>
           </View>
         )}
       </View>
 
       {item.lastMessage ? (
         <View className="ml-15">
-          <Text className={`${textSecondary} text-sm`} numberOfLines={2}>
-            <Text className="font-semibold">
+          <ThemedText className={`${textSecondary} text-sm`} numberOfLines={2}>
+            <ThemedText className="font-semibold">
               {item.lastMessage.sender.first_name}:
-            </Text>{" "}
+            </ThemedText>{" "}
             {item.lastMessage.message}
-          </Text>
-          <Text className={`${textMuted} text-xs mt-1`}>
+          </ThemedText>
+          <ThemedText className={`${textMuted} text-xs mt-1`}>
             {formatTime(item.lastMessage.created_at)}
-          </Text>
+          </ThemedText>
         </View>
       ) : (
-        <Text className={`${textSecondary} text-sm ml-15`}>
+        <ThemedText className={`${textSecondary} text-sm ml-15`}>
           No messages yet
-        </Text>
+        </ThemedText>
       )}
     </TouchableOpacity>
   );
@@ -233,9 +233,9 @@ export default function CommunityScreen() {
       <LogoHeader position="left" />
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         <View className="flex-row items-center justify-between mt-4 mb-4">
-          <Text className="text-3xl font-bold text-cyan-400">
+          <ThemedText className="text-3xl font-bold text-cyan-400">
             Community
-          </Text>
+          </ThemedText>
           <TouchableOpacity
             className="bg-cyan-500/20 w-11 h-11 rounded-full items-center justify-center"
             onPress={() => router.push("/direct-messages")}
@@ -256,11 +256,11 @@ export default function CommunityScreen() {
               className={`flex-1 py-2 rounded-xl ${activeTab === key ? "bg-cyan-500" : bgCardAlt}`}
               onPress={() => setActiveTab(key)}
             >
-              <Text
+              <ThemedText
                 className={`text-center font-bold text-sm ${activeTab === key ? "text-white" : textSecondary}`}
               >
                 {label}
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           ))}
         </View>
@@ -272,9 +272,9 @@ export default function CommunityScreen() {
                 <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
                   <Ionicons name="chatbubbles-outline" size={40} color="#22d3ee" />
                 </View>
-                <Text className={`${textSecondary} text-center`}>
+                <ThemedText className={`${textSecondary} text-center`}>
                   No group chats available yet
-                </Text>
+                </ThemedText>
               </View>
             ) : (
               <FlatList

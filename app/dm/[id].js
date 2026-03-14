@@ -7,7 +7,6 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    Text,
     TextInput,
     TouchableOpacity,
     View,
@@ -17,6 +16,7 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { ThemedText } from '../../components/themed-text';
 
 export default function DMChatScreen() {
   const { id: partnerId } = useLocalSearchParams();
@@ -193,15 +193,15 @@ export default function DMChatScreen() {
               : `${bgCardAlt} rounded-bl-sm`
           }`}
         >
-          <Text className={`${isOwnMessage ? "text-white" : textPrimary}`}>
+          <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary}`}>
             {item.message}
-          </Text>
+          </ThemedText>
           <View className="flex-row items-center justify-between mt-1">
-            <Text
+            <ThemedText
               className={`text-xs ${isOwnMessage ? "text-cyan-100" : textMuted}`}
             >
               {formatTime(item.created_at)}
-            </Text>
+            </ThemedText>
             {isOwnMessage && (
               <Ionicons
                 name={item.read ? "checkmark-done" : "checkmark"}
@@ -243,16 +243,16 @@ export default function DMChatScreen() {
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
           <View className="bg-cyan-500/20 w-10 h-10 rounded-full items-center justify-center mr-3">
-            <Text className="text-cyan-400 font-bold">
+            <ThemedText className="text-cyan-400 font-bold">
               {partnerName.charAt(0).toUpperCase()}
-            </Text>
+            </ThemedText>
           </View>
-          <Text
+          <ThemedText
             className={`${textPrimary} font-bold text-lg`}
             numberOfLines={1}
           >
             {partnerName}
-          </Text>
+          </ThemedText>
         </View>
 
         {/* Messages list */}
@@ -269,10 +269,10 @@ export default function DMChatScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <Ionicons name="chatbubble-outline" size={60} color="#374151" />
-              <Text className={`${textSecondary} mt-4`}>No messages yet</Text>
-              <Text className={`${textMuted} text-sm`}>
+              <ThemedText className={`${textSecondary} mt-4`}>No messages yet</ThemedText>
+              <ThemedText className={`${textMuted} text-sm`}>
                 Start the conversation!
-              </Text>
+              </ThemedText>
             </View>
           }
         />

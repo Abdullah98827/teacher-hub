@@ -8,7 +8,6 @@ import {
     RefreshControl,
     ScrollView,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -22,6 +21,7 @@ import SubscribersModal from "../../components/SubscribersModal";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { ThemedTextInput } from "../../components/themed-textinput";
 
 export default function AdminSubjectManagementScreen() {
   const { role, loading: roleLoading } = useUserRole();
@@ -590,7 +590,7 @@ export default function AdminSubjectManagementScreen() {
 
             <View className="mb-4">
               <Text className={`${textMuted} text-sm mb-2`}>Subject Name *</Text>
-              <TextInput
+              <ThemedTextInput
                 className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="e.g., English, Mathematics, EAL Support"
                 placeholderTextColor="#6B7280"
@@ -601,7 +601,7 @@ export default function AdminSubjectManagementScreen() {
 
             <View className="mb-4">
               <Text className={`${textMuted} text-sm mb-2`}>Subject Description</Text>
-              <TextInput
+              <ThemedTextInput
                 className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="Brief description of the subject"
                 placeholderTextColor="#6B7280"
@@ -614,7 +614,7 @@ export default function AdminSubjectManagementScreen() {
 
             <View className="mb-4">
               <Text className={`${textMuted} text-sm mb-2`}>Group Chat Description</Text>
-              <TextInput
+              <ThemedTextInput
                 className={`${bgInput} ${textPrimary} px-4 py-3 rounded-lg`}
                 placeholder="e.g., Discuss lesson plans and teaching strategies"
                 placeholderTextColor="#6B7280"

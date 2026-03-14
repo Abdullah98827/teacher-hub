@@ -8,7 +8,6 @@ import {
     Modal,
     Platform,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -17,6 +16,7 @@ import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import ProfilePicture from "./ProfilePicture";
 import UserProfileModal from "./UserProfileModal";
+import { ThemedTextInput } from './themed-textinput';
 
 export default function CommentsModal({
   visible,
@@ -525,7 +525,7 @@ export default function CommentsModal({
 
         <View className={`${bgCard} p-4 border-t ${border}`}>
           <View className="flex-row items-end gap-2">
-            <TextInput
+            <ThemedTextInput
               className={`flex-1 ${bgInput} ${textPrimary} px-4 py-3 rounded-xl border ${borderInput}`}
               placeholder="Add a comment..."
               placeholderTextColor={placeholderColor}

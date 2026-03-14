@@ -9,7 +9,6 @@ import {
     Platform,
     RefreshControl,
     ScrollView,
-    Text,
     TextInput,
     TouchableOpacity,
     View,
@@ -36,6 +35,7 @@ import {
     trackResourceView,
 } from "../../utils/resourceHelpers";
 import { deleteFile, getSignedUrl } from "../../utils/storage";
+import { ThemedText } from '../../components/themed-text';
 
 export default function ResourcesScreen() {
   const { user } = useAuth();
@@ -437,9 +437,9 @@ export default function ResourcesScreen() {
       <LogoHeader position="left" />
       <View className="flex-1 px-5">
         <View className="mb-4">
-          <Text className="text-3xl font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-3xl font-bold text-cyan-400 mb-4">
             Resources
-          </Text>
+          </ThemedText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -460,11 +460,11 @@ export default function ResourcesScreen() {
                   className={`py-3 px-4 rounded-xl ${activeTab === key ? "bg-cyan-500" : bgCardAlt}`}
                   onPress={() => setActiveTab(key)}
                 >
-                  <Text
+                  <ThemedText
                     className={`text-center font-bold ${activeTab === key ? "text-white" : textSecondary}`}
                   >
                     {label}
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
               ))}
             </View>
@@ -474,7 +474,7 @@ export default function ResourcesScreen() {
             onPress={() => router.push("/upload-resource")}
           >
             <Ionicons name="cloud-upload" size={20} color="#fff" />
-            <Text className="text-white font-bold ml-2">Upload Resource</Text>
+            <ThemedText className="text-white font-bold ml-2">Upload Resource</ThemedText>
           </TouchableOpacity>
         </View>
 
@@ -487,7 +487,7 @@ export default function ResourcesScreen() {
                 color="#22d3ee"
               />
             </View>
-            <Text className={`${textSecondary} text-center`}>
+            <ThemedText className={`${textSecondary} text-center`}>
               {activeTab === "browse"
                 ? "No resources available yet"
                 : activeTab === "saved"
@@ -495,15 +495,15 @@ export default function ResourcesScreen() {
                   : activeTab === "following"
                     ? "No resources from teachers you follow"
                     : "You haven't uploaded any resources"}
-            </Text>
+            </ThemedText>
             {activeTab === "following" && displayResources.length === 0 && (
               <TouchableOpacity
                 className="bg-cyan-600 px-6 py-3 rounded-lg mt-4"
                 onPress={() => router.push("/suggested-users")}
               >
-                <Text className="text-white font-semibold">
+                <ThemedText className="text-white font-semibold">
                   Find Teachers to Follow
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
             )}
           </View>
@@ -515,9 +515,9 @@ export default function ResourcesScreen() {
             >
               <View className="flex-row items-center">
                 <Ionicons name="filter" size={20} color="#22d3ee" />
-                <Text className={`${textPrimary} font-semibold ml-2`}>
+                <ThemedText className={`${textPrimary} font-semibold ml-2`}>
                   Filters & Sort
-                </Text>
+                </ThemedText>
               </View>
               <Ionicons
                 name={showFilters ? "chevron-up" : "chevron-down"}
@@ -529,9 +529,9 @@ export default function ResourcesScreen() {
             {showFilters && (
               <View className={`${bgCard} p-4 rounded-xl mb-3`}>
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                  <ThemedText className={`${textPrimary} font-semibold mb-2`}>
                     Search
-                  </Text>
+                  </ThemedText>
                   <View
                     className={`${bgInput} flex-row items-center px-3 py-2 rounded-xl ${borderInput} border`}
                   >
@@ -556,9 +556,9 @@ export default function ResourcesScreen() {
                 </View>
 
                 <View className="mb-3">
-                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                  <ThemedText className={`${textPrimary} font-semibold mb-2`}>
                     Category
-                  </Text>
+                  </ThemedText>
                   <View className="flex-row flex-wrap gap-2">
                     {["all", "powerpoint", "worksheet", "lesson_plan"].map(
                       (cat) => (
@@ -569,7 +569,7 @@ export default function ResourcesScreen() {
                           }`}
                           onPress={() => setSelectedCategory(cat)}
                         >
-                          <Text
+                          <ThemedText
                             className={`font-semibold ${
                               selectedCategory === cat
                                 ? "text-white"
@@ -583,7 +583,7 @@ export default function ResourcesScreen() {
                                 : cat === "worksheet"
                                   ? "Worksheet"
                                   : "Lesson Plan"}
-                          </Text>
+                          </ThemedText>
                         </TouchableOpacity>
                       )
                     )}
@@ -591,9 +591,9 @@ export default function ResourcesScreen() {
                 </View>
 
                 <View>
-                  <Text className={`${textPrimary} font-semibold mb-2`}>
+                  <ThemedText className={`${textPrimary} font-semibold mb-2`}>
                     Sort By
-                  </Text>
+                  </ThemedText>
                   <View className="flex-row gap-2">
                     {[
                       { value: "newest", label: "Newest" },
@@ -607,13 +607,13 @@ export default function ResourcesScreen() {
                         }`}
                         onPress={() => setSortBy(sort.value)}
                       >
-                        <Text
+                        <ThemedText
                           className={`font-semibold ${
                             sortBy === sort.value ? "text-white" : textSecondary
                           }`}
                         >
                           {sort.label}
-                        </Text>
+                        </ThemedText>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -627,26 +627,26 @@ export default function ResourcesScreen() {
                     setSortBy("newest");
                   }}
                 >
-                  <Text className="text-red-400 text-center font-semibold">
+                  <ThemedText className="text-red-400 text-center font-semibold">
                     Clear All Filters
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             )}
 
-            <Text className={`${textMuted} mb-3`}>
+            <ThemedText className={`${textMuted} mb-3`}>
               Showing {filteredResources.length} of {displayResources.length}{" "}
               resources
-            </Text>
+            </ThemedText>
 
             {filteredResources.length === 0 ? (
               <View className="flex-1 items-center justify-center py-10">
                 <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
                   <Ionicons name="search" size={40} color="#22d3ee" />
                 </View>
-                <Text className={`${textSecondary} text-center`}>
+                <ThemedText className={`${textSecondary} text-center`}>
                   No resources match your filters
-                </Text>
+                </ThemedText>
                 <TouchableOpacity
                   className="mt-4 bg-cyan-500 px-4 py-2 rounded-lg"
                   onPress={() => {
@@ -654,9 +654,9 @@ export default function ResourcesScreen() {
                     setSelectedCategory("all");
                   }}
                 >
-                  <Text className="text-white font-semibold">
+                  <ThemedText className="text-white font-semibold">
                     Clear Filters
-                  </Text>
+                  </ThemedText>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -680,9 +680,9 @@ export default function ResourcesScreen() {
                       <View className="bg-green-500/20 px-3 py-1 rounded-t-xl border-b border-green-500/30">
                         <View className="flex-row items-center justify-center">
                           <Ionicons name="globe" size={14} color="#22c55e" />
-                          <Text className="text-green-400 text-xs font-bold ml-1">
+                          <ThemedText className="text-green-400 text-xs font-bold ml-1">
                             PUBLIC RESOURCE
-                          </Text>
+                          </ThemedText>
                         </View>
                       </View>
                     )}
@@ -770,12 +770,12 @@ export default function ResourcesScreen() {
                 color={isDark ? "#fff" : "#111827"}
               />
             </TouchableOpacity>
-            <Text
+            <ThemedText
               className={`${textPrimary} font-bold text-lg flex-1 text-center`}
               numberOfLines={1}
             >
               {selectedResource?.title}
-            </Text>
+            </ThemedText>
             <View className="flex-row items-center gap-6">
               <TouchableOpacity
                 onPress={async () => {
@@ -812,9 +812,9 @@ export default function ResourcesScreen() {
               renderLoading={() => (
                 <View className="flex-1 items-center justify-center">
                   <ActivityIndicator size="large" color="#22d3ee" />
-                  <Text className={`${textMuted} mt-2`}>
+                  <ThemedText className={`${textMuted} mt-2`}>
                     Loading preview...
-                  </Text>
+                  </ThemedText>
                 </View>
               )}
             />
@@ -842,12 +842,12 @@ export default function ResourcesScreen() {
       >
         <View className="flex-1 bg-black/50 justify-center items-center p-5">
           <View className={`${bgCard} rounded-2xl p-6 w-full max-w-sm`}>
-            <Text className={`${textPrimary} text-xl font-bold mb-2`}>
+            <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
               Delete Resource?
-            </Text>
-            <Text className={`${textSecondary} mb-6`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} mb-6`}>
               This will permanently delete the file and all its data.
-            </Text>
+            </ThemedText>
             <View className="flex-row gap-3">
               <TouchableOpacity
                 className={`flex-1 ${bgCardAlt} py-3 rounded-xl`}
@@ -857,9 +857,9 @@ export default function ResourcesScreen() {
                 }}
                 disabled={isDeleting}
               >
-                <Text className={`${textPrimary} text-center font-bold`}>
+                <ThemedText className={`${textPrimary} text-center font-bold`}>
                   Cancel
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 className={`flex-1 bg-red-600 py-3 rounded-xl ${isDeleting ? "opacity-50" : ""}`}
@@ -869,9 +869,9 @@ export default function ResourcesScreen() {
                 {isDeleting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text className="text-white text-center font-bold">
+                  <ThemedText className="text-white text-center font-bold">
                     Delete
-                  </Text>
+                  </ThemedText>
                 )}
               </TouchableOpacity>
             </View>

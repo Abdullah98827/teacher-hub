@@ -7,7 +7,6 @@ import {
     FlatList,
     KeyboardAvoidingView,
     Platform,
-    Text,
     TextInput,
     TouchableOpacity,
     View,
@@ -19,6 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { ThemedText } from '../../components/themed-text';
 
 export default function GroupChatScreen() {
   const { id } = useLocalSearchParams();
@@ -238,9 +238,9 @@ export default function GroupChatScreen() {
     return (
       <View className={`mb-3 ${isOwnMessage ? "items-end" : "items-start"}`}>
         {!isOwnMessage && (
-          <Text className="text-cyan-400 text-xs font-semibold mb-1 ml-2">
+          <ThemedText className="text-cyan-400 text-xs font-semibold mb-1 ml-2">
             {item.sender.first_name} {item.sender.last_name}
-          </Text>
+          </ThemedText>
         )}
         <View className="flex-row items-end">
           {isAdmin && !isOwnMessage && (
@@ -264,14 +264,14 @@ export default function GroupChatScreen() {
                 : `${bgCardAlt} rounded-bl-sm`
             }`}
           >
-            <Text className={`${isOwnMessage ? "text-white" : textPrimary}`}>
+            <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary}`}>
               {item.message}
-            </Text>
-            <Text
+            </ThemedText>
+            <ThemedText
               className={`text-xs mt-1 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
             >
               {formatTime(item.created_at)}
-            </Text>
+            </ThemedText>
           </View>
 
           {isAdmin && isOwnMessage && (
@@ -316,19 +316,19 @@ export default function GroupChatScreen() {
           </TouchableOpacity>
           <View className="flex-1">
             <View className="flex-row items-center gap-2">
-              <Text className={`${textPrimary} font-bold text-lg`} numberOfLines={1}>
+              <ThemedText className={`${textPrimary} font-bold text-lg`} numberOfLines={1}>
                 {groupChat?.name}
-              </Text>
+              </ThemedText>
               {isAdmin && (
                 <View className="bg-purple-500/20 px-2 py-0.5 rounded">
-                  <Text className="text-purple-400 text-xs font-bold">MOD</Text>
+                  <ThemedText className="text-purple-400 text-xs font-bold">MOD</Text>
                 </View>
               )}
             </View>
             {groupChat?.description && (
-              <Text className={`${textSecondary} text-xs`} numberOfLines={1}>
+              <ThemedText className={`${textSecondary} text-xs`} numberOfLines={1}>
                 {groupChat.description}
-              </Text>
+              </ThemedText>
             )}
           </View>
         </View>
@@ -346,10 +346,10 @@ export default function GroupChatScreen() {
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <Ionicons name="chatbubbles-outline" size={60} color="#374151" />
-              <Text className={`${textSecondary} mt-4`}>No messages yet</Text>
-              <Text className={`${textMuted} text-sm`}>
+              <ThemedText className={`${textSecondary} mt-4`}>No messages yet</ThemedText>
+              <ThemedText className={`${textMuted} text-sm`}>
                 Be the first to say something!
-              </Text>
+              </ThemedText>
             </View>
           }
         />

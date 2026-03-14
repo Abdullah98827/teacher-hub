@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     ScrollView,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -12,6 +11,7 @@ import LogoHeader from "../../components/logoHeader";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { ThemedText } from '../../components/themed-text';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -107,18 +107,18 @@ export default function DashboardScreen() {
         <View
           className={`rounded-2xl p-6 mb-6 border ${isDark ? "bg-cyan-900/20 border-cyan-800/50" : "bg-cyan-50 border-cyan-200"}`}
         >
-          <Text className="text-3xl font-bold text-cyan-500 mb-2">
+          <ThemedText className="text-3xl font-bold text-cyan-500 mb-2">
             Hello {userProfile.firstName}!
-          </Text>
-          <Text className={`text-base ${textSecondary}`}>
+          </ThemedText>
+          <ThemedText className={`text-base ${textSecondary}`}>
             Welcome back to Teacher-Hub
-          </Text>
+          </ThemedText>
         </View>
 
         {/* Stats Cards */}
-        <Text className={`${textPrimary} font-bold text-lg mb-3`}>
+        <ThemedText className={`${textPrimary} font-bold text-lg mb-3`}>
           Your Stats
-        </Text>
+        </ThemedText>
         <View className="flex-row gap-3 mb-6">
           <View
             className={`flex-1 rounded-xl p-4 border ${isDark ? "bg-blue-900/30 border-blue-800" : "bg-blue-50 border-blue-200"}`}
@@ -128,16 +128,16 @@ export default function DashboardScreen() {
               size={24}
               color={isDark ? "#3b82f6" : "#2563eb"}
             />
-            <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
+            <ThemedText className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.uploadedResources}
-            </Text>
-            <Text
+            </ThemedText>
+            <ThemedText
               className={
                 isDark ? "text-blue-400 text-xs" : "text-blue-600 text-xs"
               }
             >
               Uploaded
-            </Text>
+            </ThemedText>
           </View>
           <View
             className={`flex-1 rounded-xl p-4 border ${isDark ? "bg-green-900/30 border-green-800" : "bg-green-50 border-green-200"}`}
@@ -147,16 +147,16 @@ export default function DashboardScreen() {
               size={24}
               color={isDark ? "#22c55e" : "#16a34a"}
             />
-            <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
+            <ThemedText className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.approvedResources}
-            </Text>
-            <Text
+            </ThemedText>
+            <ThemedText
               className={
                 isDark ? "text-green-400 text-xs" : "text-green-600 text-xs"
               }
             >
               Approved
-            </Text>
+            </ThemedText>
           </View>
           <View
             className={`flex-1 rounded-xl p-4 border ${isDark ? "bg-purple-900/30 border-purple-800" : "bg-purple-50 border-purple-200"}`}
@@ -166,23 +166,23 @@ export default function DashboardScreen() {
               size={24}
               color={isDark ? "#a855f7" : "#7c3aed"}
             />
-            <Text className={`text-3xl font-bold ${textPrimary} mt-2`}>
+            <ThemedText className={`text-3xl font-bold ${textPrimary} mt-2`}>
               {stats.totalDownloads}
-            </Text>
-            <Text
+            </ThemedText>
+            <ThemedText
               className={
                 isDark ? "text-purple-400 text-xs" : "text-purple-600 text-xs"
               }
             >
               Downloads
-            </Text>
+            </ThemedText>
           </View>
         </View>
 
         {/* Quick Actions */}
-        <Text className={`${textPrimary} font-bold text-lg mb-3`}>
+        <ThemedText className={`${textPrimary} font-bold text-lg mb-3`}>
           Quick Actions
-        </Text>
+        </ThemedText>
         <View className="gap-3 mb-6">
           <TouchableOpacity
             className="bg-cyan-600 rounded-xl p-4 flex-row items-center justify-between"
@@ -193,12 +193,12 @@ export default function DashboardScreen() {
                 <Ionicons name="cloud-upload" size={20} color="#fff" />
               </View>
               <View>
-                <Text className="text-white font-bold text-base">
+                <ThemedText className="text-white font-bold text-base">
                   Upload Resource
-                </Text>
-                <Text className="text-cyan-100 text-xs">
+                </ThemedText>
+                <ThemedText className="text-cyan-100 text-xs">
                   Share teaching materials
-                </Text>
+                </ThemedText>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#fff" />
@@ -213,12 +213,12 @@ export default function DashboardScreen() {
                 <Ionicons name="library" size={20} color="#22d3ee" />
               </View>
               <View>
-                <Text className={`${textPrimary} font-bold text-base`}>
+                <ThemedText className={`${textPrimary} font-bold text-base`}>
                   Browse Library
-                </Text>
-                <Text className={`${textSecondary} text-xs`}>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-xs`}>
                   Explore teaching resources
-                </Text>
+                </ThemedText>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
@@ -233,12 +233,12 @@ export default function DashboardScreen() {
                 <Ionicons name="chatbubble-ellipses" size={20} color="#22d3ee" />
               </View>
               <View>
-                <Text className={`${textPrimary} font-bold text-base`}>
+                <ThemedText className={`${textPrimary} font-bold text-base`}>
                   Messages
-                </Text>
-                <Text className={`${textSecondary} text-xs`}>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-xs`}>
                   Direct message other teachers
-                </Text>
+                </ThemedText>
               </View>
             </View>
             <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
@@ -254,10 +254,10 @@ export default function DashboardScreen() {
                   <Ionicons name="shield-checkmark" size={20} color="#ef4444" />
                 </View>
                 <View>
-                  <Text className={`${textPrimary} font-bold text-base`}>
+                  <ThemedText className={`${textPrimary} font-bold text-base`}>
                     Manage Resources
-                  </Text>
-                  <Text className="text-red-400 text-xs">Admin access</Text>
+                  </ThemedText>
+                  <ThemedText className="text-red-400 text-xs">Admin access</ThemedText>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={24} color="#9ca3af" />
@@ -269,15 +269,15 @@ export default function DashboardScreen() {
         <View
           className={`rounded-xl p-5 mb-6 border ${isDark ? "bg-cyan-900/20 border-cyan-800" : "bg-cyan-50 border-cyan-200"}`}
         >
-          <Text
+          <ThemedText
             className={`font-bold text-base mb-2 ${isDark ? "text-cyan-400" : "text-cyan-600"}`}
           >
             💡 Did You Know?
-          </Text>
-          <Text className={`${textSecondary} text-sm leading-5`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-sm leading-5`}>
             Upload 10 approved resources to earn a 20% discount on your next
             subscription renewal!
-          </Text>
+          </ThemedText>
         </View>
       </ScrollView>
     </ScreenWrapper>

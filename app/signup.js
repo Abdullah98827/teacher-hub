@@ -1,12 +1,13 @@
 import * as ImagePicker from "expo-image-picker";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedTextInput } from "../components/themed-textinput";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -158,7 +159,7 @@ export default function Signup() {
             Sign Up
           </Text>
 
-          <TextInput
+          <ThemedTextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="First Name"
             value={formData.firstName}
@@ -168,7 +169,7 @@ export default function Signup() {
             placeholderTextColor={placeholderColor}
           />
 
-          <TextInput
+          <ThemedTextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Last Name"
             value={formData.lastName}
@@ -178,7 +179,7 @@ export default function Signup() {
             placeholderTextColor={placeholderColor}
           />
 
-          <TextInput
+          <ThemedTextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Email"
             value={formData.email}
@@ -189,7 +190,7 @@ export default function Signup() {
             placeholderTextColor={placeholderColor}
           />
 
-          <TextInput
+          <ThemedTextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Password"
             value={formData.password}
@@ -200,7 +201,7 @@ export default function Signup() {
             placeholderTextColor={placeholderColor}
           />
 
-          <TextInput
+          <ThemedTextInput
             className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-3 rounded-xl`}
             placeholder="Teacher Reference Number (TRN)"
             value={formData.trn}

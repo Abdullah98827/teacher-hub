@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import {
     ActivityIndicator,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -12,6 +11,7 @@ import ScreenWrapper from "../components/ScreenWrapper";
 import LogoHeader from "../components/logoHeader";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedTextInput } from '../components/themed-textinput';
 
 export default function ContactAdmin() {
   const [email, setEmail] = useState("");
@@ -116,7 +116,7 @@ export default function ContactAdmin() {
 
           <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
             <Text className={`${textSecondary} text-xs mb-2`}>Your Email</Text>
-            <TextInput
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               value={email}
               editable={false}
@@ -126,7 +126,7 @@ export default function ContactAdmin() {
             <Text className={`${textSecondary} text-xs mb-2`}>
               Your Message
             </Text>
-            <TextInput
+            <ThemedTextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-lg`}
               placeholder="Type your message here..."
               value={message}

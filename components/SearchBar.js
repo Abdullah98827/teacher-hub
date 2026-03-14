@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { ThemedTextInput } from './themed-textinput';
 
 export default function SearchBar({
   value,
@@ -19,7 +20,7 @@ export default function SearchBar({
         className={`${bgInput} flex-row items-center px-4 py-3 rounded-xl border ${borderInput}`}
       >
         <Ionicons name="search" size={20} color="#9CA3AF" />
-        <TextInput
+        <ThemedTextInput
           className={`flex-1 ${textPrimary} ml-2`}
           placeholder={placeholder}
           placeholderTextColor={placeholderColor}
