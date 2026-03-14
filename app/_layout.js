@@ -6,6 +6,7 @@ import Toast from "react-native-toast-message";
 import { AuthProvider } from "../contexts/AuthContext";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import { supabase } from "../supabase";
+import { DyslexiaProvider } from '../contexts/DyslexiaContext';
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -55,43 +56,45 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        {/* wraps everything inside AuthProvider */}
-        <SafeAreaProvider>
-          <Stack
-            screenOptions={{ headerShown: false }}
-            initialRouteName="login"
-          >
-            <Stack.Screen name="login" />
-            <Stack.Screen name="signup" />
-            <Stack.Screen name="auth-callback" />
-            <Stack.Screen name="logout" />
-            <Stack.Screen name="index" />
-            <Stack.Screen name="pending" />
-            <Stack.Screen name="membership" />
-            <Stack.Screen name="checkout" />
-            <Stack.Screen name="contact" />
-            <Stack.Screen name="edit-profile" />
-            <Stack.Screen name="change-password" />
-            <Stack.Screen name="direct-messages" />
-            <Stack.Screen name="dm/[id]" />
-            <Stack.Screen name="group-chat/[id]" />
-            <Stack.Screen name="admin" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          </Stack>
+        <DyslexiaProvider>
+          {/* wraps everything inside AuthProvider */}
+          <SafeAreaProvider>
+            <Stack
+              screenOptions={{ headerShown: false }}
+              initialRouteName="login"
+            >
+              <Stack.Screen name="login" />
+              <Stack.Screen name="signup" />
+              <Stack.Screen name="auth-callback" />
+              <Stack.Screen name="logout" />
+              <Stack.Screen name="index" />
+              <Stack.Screen name="pending" />
+              <Stack.Screen name="membership" />
+              <Stack.Screen name="checkout" />
+              <Stack.Screen name="contact" />
+              <Stack.Screen name="edit-profile" />
+              <Stack.Screen name="change-password" />
+              <Stack.Screen name="direct-messages" />
+              <Stack.Screen name="dm/[id]" />
+              <Stack.Screen name="group-chat/[id]" />
+              <Stack.Screen name="admin" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            </Stack>
 
-          {/* Loading overlay shown while checking session */}
-          {isLoading && (
-            <View className="absolute inset-0 justify-center items-center bg-gray-100 dark:bg-black z-50">
-              <ActivityIndicator size="large" color="#007AFF" />
-              <Text className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-                Loading app...
-              </Text>
-            </View>
-          )}
+            {/* Loading overlay shown while checking session */}
+            {isLoading && (
+              <View className="absolute inset-0 justify-center items-center bg-gray-100 dark:bg-black z-50">
+                <ActivityIndicator size="large" color="#007AFF" />
+                <Text className="mt-4 text-lg text-gray-600 dark:text-gray-300">
+                  Loading app...
+                </Text>
+              </View>
+            )}
 
-          {/* Global toast renderer — must be last so it renders on top */}
-          <Toast />
-        </SafeAreaProvider>
+            {/* Global toast renderer — must be last so it renders on top */}
+            <Toast />
+          </SafeAreaProvider>
+        </DyslexiaProvider>
       </AuthProvider>
     </ThemeProvider>
   );

@@ -9,12 +9,12 @@ import {
     ScrollView,
     Share,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedTextInput } from './themed-textinput';
 
 const MAX_CHARS = 3000;
 
@@ -369,7 +369,7 @@ export default function TranslationModal({ visible, onClose, resourceId }) {
             >
               Text to translate
             </Text>
-            <TextInput
+            <ThemedTextInput
               style={{
                 backgroundColor: C.surface,
                 borderRadius: 10,

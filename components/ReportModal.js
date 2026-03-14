@@ -7,13 +7,13 @@ import {
     Platform,
     ScrollView,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { ThemedTextInput } from './themed-textinput';
 
 const REPORT_REASONS = [
   {
@@ -254,7 +254,7 @@ export default function ReportModal({
                 <Text className={`${textPrimary} font-semibold mb-2 text-sm`}>
                   Additional details (optional):
                 </Text>
-                <TextInput
+                <ThemedTextInput
                   className={`${bgInput} ${textPrimary} px-3 py-3 rounded-xl border ${borderInput} mb-2 text-sm`}
                   placeholder="Provide more information..."
                   placeholderTextColor={placeholderColor}

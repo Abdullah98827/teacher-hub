@@ -1,11 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useContext } from "react";
 import {
     ActivityIndicator,
     Modal,
     ScrollView,
-    Text,
     TouchableOpacity,
     View,
 } from "react-native";
@@ -19,6 +18,8 @@ import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { deleteProfilePicture } from "../../utils/profilePictureHelpers";
+import { DyslexiaContext } from '../../contexts/DyslexiaContext';
+import { ThemedText } from '../../components/themed-text';
 
 export default function SettingsScreen() {
   const [profile, setProfile] = useState({
@@ -58,6 +59,8 @@ export default function SettingsScreen() {
     textLabel,
     loadingBg,
   } = useAppTheme();
+
+  const { dyslexiaMode, setDyslexiaMode } = useContext(DyslexiaContext);
 
   const THEME_OPTIONS = [
     { label: "Light", value: "light", icon: "sunny" },
@@ -199,19 +202,19 @@ export default function SettingsScreen() {
 
       <ScrollView className="flex-1 px-5">
         <View className="py-6">
-          <Text className="text-3xl font-bold text-cyan-400 mb-2">
+          <ThemedText className="text-3xl font-bold text-cyan-400 mb-2">
             Settings
-          </Text>
-          <Text className={textSecondary}>
+          </ThemedText>
+          <ThemedText className={textSecondary}>
             Manage your account and preferences
-          </Text>
+          </ThemedText>
         </View>
 
         {/* Profile Picture Section */}
         <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
-          <Text className="text-xl font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-xl font-bold text-cyan-400 mb-4">
             Profile Picture
-          </Text>
+          </ThemedText>
 
           <View className="items-center">
             <TouchableOpacity
@@ -256,9 +259,9 @@ export default function SettingsScreen() {
               className="mt-3"
               disabled={deletingPicture}
             >
-              <Text className="text-cyan-400 text-sm text-center font-semibold">
+              <ThemedText className="text-cyan-400 text-sm text-center font-semibold">
                 {profile.profilePictureUrl ? "Change Picture" : "Upload Picture"}
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         </View>
@@ -269,7 +272,7 @@ export default function SettingsScreen() {
             className={`${bgCard} rounded-xl mb-4 border ${border} overflow-hidden`}
           >
             <View className={`p-3 border-b ${border}`}>
-              <Text className="text-xl font-bold text-cyan-400">Your Network</Text>
+              <ThemedText className="text-xl font-bold text-cyan-400">Your Network</ThemedText>
             </View>
 
             <View className="flex-row">
@@ -281,12 +284,12 @@ export default function SettingsScreen() {
                 <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mb-2">
                   <Ionicons name="people" size={24} color="#22d3ee" />
                 </View>
-                <Text className={`${textPrimary} text-xl font-bold`}>
+                <ThemedText className={`${textPrimary} text-xl font-bold`}>
                   {followersCount}
-                </Text>
-                <Text className={`${textSecondary} text-sm`}>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-sm`}>
                   {followersCount === 1 ? "Follower" : "Followers"}
-                </Text>
+                </ThemedText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -297,10 +300,10 @@ export default function SettingsScreen() {
                 <View className="bg-purple-500/20 w-12 h-12 rounded-full items-center justify-center mb-2">
                   <Ionicons name="person-add" size={24} color="#a855f7" />
                 </View>
-                <Text className={`${textPrimary} text-xl font-bold`}>
+                <ThemedText className={`${textPrimary} text-xl font-bold`}>
                   {followingCount}
-                </Text>
-                <Text className={`${textSecondary} text-sm`}>Following</Text>
+                </ThemedText>
+                <ThemedText className={`${textSecondary} text-sm`}>Following</ThemedText>
               </TouchableOpacity>
             </View>
           </View>
@@ -308,75 +311,75 @@ export default function SettingsScreen() {
 
         {/* Profile Information */}
         <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
-          <Text className="text-xl font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-xl font-bold text-cyan-400 mb-4">
             Profile Information
-          </Text>
+          </ThemedText>
 
           <View className="mb-3">
-            <Text className={`${textLabel} text-xs mb-1`}>Full Name</Text>
-            <Text className={`${textPrimary} text-base`}>
+            <ThemedText className={`${textLabel} text-xs mb-1`}>Full Name</ThemedText>
+            <ThemedText className={`${textPrimary} text-base`}>
               {profile.firstName} {profile.lastName}
-            </Text>
+            </ThemedText>
           </View>
 
           <View className="mb-3">
-            <Text className={`${textLabel} text-xs mb-1`}>Email Address</Text>
-            <Text className={`${textPrimary} text-base`}>{profile.email}</Text>
+            <ThemedText className={`${textLabel} text-xs mb-1`}>Email Address</ThemedText>
+            <ThemedText className={`${textPrimary} text-base`}>{profile.email}</ThemedText>
           </View>
 
           <View className="mb-3">
-            <Text className={`${textLabel} text-xs mb-1`}>
+            <ThemedText className={`${textLabel} text-xs mb-1`}>
               Teacher Reference Number (TRN)
-            </Text>
-            <Text className={`${textPrimary} text-base`}>{profile.trn}</Text>
+            </ThemedText>
+            <ThemedText className={`${textPrimary} text-base`}>{profile.trn}</ThemedText>
           </View>
 
           <View className="mb-3">
-            <Text className={`${textLabel} text-xs mb-1`}>Account Role</Text>
+            <ThemedText className={`${textLabel} text-xs mb-1`}>Account Role</ThemedText>
             <View className="flex-row items-center">
               <Ionicons
                 name={role === "admin" ? "shield-checkmark" : "school"}
                 size={16}
                 color={role === "admin" ? "#ef4444" : "#22d3ee"}
               />
-              <Text
+              <ThemedText
                 className={`text-base font-semibold ml-2 ${role === "admin" ? "text-red-400" : "text-cyan-400"}`}
               >
                 {role === "admin" ? "Admin" : "Teacher"}
-              </Text>
+              </ThemedText>
             </View>
           </View>
 
           {role === "teacher" && (
             <View>
-              <Text className={`${textLabel} text-xs mb-1`}>
+              <ThemedText className={`${textLabel} text-xs mb-1`}>
                 Membership Type (Cannot be changed)
-              </Text>
+              </ThemedText>
               <View
                 className={`${bgCardAlt} border ${border} p-4 rounded-lg flex-row items-center`}
               >
                 <Ionicons name="lock-closed" size={16} color="#6B7280" />
-                <Text className={`${textSecondary} ml-2 flex-1 capitalize`}>
+                <ThemedText className={`${textSecondary} ml-2 flex-1 capitalize`}>
                   {profile.membershipTier === "single"
                     ? "Single Subject"
                     : profile.membershipTier === "multi"
                       ? "Multi Subject"
                       : "No Active Membership"}
-                </Text>
+                </ThemedText>
               </View>
 
               {profile.subjectNames.length > 0 && (
                 <View className="mt-2">
-                  <Text className={`${textLabel} text-xs mb-2`}>
+                  <ThemedText className={`${textLabel} text-xs mb-2`}>
                     Your Subjects:
-                  </Text>
+                  </ThemedText>
                   <View className="flex-row flex-wrap gap-2">
                     {profile.subjectNames.map((name, index) => (
                       <View
                         key={index}
                         className="bg-cyan-600 px-3 py-1 rounded-full"
                       >
-                        <Text className="text-white text-xs">{name}</Text>
+                        <ThemedText className="text-white text-xs">{name}</ThemedText>
                       </View>
                     ))}
                   </View>
@@ -388,13 +391,13 @@ export default function SettingsScreen() {
 
         {/* Appearance */}
         <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
-          <Text className="text-xl font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-xl font-bold text-cyan-400 mb-4">
             Appearance
-          </Text>
-          <Text className={`${textSecondary} text-sm mb-4`}>
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-sm mb-4`}>
             Choose how Teacher Hub looks to you
-          </Text>
-          <View className="flex-row gap-3">
+          </ThemedText>
+          <View className="flex-row gap-3 mb-4">
             {THEME_OPTIONS.map((option) => {
               const isSelected = themePreference === option.value;
               return (
@@ -413,13 +416,13 @@ export default function SettingsScreen() {
                     size={24}
                     color={isSelected ? "#22d3ee" : isDark ? "#9ca3af" : "#6b7280"}
                   />
-                  <Text
+                  <ThemedText
                     className={`text-xs font-semibold mt-2 ${
                       isSelected ? "text-cyan-400" : textSecondary
                     }`}
                   >
                     {option.label}
-                  </Text>
+                  </ThemedText>
                   {isSelected && (
                     <View className="mt-1.5 w-1.5 h-1.5 rounded-full bg-cyan-400" />
                   )}
@@ -427,6 +430,26 @@ export default function SettingsScreen() {
               );
             })}
           </View>
+          {/* Dyslexia-friendly font toggle */}
+          <View className="flex-row items-center justify-between mt-2">
+            <ThemedText className={`${textPrimary} text-base font-semibold`}>
+              Dyslexia-friendly mode
+            </ThemedText>
+            <TouchableOpacity
+              onPress={() => setDyslexiaMode(!dyslexiaMode)}
+              className={`w-14 h-8 rounded-full flex-row items-center px-1 ${dyslexiaMode ? 'bg-cyan-500' : 'bg-gray-300'}`}
+              activeOpacity={0.7}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: dyslexiaMode }}
+            >
+              <View
+                className={`w-6 h-6 rounded-full bg-white shadow ${dyslexiaMode ? 'ml-6' : 'ml-0'}`}
+              />
+            </TouchableOpacity>
+          </View>
+          <ThemedText className={`${textSecondary} text-xs mt-2`}>
+            Increases letter spacing, line height, and uses a dyslexia-friendly font for easier reading.
+          </ThemedText>
         </View>
 
         {role === "admin" && (
@@ -436,12 +459,12 @@ export default function SettingsScreen() {
                 <Ionicons name="shield-checkmark" size={28} color="#fff" />
               </View>
               <View className="flex-1">
-                <Text className="text-xl font-bold text-white">
+                <ThemedText className="text-xl font-bold text-white">
                   Admin Access
-                </Text>
-                <Text className="text-red-200 text-sm">
+                </ThemedText>
+                <ThemedText className="text-red-200 text-sm">
                   Manage platform operations
-                </Text>
+                </ThemedText>
               </View>
             </View>
 
@@ -449,18 +472,18 @@ export default function SettingsScreen() {
               className="bg-red-600 p-4 rounded-lg active:scale-95"
               onPress={() => router.push("/admin")}
             >
-              <Text className="text-white text-center font-bold">
+              <ThemedText className="text-white text-center font-bold">
                 Open Admin Hub
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         )}
 
         {/* Account Actions */}
         <View className={`${bgCard} rounded-xl p-4 mb-3 border ${border}`}>
-          <Text className="text-xl font-bold text-cyan-400 mb-4">
+          <ThemedText className="text-xl font-bold text-cyan-400 mb-4">
             Account Actions
-          </Text>
+          </ThemedText>
 
           <TouchableOpacity
             className={`${bgCardAlt} p-4 rounded-lg mb-3 active:scale-95 border ${border}`}
@@ -469,9 +492,9 @@ export default function SettingsScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <Ionicons name="pencil" size={20} color="#22d3ee" />
-                <Text className={`${textPrimary} font-semibold ml-3`}>
+                <ThemedText className={`${textPrimary} font-semibold ml-3`}>
                   Edit Profile
-                </Text>
+                </ThemedText>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#6B7280" />
             </View>
@@ -484,9 +507,9 @@ export default function SettingsScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <Ionicons name="key" size={20} color="#22d3ee" />
-                <Text className={`${textPrimary} font-semibold ml-3`}>
+                <ThemedText className={`${textPrimary} font-semibold ml-3`}>
                   Change Password
-                </Text>
+                </ThemedText>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#6B7280" />
             </View>
@@ -499,9 +522,9 @@ export default function SettingsScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
                 <Ionicons name="people" size={22} color="#22d3ee" />
-                <Text className={`${textPrimary} ml-3 text-base`}>
+                <ThemedText className={`${textPrimary} ml-3 text-base`}>
                   Discover Teachers
-                </Text>
+                </ThemedText>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#6B7280" />
             </View>
@@ -517,7 +540,7 @@ export default function SettingsScreen() {
             ) : (
               <View className="flex-row items-center justify-center">
                 <Ionicons name="log-out" size={20} color="#fff" />
-                <Text className="text-white font-bold ml-2">Logout</Text>
+                <ThemedText className="text-white font-bold ml-2">Logout</ThemedText>
               </View>
             )}
           </TouchableOpacity>
@@ -525,19 +548,19 @@ export default function SettingsScreen() {
 
         {role === "teacher" && (
           <View className={`${bgCard} rounded-xl p-5 mb-6 border ${border}`}>
-            <Text className="text-xl font-bold text-cyan-400 mb-4">
+            <ThemedText className="text-xl font-bold text-cyan-400 mb-4">
               Support
-            </Text>
-            <Text className={`${textSecondary} mb-3`}>
+            </ThemedText>
+            <ThemedText className={`${textSecondary} mb-3`}>
               Need help or want to reach out to the admin team?
-            </Text>
+            </ThemedText>
 
             <TouchableOpacity
               className="bg-cyan-600 p-4 rounded-lg active:scale-95 flex-row items-center justify-center"
               onPress={() => router.push("/contact")}
             >
               <Ionicons name="mail" size={20} color="#fff" />
-              <Text className="text-white font-bold ml-2">Contact Admin</Text>
+              <ThemedText className="text-white font-bold ml-2">Contact Admin</ThemedText>
             </TouchableOpacity>
           </View>
         )}
@@ -552,9 +575,9 @@ export default function SettingsScreen() {
       >
         <View className="flex-1 bg-black/70 justify-center items-center">
           <View className={`${bgCard} rounded-xl p-6 mx-5 w-80 border ${border}`}>
-            <Text className={`text-xl font-bold ${textPrimary} mb-4 text-center`}>
+            <ThemedText className={`text-xl font-bold ${textPrimary} mb-4 text-center`}>
               Profile Picture
-            </Text>
+            </ThemedText>
 
             <TouchableOpacity
               className="bg-cyan-600 p-4 rounded-lg mb-3 flex-row items-center justify-center"
@@ -564,7 +587,7 @@ export default function SettingsScreen() {
               }}
             >
               <Ionicons name="camera" size={20} color="#fff" />
-              <Text className="text-white font-bold ml-2">Change Picture</Text>
+              <ThemedText className="text-white font-bold ml-2">Change Picture</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -572,16 +595,16 @@ export default function SettingsScreen() {
               onPress={handleDeletePicture}
             >
               <Ionicons name="trash" size={20} color="#fff" />
-              <Text className="text-white font-bold ml-2">Delete Picture</Text>
+              <ThemedText className="text-white font-bold ml-2">Delete Picture</ThemedText>
             </TouchableOpacity>
 
             <TouchableOpacity
               className={`${bgCardAlt} p-4 rounded-lg border ${border}`}
               onPress={() => setShowPictureModal(false)}
             >
-              <Text className={`${textPrimary} text-center font-semibold`}>
+              <ThemedText className={`${textPrimary} text-center font-semibold`}>
                 Cancel
-              </Text>
+              </ThemedText>
             </TouchableOpacity>
           </View>
         </View>

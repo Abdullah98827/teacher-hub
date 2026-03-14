@@ -23,11 +23,11 @@ export default function PendingApproval() {
         </Text>
         <Text className={`${textSecondary} text-center text-base leading-relaxed`}>
           Your account has been submitted successfully and is awaiting
-          verification by an admin. Once approved, you'll be able to choose your
+          verification by an admin. Once approved, you`ll be able to choose your
           membership and access Teacher Hub resources.
         </Text>
         <Text className={`${textSecondary} text-sm mt-6 text-center mb-8`}>
-          Approval usually takes 24–48 hours. You'll receive an email once your
+          Approval usually takes 24–48 hours. You`ll receive an email once your
           account is verified.
         </Text>
 
