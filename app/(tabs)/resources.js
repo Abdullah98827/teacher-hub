@@ -18,6 +18,7 @@ import { WebView } from "react-native-webview";
 import CommentsModal from "../../components/CommentsModal";
 import EALAdapterModal from "../../components/EALAdapterModal";
 import LogoHeader from "../../components/logoHeader";
+import OnboardingModal from '../../components/OnboardingModal';
 import RatingModal from "../../components/RatingModal";
 import ReportModal from "../../components/ReportModal";
 import ResourceCard from "../../components/ResourceCard";
@@ -29,6 +30,7 @@ import UserProfileModal from "../../components/UserProfileModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { hasSeenOnboarding, setOnboardingSeen } from '../../utils/onboardingHelpers';
 import {
     checkBookmark,
     getResourceStats,
@@ -86,6 +88,10 @@ export default function ResourcesScreen() {
 
   const [resourceStats, setResourceStats] = useState(new Map());
   const [bookmarks, setBookmarks] = useState(new Set());
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const [showTranslateOnboarding, setShowTranslateOnboarding] = useState(false);
+  const [showEALOnboarding, setShowEALOnboarding] = useState(false);
 
   const fetchResources = useCallback(async () => {
     if (!user?.id) return;
@@ -255,6 +261,51 @@ export default function ResourcesScreen() {
       fetchFollowingResources();
     }
   }, [fetchResources, activeTab]);
+
+  useEffect(() => {
+    if (user && user.id) {
+      hasSeenOnboarding(user.id, 'library').then((seen) => {
+        if (!seen) {
+          setShowOnboarding(true);
+        }
+      });
+    }
+  }, [user]);
+
+  const handleCloseOnboarding = () => {
+    if (user && user.id) {
+      setOnboardingSeen(user.id, 'library');
+    }
+    setShowOnboarding(false);
+  };
+
+  const handleTranslateClick = async () => {
+    if (!user || !selectedResource) return;
+    const seen = await hasSeenOnboarding(user.id, 'translate');
+    if (!seen) {
+      setShowPreview(false);
+      setTimeout(() => {
+        setShowTranslateOnboarding(true);
+      }, 400);
+    } else {
+      setShowPreview(false);
+      setTimeout(() => setShowTranslationModal(true), 400);
+    }
+  };
+
+  const handleEALClick = async () => {
+    if (!user || !selectedResource) return;
+    const seen = await hasSeenOnboarding(user.id, 'eal-adapter');
+    if (!seen) {
+      setShowPreview(false);
+      setTimeout(() => {
+        setShowEALOnboarding(true);
+      }, 400);
+    } else {
+      setShowPreview(false);
+      setTimeout(() => setShowEALModal(true), 400);
+    }
+  };
 
   const openPreview = async (resource) => {
     if (user?.id) {
@@ -434,6 +485,18 @@ export default function ResourcesScreen() {
 
   return (
     <ScreenWrapper>
+      <OnboardingModal
+        visible={showOnboarding}
+        onClose={handleCloseOnboarding}
+        title="Welcome to the Library!"
+        description="Here's what you can do on this screen:"
+        steps={[
+          'Browse and search teaching resources',
+          'Bookmark resources for later',
+          'Download and share materials',
+          'Rate and comment on resources',
+        ]}
+      />
       <LogoHeader position="left" />
       <View className="flex-1 px-5">
         <View className="mb-4">
@@ -786,18 +849,12 @@ export default function ResourcesScreen() {
                 <Ionicons name="download-outline" size={26} color="#22d3ee" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => {
-                  setShowPreview(false);
-                  setTimeout(() => setShowTranslationModal(true), 400);
-                }}
+                onPress={handleTranslateClick}
               >
                 <Ionicons name="language-outline" size={26} color="#22d3ee" />
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => {
-                  setShowPreview(false);
-                  setTimeout(() => setShowEALModal(true), 400);
-                }}
+                onPress={handleEALClick}
               >
                 <Ionicons name="sparkles-outline" size={26} color="#22d3ee" />
               </TouchableOpacity>
@@ -822,10 +879,45 @@ export default function ResourcesScreen() {
         </View>
       </Modal>
 
+      <OnboardingModal
+        visible={showTranslateOnboarding}
+        onClose={async () => {
+          if (user && selectedResource) {
+            await setOnboardingSeen(user.id, 'translate');
+          }
+          setShowTranslateOnboarding(false);
+          setTimeout(() => setShowTranslationModal(true), 400);
+        }}
+        title="Translate Feature"
+        description="Here's what you can do:"
+        steps={[
+          'Translate resources into multiple languages',
+          'Choose your target language',
+          'Copy or share translated content',
+        ]}
+      />
       <TranslationModal
         visible={showTranslationModal}
         onClose={() => setShowTranslationModal(false)}
         resourceId={selectedResource?.id ?? ""}
+      />
+
+      <OnboardingModal
+        visible={showEALOnboarding}
+        onClose={async () => {
+          if (user && selectedResource) {
+            await setOnboardingSeen(user.id, 'eal-adapter');
+          }
+          setShowEALOnboarding(false);
+          setTimeout(() => setShowEALModal(true), 400);
+        }}
+        title="EAL Adapter Feature"
+        description="Here's what you can do:"
+        steps={[
+          'Adapt resources for English as an Additional Language (EAL) learners',
+          'Select a language and simplify content',
+          'Download or share adapted resources',
+        ]}
       />
       <EALAdapterModal
         visible={showEALModal}

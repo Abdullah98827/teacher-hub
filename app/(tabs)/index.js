@@ -8,10 +8,13 @@ import {
     View,
 } from "react-native";
 import LogoHeader from "../../components/logoHeader";
+import OnboardingModal from '../../components/OnboardingModal';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { ThemedText } from '../../components/themed-text';
+import { useAuth } from '../../contexts/AuthContext';
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { hasSeenOnboarding, setOnboardingSeen } from '../../utils/onboardingHelpers';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -28,6 +31,8 @@ export default function DashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const { bgCard, border, textPrimary, textSecondary, isDark } = useAppTheme();
+  const { user } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const fetchDashboardData = useCallback(async () => {
     const {
@@ -89,6 +94,23 @@ export default function DashboardScreen() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  useEffect(() => {
+    if (user && user.id) {
+      hasSeenOnboarding(user.id, 'dashboard').then((seen) => {
+        if (!seen) {
+          setShowOnboarding(true);
+        }
+      });
+    }
+  }, [user]);
+
+  const handleCloseOnboarding = () => {
+    if (user && user.id) {
+      setOnboardingSeen(user.id, 'dashboard');
+    }
+    setShowOnboarding(false);
+  };
+
   if (loading) {
     return (
       <ScreenWrapper>
@@ -101,6 +123,18 @@ export default function DashboardScreen() {
 
   return (
     <ScreenWrapper>
+      <OnboardingModal
+        visible={showOnboarding}
+        onClose={handleCloseOnboarding}
+        title="Welcome to your Dashboard!"
+        description="Here's what you can do on this screen:"
+        steps={[
+          'View your teaching stats',
+          'Upload and manage resources',
+          'Access quick actions',
+          'See your progress and tips',
+        ]}
+      />
       <LogoHeader position="left" />
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         {/* Welcome Card */}

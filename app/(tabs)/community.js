@@ -2,15 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
+import OnboardingModal from '../../components/OnboardingModal';
 import ScreenWrapper from "../../components/ScreenWrapper";
 import { ThemedText } from '../../components/themed-text';
 import TrendingResources from "../../components/TrendingResources";
@@ -19,6 +20,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { hasSeenOnboarding, setOnboardingSeen } from '../../utils/onboardingHelpers';
 
 export default function CommunityScreen() {
   const { user } = useAuth();
@@ -28,6 +30,7 @@ export default function CommunityScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("chats");
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const isAdmin = role === "admin";
   const {
@@ -123,6 +126,23 @@ export default function CommunityScreen() {
       fetchGroupChats();
     }
   }, [fetchGroupChats, roleLoading]);
+
+  useEffect(() => {
+    if (user && user.id) {
+      hasSeenOnboarding(user.id, 'community').then((seen) => {
+        if (!seen) {
+          setShowOnboarding(true);
+        }
+      });
+    }
+  }, [user]);
+
+  const handleCloseOnboarding = () => {
+    if (user && user.id) {
+      setOnboardingSeen(user.id, 'community');
+    }
+    setShowOnboarding(false);
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -230,6 +250,19 @@ export default function CommunityScreen() {
 
   return (
     <ScreenWrapper>
+      {/* <OnboardingDevReset /> */}
+      <OnboardingModal
+        visible={showOnboarding}
+        onClose={handleCloseOnboarding}
+        title="Welcome to the Community!"
+        description="Here's what you can do on this screen:"
+        steps={[
+          'Join and create group chats',
+          'See trending resources',
+          'View the weekly leaderboard',
+          'Connect with other teachers',
+        ]}
+      />
       <LogoHeader position="left" />
       <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
         <View className="flex-row items-center justify-between mt-4 mb-4">
