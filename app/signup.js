@@ -144,6 +144,14 @@ export default function Signup() {
       role: "teacher",
     });
 
+    // Check if email is confirmed, redirect to verify-email if not
+    if (!data.user.email_confirmed_at && !data.user.confirmed_at) {
+      showToast("info", "Verify Email", "Please verify your email before continuing.");
+      setTimeout(() => router.replace("/verify-email"), 1000);
+      setLoading(false);
+      return;
+    }
+
     showToast("success", "Success!", "Admin will verify within 24-48 hours");
     setTimeout(() => router.push("/login"), 1500);
     setLoading(false);

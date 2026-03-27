@@ -4,6 +4,7 @@ import { useAppTheme } from "../hooks/useAppTheme";
 
 export default function MembershipCard({ membership }) {
   const { bgCard, bgCardAlt, border, textPrimary, textMuted } = useAppTheme();
+  const isDark = bgCard === "bg-gray-900" || bgCard === "dark:bg-gray-900";
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -20,13 +21,13 @@ export default function MembershipCard({ membership }) {
   const isMulti = membership.tier === "multi";
 
   return (
-    <View className={`${bgCard} rounded-xl mb-3 border ${border} p-4`}>
+    <View className={`${bgCard} rounded-xl mb-3 border ${border} p-4 ${isDark ? "bg-gray-900 border-gray-700" : "bg-white border-gray-200"}`}>
       {/* Email and tier badge */}
       <View className="flex-row items-start justify-between mb-3">
         <View className="flex-1 mr-2">
           <View className="flex-row items-center gap-2 mb-1">
             <View className="bg-cyan-500/20 w-8 h-8 rounded-full items-center justify-center">
-              <Ionicons name="person" size={16} color="#22d3ee" />
+              <Ionicons name="person" size={16} color={isDark ? "#67e8f9" : "#22d3ee"} />
             </View>
             <Text
               className={`${textPrimary} font-semibold flex-1`}
@@ -38,12 +39,12 @@ export default function MembershipCard({ membership }) {
         </View>
         <View
           className={`px-3 py-1.5 rounded-full ${
-            isMulti ? "bg-purple-500/20" : "bg-cyan-500/20"
+            isMulti ? (isDark ? "bg-purple-800/40" : "bg-purple-500/20") : (isDark ? "bg-cyan-800/40" : "bg-cyan-500/20")
           }`}
         >
           <Text
             className={`text-xs font-bold ${
-              isMulti ? "text-purple-400" : "text-cyan-400"
+              isMulti ? (isDark ? "text-purple-200" : "text-purple-400") : (isDark ? "text-cyan-200" : "text-cyan-400")
             }`}
           >
             {isMulti ? "MULTI" : "SINGLE"}
@@ -55,33 +56,34 @@ export default function MembershipCard({ membership }) {
       <View className="flex-row items-center gap-2 mb-3">
         <View
           className={`flex-row items-center px-2 py-1 rounded-full ${
-            membership.approved ? "bg-green-500/20" : "bg-red-500/20"
+            membership.approved ? (isDark ? "bg-green-800/40" : "bg-green-500/20") : (isDark ? "bg-red-800/40" : "bg-red-500/20")
           }`}
         >
           <Ionicons
             name={membership.approved ? "checkmark-circle" : "close-circle"}
             size={12}
-            color={membership.approved ? "#22c55e" : "#ef4444"}
+            color={membership.approved ? (isDark ? "#4ade80" : "#22c55e") : (isDark ? "#f87171" : "#ef4444")}
           />
           <Text
             className={`text-xs font-bold ml-1 ${
-              membership.approved ? "text-green-400" : "text-red-400"
+              membership.approved ? (isDark ? "text-green-300" : "text-green-400") : (isDark ? "text-red-300" : "text-red-400")
             }`}
           >
             {membership.approved ? "APPROVED" : "NOT APPROVED"}
           </Text>
         </View>
-
-        <View className="flex-row items-center px-2 py-1 rounded-full bg-green-500/20">
-          <Ionicons name="checkmark-circle" size={12} color="#22c55e" />
-          <Text className="text-xs font-bold ml-1 text-green-400">ACTIVE</Text>
-        </View>
+        {membership.active && (
+          <View className={`flex-row items-center px-2 py-1 rounded-full ${isDark ? "bg-green-800/40" : "bg-green-500/20"}`}>
+            <Ionicons name="checkmark-circle" size={12} color={isDark ? "#4ade80" : "#22c55e"} />
+            <Text className={`text-xs font-bold ml-1 ${isDark ? "text-green-300" : "text-green-400"}`}>ACTIVE</Text>
+          </View>
+        )}
       </View>
 
       {/* Subjects */}
-      <View className={`${bgCardAlt} rounded-lg p-3 mb-3`}>
+      <View className={`${bgCardAlt} rounded-lg p-3 mb-3 ${isDark ? "bg-gray-800" : "bg-gray-50"}`}>
         <View className="flex-row items-center mb-2">
-          <Ionicons name="book" size={14} color="#6B7280" />
+          <Ionicons name="book" size={14} color={isDark ? "#a1a1aa" : "#6B7280"} />
           <Text className={`${textMuted} text-xs ml-1.5`}>Subjects</Text>
         </View>
         <Text className={`${textPrimary} leading-5`}>
@@ -92,7 +94,7 @@ export default function MembershipCard({ membership }) {
       </View>
 
       {/* Date */}
-      <View className={`border-t ${border} pt-2`}>
+      <View className={`border-t ${border} pt-2 ${isDark ? "border-gray-700" : "border-gray-200"}`}>
         <Text className={`${textMuted} text-xs`}>
           Created {formatDate(membership.created_at)}
         </Text>

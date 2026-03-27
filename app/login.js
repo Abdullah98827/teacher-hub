@@ -1,6 +1,6 @@
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
@@ -11,6 +11,9 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
   const router = useRouter();
   const { bgCard, bgInput, borderInput, textPrimary, placeholderColor } =
     useAppTheme();
@@ -114,6 +117,37 @@ export default function Login() {
     }, 1500);
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    if (error) {
+      showToast('error', 'Google Sign-In Failed', error.message || 'Could not sign in with Google');
+      setLoading(false);
+    }
+    // On success, Supabase will handle the redirect/session
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      showToast("error", "Missing Email", "Please enter your email");
+      return;
+    }
+    if (!isValidEmail(forgotEmail)) {
+      showToast("error", "Invalid Email", "Please enter a valid email");
+      return;
+    }
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
+    setForgotLoading(false);
+    if (error) {
+      showToast("error", "Error", error.message || "Failed to send reset email");
+    } else {
+      showToast("success", "Email Sent", "Check your inbox for reset instructions");
+      setShowForgotModal(false);
+      setForgotEmail("");
+    }
+  };
+
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
@@ -146,6 +180,13 @@ export default function Login() {
           />
 
           <TouchableOpacity
+            onPress={() => setShowForgotModal(true)}
+            disabled={loading}
+          >
+            <Text className="text-cyan-400 text-sm underline mb-2 text-right">Forgot Password?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
             className={`bg-cyan-600 p-4 rounded-xl mb-4 active:scale-95 ${loading ? "opacity-50" : ""}`}
             onPress={handleLogin}
             disabled={loading}
@@ -153,6 +194,14 @@ export default function Login() {
             <Text className="text-white text-center font-semibold tracking-wide">
               {loading ? "Logging in..." : "Login"}
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className="bg-white border border-cyan-400 p-4 rounded-xl mb-4 flex-row items-center justify-center"
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+          >
+            <Text className="text-cyan-600 text-center font-semibold">Sign in with Google</Text>
           </TouchableOpacity>
 
           <Link href="/signup" asChild>
@@ -164,6 +213,46 @@ export default function Login() {
           </Link>
         </View>
       </View>
+
+      {/* Forgot Password Modal */}
+      <Modal
+        visible={showForgotModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowForgotModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/40">
+          <View className={`w-full max-w-md ${bgCard} p-6 rounded-xl shadow-lg`}>
+            <Text className="text-xl font-bold text-center mb-4 text-cyan-400">Reset Password</Text>
+            <TextInput
+              className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-xl`}
+              placeholder="Enter your email"
+              value={forgotEmail}
+              onChangeText={setForgotEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              editable={!forgotLoading}
+              placeholderTextColor={placeholderColor}
+            />
+            <TouchableOpacity
+              className={`bg-cyan-600 p-4 rounded-xl mb-3 ${forgotLoading ? "opacity-50" : ""}`}
+              onPress={handleForgotPassword}
+              disabled={forgotLoading}
+            >
+              <Text className="text-white text-center font-semibold">
+                {forgotLoading ? "Sending..." : "Send Reset Email"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`${bgInput} p-4 rounded-xl border ${borderInput}`}
+              onPress={() => setShowForgotModal(false)}
+              disabled={forgotLoading}
+            >
+              <Text className="text-center text-cyan-400 font-semibold">Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <Toast />
     </ScreenWrapper>

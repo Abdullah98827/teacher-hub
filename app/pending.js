@@ -7,7 +7,8 @@ import { supabase } from "../supabase";
 
 export default function PendingApproval() {
   const router = useRouter();
-  const { textSecondary } = useAppTheme();
+  const { bgCard, textSecondary, textPrimary } = useAppTheme();
+  const isDark = bgCard === "bg-gray-900" || bgCard === "dark:bg-gray-900";
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -17,35 +18,33 @@ export default function PendingApproval() {
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />
-      <View className="flex-1 items-center justify-center px-6">
-        <Text className="text-3xl font-bold text-cyan-400 mb-4 text-center">
+      <View className={`flex-1 items-center justify-center px-6 ${isDark ? "bg-gray-900" : "bg-white"}`}>
+        <Text className={`text-3xl font-extrabold mb-6 tracking-wide text-center ${isDark ? "text-cyan-400" : "text-cyan-500"}`}>
           Account Pending Approval
         </Text>
         <Text className={`${textSecondary} text-center text-base leading-relaxed`}>
           Your account has been submitted successfully and is awaiting
-          verification by an admin. Once approved, you`ll be able to choose your
+          verification by an admin. Once approved, you&apos;ll be able to choose your
           membership and access Teacher Hub resources.
         </Text>
         <Text className={`${textSecondary} text-sm mt-6 text-center mb-8`}>
-          Approval usually takes 24–48 hours. You`ll receive an email once your
+          Approval usually takes 24–48 hours. You&apos;ll receive an email once your
           account is verified.
         </Text>
-
-        <View className="flex-row justify-between w-full max-w-md">
+        <View className="flex-row justify-between w-full max-w-md gap-4">
           <TouchableOpacity
-            className="flex-1 bg-cyan-600 p-3 rounded-xl mr-2 active:scale-95"
+            className={`flex-1 p-4 rounded-2xl active:scale-95 ${isDark ? "bg-cyan-950" : "bg-cyan-600"}`}
             onPress={() => router.push("/contact")}
+            activeOpacity={0.85}
           >
-            <Text className="text-center text-white font-medium">
-              Contact Admin
-            </Text>
+            <Text className={`text-center font-semibold text-base ${isDark ? "text-cyan-200" : "text-white"}`}>Contact Admin</Text>
           </TouchableOpacity>
-
           <TouchableOpacity
-            className="flex-1 bg-red-600 p-3 rounded-xl ml-2 active:scale-95"
+            className={`flex-1 p-4 rounded-2xl active:scale-95 ${isDark ? "bg-red-800" : "bg-red-600"}`}
             onPress={handleLogout}
+            activeOpacity={0.85}
           >
-            <Text className="text-center text-white font-medium">Logout</Text>
+            <Text className="text-center text-white font-semibold text-base">Logout</Text>
           </TouchableOpacity>
         </View>
       </View>
