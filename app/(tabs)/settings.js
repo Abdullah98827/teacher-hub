@@ -532,6 +532,21 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+  className={`${bgCardAlt} p-4 rounded-lg mb-3 active:scale-95 border ${border}`}
+  onPress={() => router.push("/mfa-setup")}
+>
+  <View className="flex-row items-center justify-between">
+    <View className="flex-row items-center">
+      <Ionicons name="shield-half" size={20} color="#22d3ee" />
+      <ThemedText className={`${textPrimary} font-semibold ml-3`}>
+        Set Up Multi-Factor Authentication
+      </ThemedText>
+    </View>
+    <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+  </View>
+</TouchableOpacity>
+
+          <TouchableOpacity
             className="bg-red-600 p-4 rounded-lg active:scale-95"
             onPress={handleLogout}
             disabled={loggingOut}

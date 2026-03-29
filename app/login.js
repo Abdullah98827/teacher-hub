@@ -18,7 +18,6 @@ export default function Login() {
   const { bgCard, bgInput, borderInput, textPrimary, placeholderColor } =
     useAppTheme();
 
-  // Basic email validation using regex pattern
   const isValidEmail = (emailStr) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
 
@@ -27,7 +26,6 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    // Basic validation
     if (!email || !password) {
       showToast("error", "Missing Info", "Please enter email and password");
       return;
@@ -39,7 +37,6 @@ export default function Login() {
 
     setLoading(true);
 
-    // Step 1: Signs in with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -55,9 +52,35 @@ export default function Login() {
       return;
     }
 
+    // ✅ Check if MFA is required
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (aalData.nextLevel === "aal2" && aalData.nextLevel !== aalData.currentLevel) {
+      const { data: factorsData } = await supabase.auth.mfa.listFactors();
+      const totpFactor = factorsData?.totp?.[0];
+
+      if (totpFactor) {
+        const { data: challengeData, error: challengeError } =
+          await supabase.auth.mfa.challenge({ factorId: totpFactor.id });
+
+        if (challengeError) {
+          setLoading(false);
+          showToast("error", "MFA Error", challengeError.message);
+          return;
+        }
+
+        setLoading(false);
+        router.replace({
+          pathname: "/mfa-challenge",
+          params: { factorId: totpFactor.id, challengeId: challengeData.id },
+        });
+        return;
+      }
+    }
+
+    // No MFA required — continue normal login flow
     const userId = data.user.id;
 
-    // Step 2: Checks if the user is an admin (admins skip verification checks)
     const { data: admin } = await supabase
       .from("admins")
       .select("id")
@@ -71,7 +94,6 @@ export default function Login() {
       return;
     }
 
-    // Step 3: Checks if the teacher profile exists and is verified
     const { data: teacher, error: teacherError } = await supabase
       .from("teachers")
       .select("verified")
@@ -89,7 +111,6 @@ export default function Login() {
       return;
     }
 
-    // If not verified yet, sends the user to pending page
     if (!teacher.verified) {
       setLoading(false);
       showToast("info", "Pending Approval", "Redirecting to pending page...");
@@ -97,7 +118,6 @@ export default function Login() {
       return;
     }
 
-    // Step 4: Checks if they have an active membership
     const { data: membership } = await supabase
       .from("memberships")
       .select("active")
@@ -107,7 +127,6 @@ export default function Login() {
     setLoading(false);
     showToast("success", "Login Successful", "Welcome back!");
 
-    // Sends the user to membership page if inactive, otherwise to the main app
     setTimeout(() => {
       if (!membership || !membership.active) {
         router.replace("/membership");
@@ -119,12 +138,11 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
     if (error) {
-      showToast('error', 'Google Sign-In Failed', error.message || 'Could not sign in with Google');
+      showToast("error", "Google Sign-In Failed", error.message || "Could not sign in with Google");
       setLoading(false);
     }
-    // On success, Supabase will handle the redirect/session
   };
 
   const handleForgotPassword = async () => {
@@ -183,7 +201,9 @@ export default function Login() {
             onPress={() => setShowForgotModal(true)}
             disabled={loading}
           >
-            <Text className="text-cyan-400 text-sm underline mb-2 text-right">Forgot Password?</Text>
+            <Text className="text-cyan-400 text-sm underline mb-2 text-right">
+              Forgot Password?
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -201,7 +221,9 @@ export default function Login() {
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <Text className="text-cyan-600 text-center font-semibold">Sign in with Google</Text>
+            <Text className="text-cyan-600 text-center font-semibold">
+              Sign in with Google
+            </Text>
           </TouchableOpacity>
 
           <Link href="/signup" asChild>
@@ -223,7 +245,9 @@ export default function Login() {
       >
         <View className="flex-1 justify-center items-center bg-black/40">
           <View className={`w-full max-w-md ${bgCard} p-6 rounded-xl shadow-lg`}>
-            <Text className="text-xl font-bold text-center mb-4 text-cyan-400">Reset Password</Text>
+            <Text className="text-xl font-bold text-center mb-4 text-cyan-400">
+              Reset Password
+            </Text>
             <TextInput
               className={`${bgInput} border ${borderInput} ${textPrimary} p-4 mb-4 rounded-xl`}
               placeholder="Enter your email"
@@ -248,7 +272,9 @@ export default function Login() {
               onPress={() => setShowForgotModal(false)}
               disabled={forgotLoading}
             >
-              <Text className="text-center text-cyan-400 font-semibold">Cancel</Text>
+              <Text className="text-center text-cyan-400 font-semibold">
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
