@@ -1,9 +1,9 @@
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
+import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { verifyTotpOnLogin } from "../utils/mfa";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { verifyTotpOnLogin } from "../utils/mfa";
 
 export default function MfaChallengeScreen() {
   const { factorId, challengeId } = useLocalSearchParams();
