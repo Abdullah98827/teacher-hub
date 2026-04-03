@@ -17,6 +17,7 @@ import { ThemedText } from '../components/themed-text';
 import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 import {
     deleteProfilePicture,
     pickProfileImage,
@@ -116,6 +117,11 @@ export default function EditProfileScreen() {
 
     if (publicUrl) {
       setProfilePictureUrl(publicUrl);
+      logEvent({
+        event_type: "PROFILE_PICTURE_CHANGED",
+        user_id: userId,
+        details: { new_picture_url: publicUrl },
+      });
     }
   };
 
@@ -132,6 +138,10 @@ export default function EditProfileScreen() {
     setShowDeletePictureModal(false);
     if (success) {
       setProfilePictureUrl(null);
+      logEvent({
+        event_type: "PROFILE_PICTURE_DELETED",
+        user_id: userId,
+      });
     }
   };
 
@@ -190,9 +200,22 @@ export default function EditProfileScreen() {
         text1: "Update Failed",
         text2: updateError.message,
       });
+      logEvent({
+        event_type: "PROFILE_UPDATE_FAILED",
+        user_id: user.id,
+        details: { error: updateError.message },
+      });
       setSaving(false);
       return;
     }
+
+    logEvent({
+      event_type: "PROFILE_UPDATED",
+      user_id: user.id,
+      details: {
+        fields_updated: ["first_name", "last_name", "bio", "school_name", "years_experience", "allow_dms"],
+      },
+    });
 
     Toast.show({
       type: "success",

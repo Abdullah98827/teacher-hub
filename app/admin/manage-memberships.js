@@ -18,6 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function ManageMembershipsScreen() {
   const { user } = useAuth();

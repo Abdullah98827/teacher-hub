@@ -12,6 +12,7 @@ import { ThemedText } from '../components/themed-text';
 import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 
 export default function ChangePasswordScreen() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -73,11 +74,26 @@ export default function ChangePasswordScreen() {
         text1: "Update Failed",
         text2: "Could not update password. Please try again.",
       });
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      logEvent({
+        event_type: "PASSWORD_CHANGE_FAILED",
+        user_id: user?.id,
+        details: { error: error.message },
+      });
     } else {
       Toast.show({
         type: "success",
         text1: "Success",
         text2: "Password changed successfully",
+      });
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      logEvent({
+        event_type: "PASSWORD_CHANGED",
+        user_id: user?.id,
       });
       setTimeout(() => router.back(), 1500);
     }

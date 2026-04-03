@@ -6,6 +6,7 @@ import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -44,6 +45,10 @@ export default function Login() {
 
     if (error || !data.session) {
       setLoading(false);
+      logEvent({
+        event_type: "LOGIN_FAILED",
+        details: { email, error: error?.message },
+      });
       showToast(
         "error",
         "Login Failed",
@@ -80,6 +85,12 @@ export default function Login() {
 
     // No MFA required — continue normal login flow
     const userId = data.user.id;
+
+    logEvent({
+      event_type: "LOGIN_SUCCESS",
+      user_id: userId,
+      details: { email },
+    });
 
     const { data: admin } = await supabase
       .from("admins")

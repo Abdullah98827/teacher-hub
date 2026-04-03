@@ -9,6 +9,7 @@ import {
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 import { ThemedText } from './themed-text';
 
 export default function RatingModal({
@@ -111,9 +112,24 @@ export default function RatingModal({
         text1: "Failed to submit rating",
         text2: error.message,
       });
+      logEvent({
+        event_type: "RATING_FAILED",
+        user_id: user.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { error: error.message, rating: selectedRating, is_update: !!existingRating },
+      });
       setSubmitting(false);
       return;
     }
+
+    logEvent({
+      event_type: existingRating ? "RATING_UPDATED" : "RATING_CREATED",
+      user_id: user.id,
+      target_id: resourceId,
+      target_table: "resources",
+      details: { rating: selectedRating },
+    });
 
     Toast.show({
       type: "success",

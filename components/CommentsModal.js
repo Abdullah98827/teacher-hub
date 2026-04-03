@@ -14,6 +14,7 @@ import {
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 import ProfilePicture from "./ProfilePicture";
 import UserProfileModal from "./UserProfileModal";
 import { ThemedTextInput } from './themed-textinput';
@@ -221,9 +222,24 @@ export default function CommentsModal({
         text1: "Failed to post comment",
         text2: error.message,
       });
+      logEvent({
+        event_type: "COMMENT_FAILED",
+        user_id: user.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { error: error.message, is_reply: !!replyToId },
+      });
       setSubmitting(false);
       return;
     }
+
+    logEvent({
+      event_type: "COMMENT_CREATED",
+      user_id: user.id,
+      target_id: resourceId,
+      target_table: "resources",
+      details: { is_reply: !!replyToId },
+    });
 
     Toast.show({
       type: "success",
@@ -256,9 +272,23 @@ export default function CommentsModal({
         text1: "Failed to delete comment",
         text2: error.message,
       });
+      logEvent({
+        event_type: "COMMENT_DELETE_FAILED",
+        user_id: currentUserId,
+        target_id: deleteCommentId,
+        target_table: "resource_comments",
+        details: { error: error.message },
+      });
       setSubmitting(false);
       return;
     }
+
+    logEvent({
+      event_type: "COMMENT_DELETED",
+      user_id: currentUserId,
+      target_id: deleteCommentId,
+      target_table: "resource_comments",
+    });
 
     Toast.show({ type: "success", text1: "Comment deleted" });
     setShowDeleteConfirm(false);

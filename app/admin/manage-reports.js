@@ -18,8 +18,11 @@ import TabFilter from "../../components/TabFilter";
 import { ThemedText } from "../../components/themed-text";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function ManageReportsScreen() {
+  const { user } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -90,12 +93,26 @@ export default function ManageReportsScreen() {
       .eq("id", reportId);
 
     if (error) {
+      logEvent({
+        event_type: "REPORT_STATUS_UPDATE_FAILED",
+        user_id: user?.id,
+        target_id: reportId,
+        target_table: "resource_reports",
+        details: { status, error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to update report",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "REPORT_STATUS_UPDATED",
+        user_id: user?.id,
+        target_id: reportId,
+        target_table: "resource_reports",
+        details: { status },
+      });
       Toast.show({ type: "success", text1: `Report marked as ${status}` });
       setShowDetailModal(false);
       fetchReports();
