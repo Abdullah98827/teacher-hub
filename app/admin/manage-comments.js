@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -15,10 +15,13 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import { ThemedText } from "../../components/themed-text";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function ManageCommentsScreen() {
+  const { user } = useAuth();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,12 +116,25 @@ export default function ManageCommentsScreen() {
       .eq("id", selectedCommentId);
 
     if (error) {
+      logEvent({
+        event_type: "COMMENT_RESTORE_FAILED",
+        user_id: user?.id,
+        target_id: selectedCommentId,
+        target_table: "resource_comments",
+        details: { error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to restore comment",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "COMMENT_RESTORED",
+        user_id: user?.id,
+        target_id: selectedCommentId,
+        target_table: "resource_comments",
+      });
       Toast.show({ type: "success", text1: "Comment restored" });
       fetchComments();
     }
@@ -138,12 +154,25 @@ export default function ManageCommentsScreen() {
       .eq("id", selectedCommentId);
 
     if (error) {
+      logEvent({
+        event_type: "COMMENT_DELETION_FAILED",
+        user_id: user?.id,
+        target_id: selectedCommentId,
+        target_table: "resource_comments",
+        details: { error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to delete comment",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "COMMENT_DELETED",
+        user_id: user?.id,
+        target_id: selectedCommentId,
+        target_table: "resource_comments",
+      });
       Toast.show({ type: "success", text1: "Comment permanently deleted" });
       fetchComments();
     }

@@ -74,6 +74,10 @@ export default function AdminLayout() {
         name="manage-subjects"
         options={{ title: "Manage Subjects", headerShown: false }}
       />
+      <Stack.Screen
+        name="logs"
+        options={{ title: "View Application Logs", headerShown: false }}
+      />
     </Stack>
   );
 }

@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 import { ThemedTextInput } from './themed-textinput';
 
 const MAX_WORDS = 600;
@@ -161,9 +162,28 @@ export default function EALAdapterModal({ visible, onClose, resourceId }) {
       );
       if (fnError) throw new Error(fnError.message);
       if (!data?.success) throw new Error(data?.error ?? "Adaptation failed.");
+      
+      logEvent({
+        event_type: "EAL_ADAPTATION_CREATED",
+        user_id: user.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { language: selectedLang.name, language_code: selectedLang.code, subject: selectedSubject, year_group: selectedYear },
+      });
+      
       setResult(data);
       setActiveTab("simplified");
     } catch (err) {
+      const {
+        data: { user: errorUser },
+      } = await supabase.auth.getUser();
+      logEvent({
+        event_type: "EAL_ADAPTATION_FAILED",
+        user_id: errorUser?.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { error: err instanceof Error ? err.message : "Unknown error", language: selectedLang.code },
+      });
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);

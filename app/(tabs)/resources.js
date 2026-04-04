@@ -30,6 +30,7 @@ import UserProfileModal from "../../components/UserProfileModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 import { hasSeenOnboarding, setOnboardingSeen } from '../../utils/onboardingHelpers';
 import {
     checkBookmark,
@@ -362,6 +363,13 @@ export default function ResourcesScreen() {
     }
     const fileDeleted = await deleteFile(resourceToDelete.file_url);
     if (!fileDeleted) {
+      logEvent({
+        event_type: "RESOURCE_DELETE_FAILED",
+        user_id: user?.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { reason: "file_deletion_failed" },
+      });
       setIsDeleting(false);
       return;
     }
@@ -370,10 +378,24 @@ export default function ResourcesScreen() {
       .delete()
       .eq("id", resourceId);
     if (error) {
+      logEvent({
+        event_type: "RESOURCE_DELETE_FAILED",
+        user_id: user?.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { error: error.message },
+      });
       Toast.show({ type: "error", text1: "Failed to delete" });
       setIsDeleting(false);
       return;
     }
+    logEvent({
+      event_type: "RESOURCE_DELETED",
+      user_id: user?.id,
+      target_id: resourceId,
+      target_table: "resources",
+      details: { title: resourceToDelete.title },
+    });
     Toast.show({ type: "success", text1: "Resource deleted" });
     setIsDeleting(false);
     fetchResources();
@@ -398,12 +420,24 @@ export default function ResourcesScreen() {
     if (result.success) {
       if (result.isBookmarked) {
         setBookmarks((prev) => new Set(prev).add(resourceId));
+        logEvent({
+          event_type: "RESOURCE_BOOKMARKED",
+          user_id: user.id,
+          target_id: resourceId,
+          target_table: "resources",
+        });
         Toast.show({ type: "success", text1: "Resource saved!" });
       } else {
         setBookmarks((prev) => {
           const newSet = new Set(prev);
           newSet.delete(resourceId);
           return newSet;
+        });
+        logEvent({
+          event_type: "RESOURCE_BOOKMARK_REMOVED",
+          user_id: user.id,
+          target_id: resourceId,
+          target_table: "resources",
         });
         Toast.show({ type: "success", text1: "Resource removed" });
       }

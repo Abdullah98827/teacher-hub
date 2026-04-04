@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     ActivityIndicator,
     ScrollView,
@@ -16,6 +16,7 @@ import { ThemedTextInput } from '../../components/themed-textinput';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 import { uploadFile } from "../../utils/storage";
 
 export default function UploadResourceScreen() {
@@ -40,11 +41,7 @@ export default function UploadResourceScreen() {
     { value: "lesson_plan", label: "Lesson Plan", icon: "book" },
   ];
 
-  useEffect(() => {
-    fetchSubjects();
-  }, []);
-
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     const { data: membershipData, error: membershipError } = await supabase
       .from("memberships")
       .select("subject_ids")
@@ -89,7 +86,11 @@ export default function UploadResourceScreen() {
       setSubjects(subjectsData || []);
     }
     setLoading(false);
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchSubjects();
+  }, [fetchSubjects]);
 
   const pickDocument = async () => {
     try {
@@ -181,6 +182,17 @@ export default function UploadResourceScreen() {
 
       if (dbError) throw dbError;
 
+      logEvent({
+        event_type: "RESOURCE_UPLOADED",
+        user_id: user?.id,
+        details: {
+          title: title.trim(),
+          subject_id: selectedSubject,
+          category: selectedCategory,
+          status: isAdmin ? "approved" : "pending",
+        },
+      });
+
       Toast.show({
         type: "success",
         text1: "Resource uploaded!",
@@ -195,6 +207,15 @@ export default function UploadResourceScreen() {
 
       setTimeout(() => router.back(), 1000);
     } catch (error) {
+      logEvent({
+        event_type: "RESOURCE_UPLOAD_FAILED",
+        user_id: user?.id,
+        details: {
+          title: title.trim(),
+          category: selectedCategory,
+          error: error.message,
+        },
+      });
       Toast.show({
         type: "error",
         text1: "Upload failed",

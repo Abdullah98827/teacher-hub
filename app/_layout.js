@@ -66,6 +66,7 @@ export default function RootLayout() {
               <Stack.Screen name="login" />
               <Stack.Screen name="signup" />
               <Stack.Screen name="auth-callback" />
+              <Stack.Screen name="mfa-challenge" />
               <Stack.Screen name="logout" />
               <Stack.Screen name="index" />
               <Stack.Screen name="pending" />

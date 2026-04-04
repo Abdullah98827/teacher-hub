@@ -2,10 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -18,6 +18,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function VerifyTeachersScreen() {
   const { user } = useAuth();
@@ -106,6 +107,13 @@ export default function VerifyTeachersScreen() {
         .eq("id", userId);
 
       if (error) {
+        logEvent({
+          event_type: "TEACHER_VERIFICATION_FAILED",
+          user_id: user?.id,
+          target_id: userId,
+          target_table: "teachers",
+          details: { error: error.message },
+        });
         Toast.show({
           type: "error",
           text1: "Approval failed",
@@ -115,13 +123,19 @@ export default function VerifyTeachersScreen() {
         if (photoUrl) {
           await supabase.storage.from("teacher-passes").remove([photoUrl]);
         }
+        logEvent({
+          event_type: "TEACHER_VERIFIED",
+          user_id: user?.id,
+          target_id: userId,
+          target_table: "teachers",
+        });
         Toast.show({ type: "success", text1: "Teacher verified successfully" });
         loadPendingUsers();
       }
 
       setProcessing(false);
     },
-    [loadPendingUsers]
+    [loadPendingUsers, user?.id]
   );
 
   const executeReject = async () => {
@@ -139,12 +153,25 @@ export default function VerifyTeachersScreen() {
       .eq("id", confirmDeleteId);
 
     if (error) {
+      logEvent({
+        event_type: "TEACHER_REJECTION_FAILED",
+        user_id: user?.id,
+        target_id: confirmDeleteId,
+        target_table: "teachers",
+        details: { error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Deletion failed",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "TEACHER_REJECTED",
+        user_id: user?.id,
+        target_id: confirmDeleteId,
+        target_table: "teachers",
+      });
       Toast.show({ type: "success", text1: "Teacher account removed" });
       loadPendingUsers();
     }

@@ -1,13 +1,13 @@
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { ThemedTextInput } from '../components/themed-textinput';
@@ -118,9 +118,12 @@ export default function CheckoutScreen() {
     }, 2500);
   };
 
+  // Set background color for light/dark mode
+  const mainBg = bgCard === "bg-neutral-900" ? "bg-black" : "bg-white";
+
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-black px-6 pt-16"
+      className={`flex-1 px-6 pt-16 ${mainBg}`}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -128,7 +131,7 @@ export default function CheckoutScreen() {
           Confirm Your Membership
         </Text>
         <Text className={`${textSecondary} text-sm mb-4`}>
-          🔒 Secure Stripe-style Checkout
+          <Text className="mr-1">🔒</Text> Secure Stripe-style Checkout
         </Text>
 
         <View className={`${bgCard} p-4 rounded-xl mb-6 ${border} border`}>
@@ -157,14 +160,14 @@ export default function CheckoutScreen() {
           placeholderTextColor={placeholderColor}
           value={firstName}
           onChangeText={setFirstName}
-          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
         />
         <ThemedTextInput
           placeholder="Last Name"
           placeholderTextColor={placeholderColor}
           value={lastName}
           onChangeText={setLastName}
-          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
         />
 
         <Text className={`${textPrimary} text-lg font-semibold mb-2`}>
@@ -179,7 +182,7 @@ export default function CheckoutScreen() {
             const cleaned = text.replace(/\D/g, "").slice(0, 16);
             setCardNumber(cleaned);
           }}
-          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
         />
         <View className="flex-row gap-4">
           <ThemedTextInput
@@ -188,7 +191,7 @@ export default function CheckoutScreen() {
             value={expiry}
             onChangeText={setExpiry}
             keyboardType="numeric"
-            className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+            className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
           />
           <ThemedTextInput
             placeholder="CVV"
@@ -197,7 +200,7 @@ export default function CheckoutScreen() {
             onChangeText={setCvv}
             keyboardType="numeric"
             secureTextEntry
-            className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+            className={`flex-1 ${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
           />
         </View>
 
@@ -209,21 +212,21 @@ export default function CheckoutScreen() {
           placeholderTextColor={placeholderColor}
           value={address}
           onChangeText={setAddress}
-          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
         />
         <ThemedTextInput
           placeholder="City"
           placeholderTextColor={placeholderColor}
           value={city}
           onChangeText={setCity}
-          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
         />
         <ThemedTextInput
           placeholder="Postcode"
           placeholderTextColor={placeholderColor}
           value={postcode}
           onChangeText={setPostcode}
-          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3`}
+          className={`${bgInput} ${textPrimary} p-3 rounded-xl mb-3 border ${border}`}
         />
 
         <TouchableOpacity
@@ -242,7 +245,7 @@ export default function CheckoutScreen() {
 
         <View className="flex-row justify-between mt-6">
           <TouchableOpacity
-            className={`flex-1 ${bgInput} p-3 rounded-xl mr-2 active:scale-95`}
+            className={`flex-1 ${bgInput} p-3 rounded-xl mr-2 active:scale-95 border ${border}`}
             onPress={() => router.push("/contact")}
           >
             <Text className="text-center text-cyan-400 font-medium">
@@ -251,7 +254,7 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`flex-1 ${bgCard} p-3 rounded-xl ml-2 active:scale-95`}
+            className={`flex-1 ${bgCard} p-3 rounded-xl ml-2 active:scale-95 border ${border}`}
             onPress={() => router.back()}
           >
             <Text className={`text-center ${textPrimary} font-medium`}>
@@ -259,10 +262,7 @@ export default function CheckoutScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-
-        <Text className={`text-center ${textSecondary} text-xs mt-6`}>
-          Powered by Teacher Hub
-        </Text>
+        <View className="h-8" />
       </ScrollView>
       <Toast />
     </KeyboardAvoidingView>

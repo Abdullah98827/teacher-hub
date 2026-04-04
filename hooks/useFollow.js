@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 
 /**
  * Hook to manage following/unfollowing users
@@ -103,6 +104,12 @@ export function useFollow(targetUserId) {
       } else {
         setIsFollowing(false);
         setFollowersCount((prev) => Math.max(0, prev - 1));
+        logEvent({
+          event_type: "USER_UNFOLLOWED",
+          user_id: currentUserId,
+          target_id: targetUserId,
+          target_table: "teachers",
+        });
         Toast.show({
           type: "success",
           text1: "Unfollowed",
@@ -125,6 +132,12 @@ export function useFollow(targetUserId) {
       } else {
         setIsFollowing(true);
         setFollowersCount((prev) => prev + 1);
+        logEvent({
+          event_type: "USER_FOLLOWED",
+          user_id: currentUserId,
+          target_id: targetUserId,
+          target_table: "teachers",
+        });
         Toast.show({
           type: "success",
           text1: "Following",

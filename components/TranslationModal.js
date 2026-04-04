@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 import { ThemedTextInput } from './themed-textinput';
 
 const MAX_CHARS = 3000;
@@ -124,8 +125,26 @@ export default function TranslationModal({ visible, onClose, resourceId }) {
       if (data?.error) throw new Error(data.error);
       if (!data?.translated_text) throw new Error("No translation returned.");
 
+      logEvent({
+        event_type: "RESOURCE_TRANSLATED",
+        user_id: user.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { target_language: selectedLang.code, language_name: selectedLang.name },
+      });
+
       setTranslated(data.translated_text);
     } catch (err) {
+      const {
+        data: { user: errorUser },
+      } = await supabase.auth.getUser();
+      logEvent({
+        event_type: "TRANSLATION_FAILED",
+        user_id: errorUser?.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { error: err instanceof Error ? err.message : "Unknown error", target_language: selectedLang.code },
+      });
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);

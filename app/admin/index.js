@@ -54,6 +54,12 @@ export default function AdminHub() {
       route: "/admin/manage-subjects",
       icon: "book-outline",
     },
+    {
+      label: "View Application Logs",
+      subtitle: "See all application-wide logs",
+      route: "/admin/logs",
+      icon: "archive-outline",
+    },
   ];
 
   const iconBg = isDark ? "rgba(6,182,212,0.12)" : "rgba(8,145,178,0.08)";

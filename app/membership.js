@@ -1,12 +1,13 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    Image,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Image,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../components/ScreenWrapper";
@@ -103,99 +104,92 @@ export default function Membership() {
   return (
     <ScreenWrapper>
       <View className="flex-1 items-center justify-center p-6">
-        <Text className="text-2xl font-bold text-cyan-400 mb-4">
+        <Text className="text-2xl font-bold text-cyan-400 mb-4 flex-row items-center justify-center">
           Choose Your Membership
         </Text>
 
         <View className="flex-row gap-4 mb-6">
-          <TouchableOpacity
-            className={`p-4 rounded-xl w-40 ${tier === "single" ? "bg-cyan-600" : bgCard}`}
-            onPress={() => {
-              setTier("single");
-              setSelectedSubjectIds([]);
-              fadeAnim.setValue(0);
-            }}
-          >
-            <Text className="text-white font-bold text-center">Single Subject</Text>
-            {tier === "single" && (
-              <Animated.Text
-                style={{ opacity: fadeAnim }}
-                className="text-cyan-100 text-xs text-center mt-1"
-              >
-                {pricing.single}
-              </Animated.Text>
-            )}
-          </TouchableOpacity>
+  <TouchableOpacity
+    className={`p-4 rounded-xl w-40 border ${tier === "single" ? "bg-cyan-600 border-cyan-600" : "bg-white border-gray-300"}`}
+    onPress={() => {
+      setTier("single");
+      setSelectedSubjectIds([]);
+      fadeAnim.setValue(0);
+    }}
+  >
+    <Text className={`font-bold text-center ${tier === "single" ? "text-white" : "text-cyan-600"}`}>Single Subject</Text>
+    {tier === "single" && (
+      <Animated.Text
+        style={{ opacity: fadeAnim }}
+        className="text-cyan-100 text-xs text-center mt-1"
+      >
+        {pricing.single}
+      </Animated.Text>
+    )}
+  </TouchableOpacity>
 
-          <TouchableOpacity
-            className={`p-4 rounded-xl w-40 ${tier === "multi" ? "bg-cyan-600" : bgCard}`}
-            onPress={() => {
-              setTier("multi");
-              setSelectedSubjectIds([]);
-              fadeAnim.setValue(0);
-            }}
-          >
-            <Text className="text-white font-bold text-center">Multi Subject</Text>
-            {tier === "multi" && (
-              <Animated.Text
-                style={{ opacity: fadeAnim }}
-                className="text-cyan-100 text-xs text-center mt-1"
-              >
-                {pricing.multi}
-              </Animated.Text>
-            )}
-          </TouchableOpacity>
-        </View>
+  <TouchableOpacity
+    className={`p-4 rounded-xl w-40 border ${tier === "multi" ? "bg-cyan-600 border-cyan-600" : "bg-white border-gray-300"}`}
+    onPress={() => {
+      setTier("multi");
+      setSelectedSubjectIds([]);
+      fadeAnim.setValue(0);
+    }}
+  >
+    <Text className={`font-bold text-center ${tier === "multi" ? "text-white" : "text-cyan-600"}`}>Multi Subject</Text>
+    {tier === "multi" && (
+      <Animated.Text
+        style={{ opacity: fadeAnim }}
+        className="text-cyan-100 text-xs text-center mt-1"
+      >
+        {pricing.multi}
+      </Animated.Text>
+    )}
+  </TouchableOpacity>
+</View>
 
         <Text className={`${textSecondary} mb-2`}>
           Select {tier === "multi" ? "up to 2" : "1"} subject(s):
         </Text>
 
         <ScrollView className="w-full max-w-md mb-6">
-          {subjects.map((subject) => (
-            <TouchableOpacity
-              key={subject.id}
-              className={`flex-row items-center p-3 mb-2 rounded-xl border ${
-                selectedSubjectIds.includes(subject.id)
-                  ? "bg-cyan-600 border-cyan-400"
-                  : `${bgCard} ${border}`
-              }`}
-              onPress={() => toggleSubject(subject.id)}
-            >
-              {subject.icon_url ? (
-                <Image
-                  source={{ uri: subject.icon_url }}
-                  className="w-10 h-10 mr-3 rounded-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <View
-                  className={`w-10 h-10 mr-3 rounded-full ${bgCardAlt} items-center justify-center`}
-                >
-                  <Text className="text-white text-xs">📚</Text>
-                </View>
-              )}
+  {subjects.map((subject) => {
+    const selected = selectedSubjectIds.includes(subject.id);
+    return (
+      <TouchableOpacity
+        key={subject.id}
+        className={`flex-row items-center p-3 mb-2 rounded-xl border ${selected ? "bg-cyan-600 border-cyan-400" : "bg-white border-gray-300"}`}
+        onPress={() => toggleSubject(subject.id)}
+      >
+        {subject.icon_url ? (
+          <Image
+            source={{ uri: subject.icon_url }}
+            className="w-10 h-10 mr-3 rounded-full"
+            resizeMode="cover"
+          />
+        ) : (
+          <View className="w-10 h-10 mr-3 rounded-full bg-cyan-50 items-center justify-center">
+            <Ionicons name="school-outline" size={22} color="#22d3ee" />
+          </View>
+        )}
 
-              <View className="flex-1">
-                <Text className={`${textPrimary} font-semibold`}>
-                  {subject.name}
-                </Text>
-                {subject.description && (
-                  <Text className={`${textSecondary} text-xs`}>
-                    {subject.description}
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View className="flex-1">
+          <Text className={`font-semibold ${selected ? "text-white" : "text-gray-900"}`}>{subject.name}</Text>
+          {subject.description && (
+            <Text className={`text-xs ${selected ? "text-cyan-100" : "text-gray-500"}`}>{subject.description}</Text>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  })}
+</ScrollView>
 
         <TouchableOpacity
           className={`p-4 rounded-xl ${loading ? "bg-gray-400" : "bg-cyan-600"}`}
           onPress={confirmMembership}
           disabled={loading}
         >
-          <Text className="text-white text-center font-bold">
+          <Text className="text-white text-center font-bold flex-row items-center justify-center">
             {loading ? "Saving..." : "Confirm Membership"}
           </Text>
         </TouchableOpacity>
@@ -205,7 +199,7 @@ export default function Membership() {
             className={`flex-1 ${bgCard} p-3 rounded-xl mr-2 active:scale-95`}
             onPress={() => router.push("/contact")}
           >
-            <Text className="text-center text-cyan-400 font-medium">
+            <Text className="text-center text-cyan-400 font-medium flex-row items-center justify-center">
               Contact Admin
             </Text>
           </TouchableOpacity>
@@ -214,16 +208,11 @@ export default function Membership() {
             className="flex-1 bg-red-600 p-3 rounded-xl ml-2 active:scale-95"
             onPress={handleLogout}
           >
-            <Text className="text-center text-white font-medium">Logout</Text>
+            <Text className="text-center text-white font-medium flex-row items-center justify-center">
+              Logout
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          className={`mt-4 ${bgCardAlt} p-3 rounded-xl w-full max-w-md active:scale-95`}
-          onPress={() => router.back()}
-        >
-          <Text className="text-center text-cyan-300 font-medium">Back</Text>
-        </TouchableOpacity>
       </View>
       <Toast />
     </ScreenWrapper>

@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AccessToggle from "../../components/AccessToggle";
@@ -19,11 +19,14 @@ import SubjectCard from "../../components/SubjectCard";
 import SubscribersModal from "../../components/SubscribersModal";
 import { ThemedText } from '../../components/themed-text';
 import { ThemedTextInput } from "../../components/themed-textinput";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function AdminSubjectManagementScreen() {
+  const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
 
@@ -309,6 +312,13 @@ export default function AdminSubjectManagementScreen() {
         .eq("id", editingSubject.id);
 
       if (subjectError) {
+        logEvent({
+          event_type: "SUBJECT_UPDATE_FAILED",
+          user_id: user?.id,
+          target_id: editingSubject.id,
+          target_table: "subjects",
+          details: { subject_name: formData.name.trim(), error: subjectError.message },
+        });
         Toast.show({
           type: "error",
           text1: "Failed to update",
@@ -363,6 +373,13 @@ export default function AdminSubjectManagementScreen() {
       }
 
       Toast.show({ type: "success", text1: "Subject updated successfully" });
+      logEvent({
+        event_type: "SUBJECT_UPDATED",
+        user_id: user?.id,
+        target_id: editingSubject.id,
+        target_table: "subjects",
+        details: { subject_name: formData.name.trim() },
+      });
     } else {
       const { data: newSubject, error: subjectError } = await supabase
         .from("subjects")
@@ -375,6 +392,11 @@ export default function AdminSubjectManagementScreen() {
         .single();
 
       if (subjectError) {
+        logEvent({
+          event_type: "SUBJECT_CREATION_FAILED",
+          user_id: user?.id,
+          details: { subject_name: formData.name.trim(), error: subjectError.message },
+        });
         Toast.show({
           type: "error",
           text1: "Failed to create",
@@ -405,6 +427,13 @@ export default function AdminSubjectManagementScreen() {
         return;
       }
 
+      logEvent({
+        event_type: "SUBJECT_CREATED",
+        user_id: user?.id,
+        target_id: newSubject.id,
+        target_table: "subjects",
+        details: { subject_name: formData.name.trim() },
+      });
       Toast.show({ type: "success", text1: "Subject & group chat created successfully" });
     }
 
@@ -442,12 +471,26 @@ export default function AdminSubjectManagementScreen() {
       .eq("id", subject.id);
 
     if (error) {
+      logEvent({
+        event_type: "SUBJECT_DELETION_FAILED",
+        user_id: user?.id,
+        target_id: subject.id,
+        target_table: "subjects",
+        details: { subject_name: subject.name, error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to delete",
         text2: "Something went wrong. Please try again.",
       });
     } else {
+      logEvent({
+        event_type: "SUBJECT_DELETED",
+        user_id: user?.id,
+        target_id: subject.id,
+        target_table: "subjects",
+        details: { subject_name: subject.name },
+      });
       Toast.show({
         type: "success",
         text1: "Subject & group chat deleted",

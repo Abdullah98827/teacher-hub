@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -16,10 +16,13 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import StatsSummary from "../../components/StatsSummary";
 import TabFilter from "../../components/TabFilter";
 import { ThemedText } from "../../components/themed-text";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function ManageReportsScreen() {
+  const { user } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -90,12 +93,26 @@ export default function ManageReportsScreen() {
       .eq("id", reportId);
 
     if (error) {
+      logEvent({
+        event_type: "REPORT_STATUS_UPDATE_FAILED",
+        user_id: user?.id,
+        target_id: reportId,
+        target_table: "resource_reports",
+        details: { status, error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to update report",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "REPORT_STATUS_UPDATED",
+        user_id: user?.id,
+        target_id: reportId,
+        target_table: "resource_reports",
+        details: { status },
+      });
       Toast.show({ type: "success", text1: `Report marked as ${status}` });
       setShowDetailModal(false);
       fetchReports();

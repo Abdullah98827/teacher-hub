@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -22,6 +22,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 import { deleteFile } from "../../utils/storage";
 
 export default function AdminResourcesScreen() {
@@ -124,12 +125,25 @@ export default function AdminResourcesScreen() {
       .eq("id", resourceId);
 
     if (error) {
+      logEvent({
+        event_type: "RESOURCE_APPROVAL_FAILED",
+        user_id: user?.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to approve",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "RESOURCE_APPROVED",
+        user_id: user?.id,
+        target_id: resourceId,
+        target_table: "resources",
+      });
       Toast.show({ type: "success", text1: "Resource approved" });
       fetchResources();
     }
@@ -151,12 +165,25 @@ export default function AdminResourcesScreen() {
         .eq("id", confirmAction.resourceId);
 
       if (error) {
+        logEvent({
+          event_type: "RESOURCE_REJECTION_FAILED",
+          user_id: user?.id,
+          target_id: confirmAction.resourceId,
+          target_table: "resources",
+          details: { error: error.message },
+        });
         Toast.show({
           type: "error",
           text1: "Operation failed",
           text2: error.message,
         });
       } else {
+        logEvent({
+          event_type: "RESOURCE_REJECTED",
+          user_id: user?.id,
+          target_id: confirmAction.resourceId,
+          target_table: "resources",
+        });
         Toast.show({ type: "success", text1: "Resource rejected" });
         fetchResources();
       }
@@ -173,12 +200,25 @@ export default function AdminResourcesScreen() {
         .eq("id", confirmAction.resourceId);
 
       if (error) {
+        logEvent({
+          event_type: "RESOURCE_DELETION_FAILED",
+          user_id: user?.id,
+          target_id: confirmAction.resourceId,
+          target_table: "resources",
+          details: { error: error.message },
+        });
         Toast.show({
           type: "error",
           text1: "Operation failed",
           text2: error.message,
         });
       } else {
+        logEvent({
+          event_type: "RESOURCE_DELETED",
+          user_id: user?.id,
+          target_id: confirmAction.resourceId,
+          target_table: "resources",
+        });
         Toast.show({ type: "success", text1: "Resource deleted" });
         fetchResources();
       }

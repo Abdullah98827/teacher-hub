@@ -2,11 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useContext, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Modal,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -20,6 +20,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 import { deleteProfilePicture } from "../../utils/profilePictureHelpers";
 
 export default function SettingsScreen() {
@@ -163,6 +164,10 @@ export default function SettingsScreen() {
 
     if (success) {
       setProfile((prev) => ({ ...prev, profilePictureUrl: null }));
+      logEvent({
+        event_type: "PROFILE_PICTURE_DELETED",
+        user_id: user.id,
+      });
     }
   };
 
@@ -172,6 +177,10 @@ export default function SettingsScreen() {
 
   const executeLogout = async () => {
     setLoggingOut(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    
     const { error } = await supabase.auth.signOut();
 
     if (error) {
@@ -180,8 +189,17 @@ export default function SettingsScreen() {
         text1: "Logout Failed",
         text2: "Something went wrong. Please try again.",
       });
+      logEvent({
+        event_type: "LOGOUT_FAILED",
+        user_id: user?.id,
+        details: { error: error.message },
+      });
       setLoggingOut(false);
     } else {
+      logEvent({
+        event_type: "LOGOUT_SUCCESS",
+        user_id: user?.id,
+      });
       router.replace("/login");
     }
   };
@@ -404,7 +422,14 @@ export default function SettingsScreen() {
               return (
                 <TouchableOpacity
                   key={option.value}
-                  onPress={() => setThemePreference(option.value)}
+                  onPress={() => {
+                    setThemePreference(option.value);
+                    logEvent({
+                      event_type: "THEME_PREFERENCE_CHANGED",
+                      user_id: userId,
+                      details: { new_theme: option.value },
+                    });
+                  }}
                   activeOpacity={0.7}
                   className={`flex-1 items-center py-4 px-2 rounded-xl border-2 ${
                     isSelected
@@ -437,7 +462,14 @@ export default function SettingsScreen() {
               Dyslexia-friendly mode
             </ThemedText>
             <TouchableOpacity
-              onPress={() => setDyslexiaMode(!dyslexiaMode)}
+              onPress={() => {
+                setDyslexiaMode(!dyslexiaMode);
+                logEvent({
+                  event_type: "DYSLEXIA_MODE_TOGGLED",
+                  user_id: userId,
+                  details: { dyslexia_mode_enabled: !dyslexiaMode },
+                });
+              }}
               className={`w-14 h-8 rounded-full flex-row items-center px-1 ${dyslexiaMode ? 'bg-cyan-500' : 'bg-gray-300'}`}
               activeOpacity={0.7}
               accessibilityRole="switch"
@@ -530,6 +562,21 @@ export default function SettingsScreen() {
               <Ionicons name="chevron-forward" size={20} color="#6B7280" />
             </View>
           </TouchableOpacity>
+
+          <TouchableOpacity
+  className={`${bgCardAlt} p-4 rounded-lg mb-3 active:scale-95 border ${border}`}
+  onPress={() => router.push("/mfa-setup")}
+>
+  <View className="flex-row items-center justify-between">
+    <View className="flex-row items-center">
+      <Ionicons name="shield-half" size={20} color="#22d3ee" />
+      <ThemedText className={`${textPrimary} font-semibold ml-3`}>
+        Set Up Multi-Factor Authentication
+      </ThemedText>
+    </View>
+    <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+  </View>
+</TouchableOpacity>
 
           <TouchableOpacity
             className="bg-red-600 p-4 rounded-lg active:scale-95"

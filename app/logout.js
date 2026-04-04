@@ -4,6 +4,7 @@ import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 
 export default function Logout() {
   const router = useRouter();
@@ -15,11 +16,23 @@ export default function Logout() {
 
   useEffect(() => {
     const logout = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id;
+
       const { error } = await supabase.auth.signOut();
 
       if (error) {
+        logEvent({
+          event_type: "LOGOUT_FAILED",
+          user_id: userId,
+          details: { error: error.message },
+        });
         showToast("error", "Logout Failed", error.message);
       } else {
+        logEvent({
+          event_type: "LOGOUT_SUCCESS",
+          user_id: userId,
+        });
         showToast("success", "Logged Out", "You have been signed out successfully.");
         setTimeout(() => {
           router.replace("/login");
@@ -28,7 +41,7 @@ export default function Logout() {
     };
 
     logout();
-  }, []);
+  }, [router]);
 
   return (
     <View

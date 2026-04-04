@@ -19,6 +19,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function ManageContactRequestsScreen() {
   const { user } = useAuth();
@@ -88,12 +89,25 @@ export default function ManageContactRequestsScreen() {
       .eq("id", id);
 
     if (error) {
+      logEvent({
+        event_type: "CONTACT_REQUEST_RESOLUTION_FAILED",
+        user_id: user?.id,
+        target_id: id,
+        target_table: "manage_contact_requests",
+        details: { error: error.message },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to update",
         text2: error.message,
       });
     } else {
+      logEvent({
+        event_type: "CONTACT_REQUEST_RESOLVED",
+        user_id: user?.id,
+        target_id: id,
+        target_table: "manage_contact_requests",
+      });
       Toast.show({ type: "success", text1: "Request resolved" });
       fetchRequests();
     }

@@ -12,6 +12,7 @@ import {
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 import { ThemedText } from './themed-text';
 import { ThemedTextInput } from './themed-textinput';
 
@@ -126,9 +127,24 @@ export default function ReportModal({
         text1: "Failed to submit report",
         text2: error.message,
       });
+      logEvent({
+        event_type: "RESOURCE_REPORT_FAILED",
+        user_id: user.id,
+        target_id: resourceId,
+        target_table: "resources",
+        details: { reason: selectedReason, error: error.message },
+      });
       setSubmitting(false);
       return;
     }
+
+    logEvent({
+      event_type: "RESOURCE_REPORTED",
+      user_id: user.id,
+      target_id: resourceId,
+      target_table: "resources",
+      details: { reason: reasonLabel },
+    });
 
     Toast.show({
       type: "success",

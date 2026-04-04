@@ -7,6 +7,7 @@ import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 
 export default function Signup() {
   const [formData, setFormData] = useState({
@@ -108,12 +109,22 @@ export default function Signup() {
     });
 
     if (error || !data.user?.id) {
+      logEvent({
+        event_type: "SIGNUP_FAILED",
+        details: { email, error: error?.message },
+      });
       showToast("error", "Signup Failed", error?.message || "Could not create account");
       setLoading(false);
       return;
     }
 
     const userId = data.user.id;
+
+    logEvent({
+      event_type: "SIGNUP_SUCCESS",
+      user_id: userId,
+      details: { email },
+    });
 
     const fileName = await uploadPhoto(userId);
 
@@ -143,6 +154,14 @@ export default function Signup() {
       id: userId,
       role: "teacher",
     });
+
+    // Check if email is confirmed, redirect to verify-email if not
+    if (!data.user.email_confirmed_at && !data.user.confirmed_at) {
+      showToast("info", "Verify Email", "Please verify your email before continuing.");
+      setTimeout(() => router.replace("/verify-email"), 1000);
+      setLoading(false);
+      return;
+    }
 
     showToast("success", "Success!", "Admin will verify within 24-48 hours");
     setTimeout(() => router.push("/login"), 1500);
