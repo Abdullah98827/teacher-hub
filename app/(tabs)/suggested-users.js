@@ -4,11 +4,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ProfilePicture from "../../components/ProfilePicture";
@@ -62,21 +62,21 @@ function SuggestedUserCard({ user, onPress }) {
       </TouchableOpacity>
       <TouchableOpacity
         className={`mt-3 py-2.5 rounded-lg flex-row items-center justify-center ${
-          isFollowing ? `${bgCard} border border-cyan-600` : "bg-cyan-600"
+          isFollowing ? "bg-cyan-100 border border-cyan-600" : "bg-cyan-600"
         }`}
         onPress={toggleFollow}
         disabled={followLoading}
       >
         {followLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
+          <ActivityIndicator size="small" color={isFollowing ? "#0891b2" : "#fff"} />
         ) : (
           <>
             <Ionicons
               name={isFollowing ? "checkmark-circle" : "person-add"}
               size={18}
-              color="#fff"
+              color={isFollowing ? "#0891b2" : "#fff"}
             />
-            <ThemedText className="text-white font-semibold ml-2">
+            <ThemedText className={`${isFollowing ? "text-cyan-700" : "text-white"} font-semibold ml-2`}>
               {isFollowing ? "Following" : "Follow"}
             </ThemedText>
           </>

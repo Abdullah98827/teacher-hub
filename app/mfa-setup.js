@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import { ThemedText } from "../components/themed-text";
@@ -20,7 +21,6 @@ function MFASetupScreen() {
   const router = useRouter();
   const { bg, bgCard, border, textPrimary, textSecondary } = useAppTheme();
 
-  // Helper to check if user already enrolled
   const alreadyEnrolledError = (err) => {
     return (
       err?.message?.toLowerCase().includes('already exists') ||
@@ -28,7 +28,6 @@ function MFASetupScreen() {
     );
   };
 
-  // Check on mount if already enrolled
   useEffect(() => {
     const checkMfaEnrollment = async () => {
       setLoading(true);
@@ -70,7 +69,6 @@ function MFASetupScreen() {
     setLoading(false);
   };
 
-  // Only setEnrolled(true) after successful verification!
   const handleVerify = async () => {
     if (!code) {
       Toast.show({
@@ -101,16 +99,17 @@ function MFASetupScreen() {
   };
 
   return (
-    <View className={`flex-1 ${bg}`}>
+    <SafeAreaView className={`flex-1 ${bg}`} edges={['top']}>
       <LogoHeader position="left" />
-      <ScrollView contentContainerStyle={{
-        flexGrow: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingTop: 32,
-        paddingBottom: 32
-      }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 24,
+          paddingVertical: 32,
+        }}
+      >
         <View className={`w-full max-w-md ${bgCard} rounded-2xl p-8 border ${border} shadow-lg items-center`}>
           <ThemedText className="text-2xl font-bold text-cyan-400 mb-2 text-center">
             Set Up Multi-Factor Authentication
@@ -118,7 +117,11 @@ function MFASetupScreen() {
           <ThemedText className={`mb-6 ${textSecondary} text-center`}>
             Protect your account by enabling an extra layer of security.
           </ThemedText>
-          {loading && <ActivityIndicator size="large" color="#22d3ee" className="mb-4" />}
+
+          {loading && (
+            <ActivityIndicator size="large" color="#22d3ee" style={{ marginBottom: 16 }} />
+          )}
+
           {enrolled && !qrCode && !loading && (
             <>
               <ThemedText className="text-green-500 mt-4 text-lg font-semibold text-center">
@@ -129,6 +132,7 @@ function MFASetupScreen() {
               </ThemedText>
             </>
           )}
+
           {!qrCode && !enrolled && !loading && (
             <TouchableOpacity
               className="bg-cyan-600 px-6 py-3 rounded-lg mb-2 w-full"
@@ -140,6 +144,7 @@ function MFASetupScreen() {
               </ThemedText>
             </TouchableOpacity>
           )}
+
           {qrCode && !enrolled && (
             <>
               <ThemedText className={`mb-3 ${textSecondary} text-center`}>
@@ -178,9 +183,13 @@ function MFASetupScreen() {
               </TouchableOpacity>
             </>
           )}
+
           <TouchableOpacity className="mt-8" onPress={() => router.back()}>
-            <ThemedText className="text-cyan-400 underline text-center">Back to Settings</ThemedText>
+            <ThemedText className="text-cyan-400 underline text-center">
+              Back to Settings
+            </ThemedText>
           </TouchableOpacity>
+
           <TouchableOpacity
             className="mt-4"
             onPress={async () => {
@@ -198,7 +207,7 @@ function MFASetupScreen() {
                 setEnrolled(false);
               } catch (err) {
                 if (alreadyEnrolledError(err)) {
-                  setEnrolled(false); // Don't set to true unless verified!
+                  setEnrolled(false);
                   Toast.show({
                     type: "info",
                     text1: "MFA factor still exists",
@@ -209,11 +218,14 @@ function MFASetupScreen() {
               setLoading(false);
             }}
           >
-            <ThemedText className="text-cyan-400 underline text-center">Refresh MFA Status</ThemedText>
+            <ThemedText className="text-cyan-400 underline text-center">
+              Refresh MFA Status
+            </ThemedText>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+      <Toast />
+    </SafeAreaView>
   );
 }
 

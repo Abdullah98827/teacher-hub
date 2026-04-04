@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -78,40 +78,27 @@ export default function AdminLogs() {
   const [searchText, setSearchText] = useState("");
   const [userEmailMap, setUserEmailMap] = useState({});
   const [selectedDateRange, setSelectedDateRange] = useState(7); // Default 7 days
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const logsPerPage = pageIndex === 0 ? 50 : 30;
   const { isDark } = useAppTheme();
 
   const C = {
-    bg: isDark ? "#0d0d0d" : "#ffffff",
-    surface: isDark ? "#161616" : "#f9fafb",
-    surfaceHi: isDark ? "#1e1e1e" : "#f3f4f6",
+    bg: isDark ? "#0a0a0a" : "#ffffff",
+    surface: isDark ? "#141414" : "#f9fafb",
+    surfaceHi: isDark ? "#1f1f1f" : "#f3f4f6",
     border: isDark ? "#252525" : "#e5e7eb",
     borderHi: isDark ? "#2e2e2e" : "#d1d5db",
     accent: "#22d3ee",
-    textPrimary: isDark ? "#f0f0f0" : "#111827",
-    textSecondary: isDark ? "#888888" : "#6b7280",
-    textMuted: isDark ? "#555555" : "#9ca3af",
+    accentText: isDark ? "#0a0a0a" : "#000000",
+    textPrimary: isDark ? "#e5e5e5" : "#111827",
+    textSecondary: isDark ? "#9ca3af" : "#6b7280",
+    textMuted: isDark ? "#6b7280" : "#9ca3af",
     green: "#34d399",
     red: "#f87171",
   };
 
-  useEffect(() => {
-    setPageIndex(0);
-    fetchLogs(0, false);
-  }, [selectedDateRange]);
-
-  const handleLoadMore = () => {
-    if (!loadingMore && hasMore) {
-      const nextPage = pageIndex + 1;
-      setPageIndex(nextPage);
-      fetchLogs(nextPage, true);
-    }
-  };
-
-  const fetchLogs = async (pageNum = 0, isLoadingMore = false) => {
+  // Define fetchLogs with useCallback - ONLY depend on selectedDateRange
+  const fetchLogs = useCallback(async (pageNum = 0, isLoadingMore = false, currentLogs = []) => {
     if (!isLoadingMore) setLoading(true);
     else setLoadingMore(true);
 
@@ -158,7 +145,7 @@ export default function AdminLogs() {
       if (newLogs && newLogs.length > 0) {
         const uniqueUserIds = [
           ...new Set(
-            [...(isLoadingMore ? logs : []), ...newLogs]
+            [...(isLoadingMore ? currentLogs : []), ...newLogs]
               .map((log) => log.user_id)
               .filter(Boolean)
           ),
@@ -186,6 +173,20 @@ export default function AdminLogs() {
 
     if (!isLoadingMore) setLoading(false);
     else setLoadingMore(false);
+  }, [selectedDateRange]);
+
+  useEffect(() => {
+    setPageIndex(0);
+    fetchLogs(0, false, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDateRange]);
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      const nextPage = pageIndex + 1;
+      setPageIndex(nextPage);
+      fetchLogs(nextPage, true);
+    }
   };
 
   const filteredLogs = logs.filter((log) => {
@@ -451,7 +452,7 @@ export default function AdminLogs() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: C.surface, borderRadius: 10, paddingHorizontal: 12 }}>
             <Ionicons name="search-outline" size={16} color={C.textMuted} />
             <ThemedTextInput
-              style={{ flex: 1, color: C.textPrimary, fontSize: 14, paddingVertical: 10 }}
+              style={{ flex: 1, color: C.textPrimary, fontSize: 13, paddingVertical: 10 }}
               placeholder="Search by email, event type, or user ID…"
               placeholderTextColor={C.textMuted}
               value={searchText}
@@ -488,13 +489,13 @@ export default function AdminLogs() {
                   <Ionicons
                     name="calendar-outline"
                     size={12}
-                    color={isSelected ? "#000" : C.textSecondary}
+                    color={isSelected ? C.accentText : C.textSecondary}
                   />
                   <Text
                     style={{
                       fontSize: 12,
                       fontWeight: "600",
-                      color: isSelected ? "#000" : C.textSecondary,
+                      color: isSelected ? C.accentText : C.textSecondary,
                     }}
                   >
                     {range.label}
@@ -528,7 +529,7 @@ export default function AdminLogs() {
                     style={{
                       fontSize: 12,
                       fontWeight: "600",
-                      color: isSelected ? "#000" : C.textSecondary,
+                      color: isSelected ? C.accentText : C.textSecondary,
                     }}
                   >
                     {cat}

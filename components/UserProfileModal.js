@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
@@ -123,7 +123,6 @@ export default function UserProfileModal({
 
   const handleNavigate = (path) => {
     if (onNavigateToPath) {
-      // Parent controls closing + navigation to avoid double-modal teardown
       onNavigateToPath(path);
     } else {
       onClose();
@@ -161,7 +160,8 @@ export default function UserProfileModal({
       onRequestClose={onClose}
     >
       <View className={`flex-1 ${bg}`}>
-        <View className={`${bgCard} p-4 pt-12 border-b ${border}`}>
+        {/* Modal Header — clean, no LogoHeader */}
+        <View className={`${bgCard} p-4 pt-14 border-b ${border}`}>
           <View className="flex-row items-center justify-between">
             <ThemedText className="text-2xl font-bold text-cyan-400">
               Teacher Profile
