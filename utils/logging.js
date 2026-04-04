@@ -1,6 +1,5 @@
 // Logging utility for app-wide event logging to Supabase app_logs table
 import { supabase } from '../supabase';
-import * as Device from 'expo-device';
 
 /**
  * Log an event to the app_logs table.
@@ -15,9 +14,15 @@ export async function logEvent({ event_type, user_id, target_id, target_table, d
   let ip_address = null;
   let user_agent = null;
 
-  // Try to get device info (user agent) for mobile/web
+  // Try to get device info (user agent) for mobile/web - non-blocking
   try {
-    user_agent = `${Device.manufacturer || ''} ${Device.modelName || ''} ${Device.osName || ''} ${Device.osVersion || ''}`.trim();
+    // Use dynamic import instead of require to avoid bundling issues
+    import('expo-device').then((Device) => {
+      const defaultDevice = Device.default || Device;
+      user_agent = `${defaultDevice.manufacturer || ''} ${defaultDevice.modelName || ''} ${defaultDevice.osName || ''} ${defaultDevice.osVersion || ''}`.trim();
+    }).catch(() => {
+      // Silently fail - device info is optional
+    });
   } catch {}
 
   // Try to get public IP address (client-side only, best effort)
@@ -29,19 +34,21 @@ export async function logEvent({ event_type, user_id, target_id, target_table, d
     }
   } catch {}
 
-  const { error } = await supabase.from('app_logs').insert([
-    {
-      event_type,
-      user_id,
-      target_id,
-      target_table,
-      details,
-      ip_address,
-      user_agent,
-    },
-  ]);
-  if (error) {
-    // Optionally handle/log error
-    console.error('Failed to log event:', error);
+  // Log the event to Supabase
+  try {
+    await supabase.from('app_logs').insert([
+      {
+        event_type,
+        user_id,
+        target_id,
+        target_table,
+        details,
+        ip_address,
+        user_agent,
+      },
+    ]);
+  } catch (error) {
+    // Silently fail - logging errors should never break app functionality
+    console.debug('Logging error:', error?.message);
   }
 }

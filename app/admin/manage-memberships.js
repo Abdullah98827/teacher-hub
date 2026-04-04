@@ -2,10 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -18,7 +18,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { logEvent } from "../../utils/logging";
 
 export default function ManageMembershipsScreen() {
   const { user } = useAuth();

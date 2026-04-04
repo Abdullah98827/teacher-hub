@@ -3,13 +3,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ConfirmModal from "../../components/ConfirmModal";
@@ -19,6 +19,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function GroupChatScreen() {
   const { id } = useLocalSearchParams();
@@ -156,12 +157,26 @@ export default function GroupChatScreen() {
       .eq("id", pendingDeleteId);
 
     if (error) {
+      logEvent({
+        event_type: "GROUP_MESSAGE_DELETE_FAILED",
+        user_id: user?.id,
+        target_id: pendingDeleteId,
+        target_table: "group_messages",
+        details: { error: error.message, group_chat_id: id },
+      });
       Toast.show({
         type: "error",
         text1: "Failed to delete message",
         text2: "Something went wrong. Please try again.",
       });
     } else {
+      logEvent({
+        event_type: "GROUP_MESSAGE_DELETED",
+        user_id: user?.id,
+        target_id: pendingDeleteId,
+        target_table: "group_messages",
+        details: { group_chat_id: id },
+      });
       Toast.show({ type: "success", text1: "Message deleted" });
       setMessages((prev) => prev.filter((m) => m.id !== pendingDeleteId));
     }
@@ -208,10 +223,24 @@ export default function GroupChatScreen() {
     if (error) {
       setMessages((prev) => prev.filter((m) => m.id !== tempMessage.id));
       setNewMessage(messageText);
+      logEvent({
+        event_type: "GROUP_MESSAGE_SEND_FAILED",
+        user_id: user?.id,
+        target_id: id,
+        target_table: "group_chats",
+        details: { error: error.message },
+      });
       Toast.show({ type: "error", text1: "Failed to send message" });
       setSending(false);
       return;
     }
+
+    logEvent({
+      event_type: "GROUP_MESSAGE_SENT",
+      user_id: user?.id,
+      target_id: id,
+      target_table: "group_chats",
+    });
 
     if (data) {
       setMessages((prev) =>

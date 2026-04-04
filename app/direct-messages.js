@@ -16,6 +16,7 @@ import { ThemedTextInput } from '../components/themed-textinput';
 import { useAuth } from "../contexts/AuthContext";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { logEvent } from "../utils/logging";
 
 export default function DirectMessagesScreen() {
   const { user, loading: authLoading } = useAuth();
@@ -145,7 +146,15 @@ export default function DirectMessagesScreen() {
   const renderConversation = ({ item }) => (
     <TouchableOpacity
       className={`${bgCard} rounded-xl p-4 mb-3 flex-row items-center ${border} border`}
-      onPress={() => router.push(`/dm/${item.userId}`)}
+      onPress={() => {
+        logEvent({
+          event_type: "DM_CONVERSATION_OPENED",
+          user_id: user?.id,
+          target_id: item.userId,
+          target_table: "teachers",
+        });
+        router.push(`/dm/${item.userId}`);
+      }}
       activeOpacity={0.7}
     >
       <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mr-3">

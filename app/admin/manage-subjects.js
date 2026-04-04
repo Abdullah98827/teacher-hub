@@ -2,13 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    RefreshControl,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AccessToggle from "../../components/AccessToggle";
@@ -19,11 +19,11 @@ import SubjectCard from "../../components/SubjectCard";
 import SubscribersModal from "../../components/SubscribersModal";
 import { ThemedText } from '../../components/themed-text';
 import { ThemedTextInput } from "../../components/themed-textinput";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function AdminSubjectManagementScreen() {
   const { user } = useAuth();

@@ -1,11 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -15,10 +15,10 @@ import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
 import { ThemedText } from "../../components/themed-text";
+import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
-import { useAuth } from "../../contexts/AuthContext";
 
 export default function ManageCommentsScreen() {
   const { user } = useAuth();

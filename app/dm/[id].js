@@ -3,13 +3,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
@@ -17,6 +17,7 @@ import { ThemedText } from '../../components/themed-text';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { logEvent } from "../../utils/logging";
 
 export default function DMChatScreen() {
   const { id: partnerId } = useLocalSearchParams();
@@ -163,10 +164,24 @@ export default function DMChatScreen() {
     if (error) {
       setMessages((prev) => prev.filter((m) => m.id !== tempMessage.id));
       setNewMessage(messageText);
+      logEvent({
+        event_type: "DM_SEND_FAILED",
+        user_id: user.id,
+        target_id: partnerId,
+        target_table: "teachers",
+        details: { error: error.message },
+      });
       Toast.show({ type: "error", text1: "Failed to send message" });
       setSending(false);
       return;
     }
+
+    logEvent({
+      event_type: "DM_SENT",
+      user_id: user.id,
+      target_id: partnerId,
+      target_table: "teachers",
+    });
 
     if (data) {
       setMessages((prev) =>

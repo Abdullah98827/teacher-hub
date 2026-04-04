@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -22,8 +22,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { deleteFile } from "../../utils/storage";
 import { logEvent } from "../../utils/logging";
+import { deleteFile } from "../../utils/storage";
 
 export default function AdminResourcesScreen() {
   const { user } = useAuth();

@@ -2,11 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useContext, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Modal,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
