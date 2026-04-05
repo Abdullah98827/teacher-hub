@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    ScrollView,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
@@ -220,12 +220,52 @@ export default function CommunityScreen() {
 
       {item.lastMessage ? (
         <View className="ml-15">
-          <ThemedText className={`${textSecondary} text-sm`} numberOfLines={2}>
-            <ThemedText className="font-semibold">
-              {item.lastMessage.sender.first_name}:
-            </ThemedText>{" "}
-            {item.lastMessage.message}
-          </ThemedText>
+          {(() => {
+            let displayText = item.lastMessage.message;
+            let isResourceShare = false;
+            let resourceTitle = "";
+            
+            // Try to parse as resource share message (new JSON format)
+            try {
+              const parsed = JSON.parse(item.lastMessage.message);
+              if (parsed.type === "resource_share" && parsed.title) {
+                resourceTitle = parsed.title;
+                isResourceShare = true;
+              }
+            } catch (_) {
+              // Not JSON, check if it's old format resource message
+              if (item.lastMessage.message && item.lastMessage.message.includes("teacherhub://resource/")) {
+                const titleMatch = item.lastMessage.message.match(/Check out:?\s*"?([^"]+)"?/i);
+                if (titleMatch) {
+                  resourceTitle = titleMatch[1].trim();
+                  isResourceShare = true;
+                }
+              }
+            }
+            
+            if (isResourceShare && resourceTitle) {
+              return (
+                <View className="flex-row items-center gap-1.5">
+                  <Ionicons name="share-social" size={14} color="#22d3ee" />
+                  <ThemedText className={`${textSecondary} text-sm flex-1`} numberOfLines={2}>
+                    <ThemedText className="font-semibold">
+                      {item.lastMessage.sender.first_name}:
+                    </ThemedText>{" "}
+                    Shared {resourceTitle}
+                  </ThemedText>
+                </View>
+              );
+            }
+            
+            return (
+              <ThemedText className={`${textSecondary} text-sm`} numberOfLines={2}>
+                <ThemedText className="font-semibold">
+                  {item.lastMessage.sender.first_name}:
+                </ThemedText>{" "}
+                {displayText}
+              </ThemedText>
+            );
+          })()}
           <ThemedText className={`${textMuted} text-xs mt-1`}>
             {formatTime(item.lastMessage.created_at)}
           </ThemedText>

@@ -1,6 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Linking, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { AuthProvider } from "../contexts/AuthContext";
@@ -47,9 +47,41 @@ export default function RootLayout() {
       }
     );
 
+    // Handle deep links (teacherhub://resource/{id})
+    const handleDeepLink = async ({ url }) => {
+      if (url && url.includes("teacherhub://resource/")) {
+        const resourceId = url.split("teacherhub://resource/")[1];
+        if (resourceId) {
+          console.log("Deep link detected for resource:", resourceId);
+          // Navigate to resources tab with the resource ID
+          router.push(`/(tabs)/resources?openResourceId=${resourceId}`);
+        }
+      }
+    };
+
+    const linkingSubscription = Linking.addEventListener("url", handleDeepLink);
+
+    // Also check if app was opened from a link
+    const checkInitialUrl = async () => {
+      const url = await Linking.getInitialURL();
+      if (url && url.includes("teacherhub://resource/")) {
+        const resourceId = url.split("teacherhub://resource/")[1];
+        if (resourceId) {
+          console.log("Initial URL deep link detected for resource:", resourceId);
+          // Small delay to ensure navigation stack is ready
+          setTimeout(() => {
+            router.push(`/(tabs)/resources?openResourceId=${resourceId}`);
+          }, 1000);
+        }
+      }
+    };
+
+    checkInitialUrl();
+
     // Cleanup subscription when component unmounts
     return () => {
       subscription?.subscription.unsubscribe();
+      linkingSubscription?.remove();
     };
   }, [router]);
 

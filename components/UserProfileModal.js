@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +21,7 @@ export default function UserProfileModal({
   onClose,
   onNavigateToPath,
 }) {
+  const router = useRouter();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -122,11 +124,10 @@ export default function UserProfileModal({
   };
 
   const handleNavigate = (path) => {
-    if (onNavigateToPath) {
-      onNavigateToPath(path);
-    } else {
-      onClose();
-    }
+    onClose();
+    setTimeout(() => {
+      router.push(path);
+    }, 300);
   };
 
   const handleMessage = () => {
@@ -147,7 +148,11 @@ export default function UserProfileModal({
       });
       return;
     }
-    handleNavigate(`/dm/${userId}`);
+    // Close modal first, then navigate
+    onClose();
+    setTimeout(() => {
+      router.push(`/dm/${userId}`);
+    }, 300);
   };
 
   if (!visible) return null;
@@ -255,7 +260,7 @@ export default function UserProfileModal({
             >
               <TouchableOpacity
                 className={`flex-1 items-center py-4 border-r ${border}`}
-                onPress={() => handleNavigate(`/followers/${userId}`)}
+                onPress={() => handleNavigate(`/(tabs)/followers/${userId}`)}
               >
                 <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                   {followersCount}
@@ -266,7 +271,7 @@ export default function UserProfileModal({
               </TouchableOpacity>
               <TouchableOpacity
                 className="flex-1 items-center py-4"
-                onPress={() => handleNavigate(`/following/${userId}`)}
+                onPress={() => handleNavigate(`/(tabs)/following/${userId}`)}
               >
                 <ThemedText className={`${textPrimary} text-2xl font-bold`}>
                   {followingCount}

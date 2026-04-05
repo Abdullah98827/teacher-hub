@@ -1,4 +1,6 @@
 import LogoHeader from "@/components/logoHeader";
+import ProfilePicture from "@/components/ProfilePicture";
+import UserProfileModal from "@/components/UserProfileModal";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,6 +36,11 @@ export default function GroupChatScreen() {
   const [sending, setSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [userProfilePic, setUserProfilePic] = useState(null);
+  const [userFirstName, setUserFirstName] = useState("");
+  const [userLastName, setUserLastName] = useState("");
   const flatListRef = useRef(null);
 
   const isAdmin = role === "admin";
@@ -65,7 +72,7 @@ export default function GroupChatScreen() {
     }
 
     setGroupChat(data);
-  }, [id]);
+  }, [id, router]);
 
   const fetchMessages = useCallback(async () => {
     if (!id) {
@@ -75,7 +82,7 @@ export default function GroupChatScreen() {
 
     const { data, error } = await supabase
       .from("group_messages")
-      .select("id, message, created_at, sender:teachers(id, first_name, last_name)")
+      .select("id, message, created_at, sender:teachers(id, first_name, last_name, profile_picture_url)")
       .eq("group_chat_id", id)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
@@ -90,9 +97,35 @@ export default function GroupChatScreen() {
     setLoading(false);
   }, [id]);
 
+  const fetchUserProfilePic = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("profile_picture_url, first_name, last_name")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setUserProfilePic(data.profile_picture_url || null);
+        setUserFirstName(data.first_name || "");
+        setUserLastName(data.last_name || "");
+      }
+
+      if (error) {
+        console.warn("Error fetching user profile picture:", error);
+        console.log("User ID:", user.id);
+      }
+    } catch (err) {
+      console.error("Exception fetching user profile picture:", err);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
     fetchGroupChat();
     fetchMessages();
+    fetchUserProfilePic();
 
     const channel = supabase
       .channel(`group_chat_${id}`)
@@ -107,7 +140,7 @@ export default function GroupChatScreen() {
         async (payload) => {
           const { data: sender } = await supabase
             .from("teachers")
-            .select("id, first_name, last_name")
+            .select("id, first_name, last_name, profile_picture_url")
             .eq("id", payload.new.sender_id)
             .single();
 
@@ -136,7 +169,7 @@ export default function GroupChatScreen() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, fetchGroupChat, fetchMessages]);
+  }, [id, fetchGroupChat, fetchMessages, fetchUserProfilePic]);
 
   const deleteMessage = (messageId) => {
     if (!isAdmin) return;
@@ -264,19 +297,133 @@ export default function GroupChatScreen() {
     const isOwnMessage = item.sender.id === user?.id;
     const isDeleting = deletingMessageId === item.id;
 
+    // Try to parse as resource share message (new JSON format)
+    let isResourceShare = false;
+    let resourceData = null;
+    try {
+      const parsed = JSON.parse(item.message);
+      if (parsed.type === "resource_share" && parsed.resourceId && parsed.link) {
+        isResourceShare = true;
+        resourceData = parsed;
+      }
+    } catch (_) {
+      // Not JSON, check if it's old format resource message
+      // Old format: "📚 Check out: RESOURCE_NAME\n\nteacherhub://resource/..."
+      if (item.message && item.message.includes("teacherhub://resource/")) {
+        isResourceShare = true;
+        // Extract title from old format
+        const titleMatch = item.message.match(/Check out:?\s*"?([^"]+)"?/i);
+        const linkMatch = item.message.match(/teacherhub:\/\/resource\/([a-f0-9\-]+)/);
+        if (linkMatch) {
+          resourceData = {
+            title: titleMatch ? titleMatch[1].trim() : "Shared Resource",
+            resourceId: linkMatch[1],
+            link: `teacherhub://resource/${linkMatch[1]}`,
+          };
+        }
+      }
+    }
+
+    const handleResourcePress = () => {
+      if (resourceData && resourceData.resourceId) {
+        router.push(`/(tabs)/resources?openResourceId=${resourceData.resourceId}`);
+      }
+    };
+
     return (
       <View className={`mb-3 ${isOwnMessage ? "items-end" : "items-start"}`}>
         {!isOwnMessage && (
-          <ThemedText className="text-cyan-400 text-xs font-semibold mb-1 ml-2">
-            {item.sender.first_name} {item.sender.last_name}
-          </ThemedText>
+          <View className="flex-row items-center gap-2 mb-1 ml-2">
+            <ProfilePicture
+              imageUrl={item.sender.profile_picture_url}
+              firstName={item.sender.first_name}
+              lastName={item.sender.last_name}
+              customSize={24}
+            />
+            <TouchableOpacity 
+              onPress={() => {
+                setSelectedUserId(item.sender.id);
+                setShowProfileModal(true);
+              }}
+            >
+              <ThemedText className="text-cyan-400 text-xs font-semibold">
+                {item.sender.first_name}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
         )}
-        <View className="flex-row items-end">
-          {isAdmin && !isOwnMessage && (
+        <View className="flex-row items-end gap-2">
+          {!isOwnMessage && (
+            <ProfilePicture
+              imageUrl={item.sender.profile_picture_url}
+              firstName={item.sender.first_name}
+              lastName={item.sender.last_name}
+              size="sm"
+            />
+          )}
+
+          {isResourceShare && resourceData ? (
+            <TouchableOpacity
+              onPress={handleResourcePress}
+              activeOpacity={0.6}
+              className="max-w-[70%]"
+            >
+              <View
+                className={`rounded-lg px-3 py-3 ${
+                  isOwnMessage
+                    ? "bg-cyan-500"
+                    : bgCardAlt
+                }`}
+              >
+                <View className="flex-row items-center gap-2 mb-2">
+                  <Ionicons
+                    name="share-social"
+                    size={16}
+                    color={isOwnMessage ? "#e0f2fe" : "#22d3ee"}
+                  />
+                  <ThemedText 
+                    className={`text-xs font-semibold ${isOwnMessage ? "text-cyan-50" : "text-cyan-400"}`}
+                  >
+                    {isOwnMessage ? "You shared" : "Shared with you"}
+                  </ThemedText>
+                </View>
+                <ThemedText 
+                  className={`text-sm font-medium ${isOwnMessage ? "text-white" : textPrimary}`}
+                  numberOfLines={3}
+                >
+                  {resourceData.title}
+                </ThemedText>
+                <ThemedText
+                  className={`text-xs mt-2 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
+                >
+                  {formatTime(item.created_at)}
+                </ThemedText>
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View
+              className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                isOwnMessage
+                  ? "bg-cyan-500"
+                  : bgCardAlt
+              }`}
+            >
+              <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary} text-base leading-6`}>
+                {item.message}
+              </ThemedText>
+              <ThemedText
+                className={`text-xs mt-1 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
+              >
+                {formatTime(item.created_at)}
+              </ThemedText>
+            </View>
+          )}
+
+          {isOwnMessage && (
             <TouchableOpacity
               onPress={() => deleteMessage(item.id)}
               disabled={isDeleting}
-              className="mr-2 mb-1"
+              className="mb-1"
             >
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#ef4444" />
@@ -285,29 +432,11 @@ export default function GroupChatScreen() {
               )}
             </TouchableOpacity>
           )}
-
-          <View
-            className={`max-w-[75%] px-4 py-3 rounded-2xl ${
-              isOwnMessage
-                ? "bg-cyan-500 rounded-br-sm"
-                : `${bgCardAlt} rounded-bl-sm`
-            }`}
-          >
-            <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary}`}>
-              {item.message}
-            </ThemedText>
-            <ThemedText
-              className={`text-xs mt-1 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
-            >
-              {formatTime(item.created_at)}
-            </ThemedText>
-          </View>
-
-          {isAdmin && isOwnMessage && (
+          {!isOwnMessage && isAdmin && (
             <TouchableOpacity
               onPress={() => deleteMessage(item.id)}
               disabled={isDeleting}
-              className="ml-2 mb-1"
+              className="mb-1"
             >
               {isDeleting ? (
                 <ActivityIndicator size="small" color="#ef4444" />
@@ -315,6 +444,14 @@ export default function GroupChatScreen() {
                 <Ionicons name="trash-outline" size={16} color="#ef4444" />
               )}
             </TouchableOpacity>
+          )}
+          {isOwnMessage && (
+            <ProfilePicture
+              imageUrl={userProfilePic}
+              firstName={userFirstName}
+              lastName={userLastName}
+              size="sm"
+            />
           )}
         </View>
       </View>
@@ -424,6 +561,12 @@ export default function GroupChatScreen() {
         isProcessing={!!deletingMessageId}
         onConfirm={confirmDeleteMessage}
         onCancel={() => setPendingDeleteId(null)}
+      />
+
+      <UserProfileModal 
+        visible={showProfileModal}
+        userId={selectedUserId}
+        onClose={() => setShowProfileModal(false)}
       />
 
       <Toast />

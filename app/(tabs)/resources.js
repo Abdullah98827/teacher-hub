@@ -1,17 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Linking,
-    Modal,
-    Platform,
-    RefreshControl,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Linking,
+  Modal,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { WebView } from "react-native-webview";
@@ -33,16 +33,17 @@ import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
 import { hasSeenOnboarding, setOnboardingSeen } from '../../utils/onboardingHelpers';
 import {
-    checkBookmark,
-    getResourceStats,
-    toggleBookmark,
-    trackResourceView,
+  checkBookmark,
+  getResourceStats,
+  toggleBookmark,
+  trackResourceView,
 } from "../../utils/resourceHelpers";
 import { deleteFile, getSignedUrl } from "../../utils/storage";
 
 export default function ResourcesScreen() {
   const { user } = useAuth();
   const router = useRouter();
+  const { openResourceId } = useLocalSearchParams();
   const {
     bg,
     bgCard,
@@ -82,6 +83,7 @@ export default function ResourcesScreen() {
 
   const [selectedResourceId, setSelectedResourceId] = useState(null);
   const [selectedResourceTitle, setSelectedResourceTitle] = useState("");
+  const [selectedResourceSubjectId, setSelectedResourceSubjectId] = useState(null);
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -261,7 +263,7 @@ export default function ResourcesScreen() {
     if (activeTab === "following") {
       fetchFollowingResources();
     }
-  }, [fetchResources, activeTab]);
+  }, [fetchResources, fetchFollowingResources, activeTab]);
 
   useEffect(() => {
     if (user && user.id) {
@@ -279,6 +281,42 @@ export default function ResourcesScreen() {
     }
     setShowOnboarding(false);
   };
+
+  // Handle opening a specific resource from deep link
+  useEffect(() => {
+    if (openResourceId && resources.length > 0) {
+      const resource = resources.find((r) => r.id === openResourceId);
+      if (resource) {
+        // Immediately show the preview with the resource
+        setSelectedResource(resource);
+        
+        // Load stats and signed URL in the background
+        (async () => {
+          try {
+            if (user?.id) {
+              await trackResourceView(resource.id, user.id);
+              const stats = await getResourceStats(resource.id);
+              setResourceStats((prev) => new Map(prev).set(resource.id, stats));
+            }
+            const url = await getSignedUrl(resource.file_url, 600);
+            if (url) {
+              setSignedUrl(url);
+            }
+          } catch (err) {
+            console.error("Error loading resource preview:", err);
+          }
+        })();
+        
+        // Show preview after a small delay
+        setTimeout(() => {
+          setShowPreview(true);
+        }, 100);
+        
+        // Clear the query param to prevent re-opening on close
+        router.setParams({ openResourceId: undefined });
+      }
+    }
+  }, [openResourceId, resources, user?.id, router]);
 
   const handleTranslateClick = async () => {
     if (!user || !selectedResource) return;
@@ -827,6 +865,7 @@ export default function ResourcesScreen() {
                       onShare={() => {
                         setSelectedResourceId(item.id);
                         setSelectedResourceTitle(item.title);
+                        setSelectedResourceSubjectId(item.subject?.id);
                         setShowShareModal(true);
                       }}
                       showActions={
@@ -1030,6 +1069,7 @@ export default function ResourcesScreen() {
             visible={showShareModal}
             resourceId={selectedResourceId}
             resourceTitle={selectedResourceTitle}
+            subjectId={selectedResourceSubjectId}
             onClose={() => setShowShareModal(false)}
           />
         </>

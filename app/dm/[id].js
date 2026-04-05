@@ -1,15 +1,17 @@
 import LogoHeader from "@/components/logoHeader";
+import ProfilePicture from "@/components/ProfilePicture";
+import UserProfileModal from "@/components/UserProfileModal";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
@@ -29,34 +31,83 @@ export default function DMChatScreen() {
     bgInput,
     border,
     textPrimary,
-    textSecondary,
     textMuted,
     placeholderColor,
   } = useAppTheme();
 
   const [partnerName, setPartnerName] = useState("Loading...");
+  const [partnerProfilePic, setPartnerProfilePic] = useState(null);
+  const [partnerLastName, setPartnerLastName] = useState("");
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [deletingMessageId, setDeletingMessageId] = useState(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [userProfilePic, setUserProfilePic] = useState(null);
+  const [userFirstName, setUserFirstName] = useState("");
+  const [userLastName, setUserLastName] = useState("");
   const flatListRef = useRef(null);
 
   // ── Fetch partner name ────────────────────────────────────────────────────
   const fetchPartnerInfo = useCallback(async () => {
     if (!partnerId) return;
-    const { data, error } = await supabase
-      .from("teachers")
-      .select("first_name, last_name")
-      .eq("id", partnerId)
-      .single();
+    
+    try {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("first_name, last_name, profile_picture_url")
+        .eq("id", partnerId)
+        .single();
 
-    if (error || !data) {
-      Toast.show({ type: "error", text1: "User not found" });
-      router.back();
-      return;
+      if (data) {
+        setPartnerName(data.first_name);
+        setPartnerLastName(data.last_name);
+        setPartnerProfilePic(data.profile_picture_url);
+        return;
+      }
+
+      // If not found, log error but allow the chat to continue
+      if (error) {
+        console.warn("Error fetching partner info:", error);
+        // Use a generic name instead of showing error
+        setPartnerName("User");
+        setPartnerLastName("");
+        setPartnerProfilePic(null);
+      }
+    } catch (err) {
+      console.error("Exception fetching partner info:", err);
+      setPartnerName("User");
+      setPartnerLastName("");
+      setPartnerProfilePic(null);
     }
-    setPartnerName(`${data.first_name} ${data.last_name}`);
   }, [partnerId]);
+
+  // ── Fetch current user profile picture ─────────────────────────────────────
+  const fetchUserProfilePic = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("profile_picture_url, first_name, last_name")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setUserProfilePic(data.profile_picture_url || null);
+        setUserFirstName(data.first_name || "");
+        setUserLastName(data.last_name || "");
+      }
+
+      if (error) {
+        console.warn("Error fetching user profile picture:", error);
+        console.log("User ID:", user.id);
+      }
+    } catch (err) {
+      console.error("Exception fetching user profile picture:", err);
+    }
+  }, [user?.id]);
 
   // ── Fetch messages (only once user is ready) ─────────────────────────────
   const fetchMessages = useCallback(async () => {
@@ -92,8 +143,9 @@ export default function DMChatScreen() {
   useEffect(() => {
     if (authLoading) return; // wait for auth to resolve
     fetchPartnerInfo();
+    fetchUserProfilePic();
     fetchMessages();
-  }, [authLoading, fetchPartnerInfo, fetchMessages]);
+  }, [authLoading, fetchPartnerInfo, fetchUserProfilePic, fetchMessages]);
 
   // ── Realtime subscription (only subscribe once user.id is known) ─────────
   useEffect(() => {
@@ -191,6 +243,46 @@ export default function DMChatScreen() {
     setSending(false);
   };
 
+  // ── Delete message ────────────────────────────────────────────────────────
+  const deleteMessage = async (messageId) => {
+    setDeletingMessageId(messageId);
+    try {
+      const { error } = await supabase
+        .from("direct_messages")
+        .delete()
+        .eq("id", messageId);
+
+      if (error) throw error;
+
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      Toast.show({
+        type: "success",
+        text1: "Message deleted",
+      });
+      logEvent({
+        event_type: "DM_DELETED",
+        user_id: user?.id,
+        target_id: partnerId,
+        target_table: "teachers",
+      });
+    } catch (err) {
+      console.error("Error deleting message:", err);
+      Toast.show({
+        type: "error",
+        text1: "Failed to delete message",
+      });
+      logEvent({
+        event_type: "DM_DELETE_FAILED",
+        user_id: user?.id,
+        target_id: partnerId,
+        target_table: "teachers",
+        details: { error: err.message },
+      });
+    } finally {
+      setDeletingMessageId(null);
+    }
+  };
+
   // ── Helpers ───────────────────────────────────────────────────────────────
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -199,34 +291,166 @@ export default function DMChatScreen() {
 
   const renderMessage = ({ item }) => {
     const isOwnMessage = item.sender_id === user?.id;
+    const isDeleting = deletingMessageId === item.id;
+    
+    // Try to parse as resource share message (new JSON format)
+    let isResourceShare = false;
+    let resourceData = null;
+    try {
+      const parsed = JSON.parse(item.message);
+      if (parsed.type === "resource_share" && parsed.resourceId && parsed.link) {
+        isResourceShare = true;
+        resourceData = parsed;
+      }
+    } catch (_) {
+      // Not JSON, check if it's old format resource message
+      // Old format: "📚 Check out: RESOURCE_NAME\n\nteacherhub://resource/..."
+      if (item.message && item.message.includes("teacherhub://resource/")) {
+        isResourceShare = true;
+        // Extract title from old format
+        const titleMatch = item.message.match(/Check out:?\s*"?([^"]+)"?/i);
+        const linkMatch = item.message.match(/teacherhub:\/\/resource\/([a-f0-9\-]+)/);
+        if (linkMatch) {
+          resourceData = {
+            title: titleMatch ? titleMatch[1].trim() : "Shared Resource",
+            resourceId: linkMatch[1],
+            link: `teacherhub://resource/${linkMatch[1]}`,
+          };
+        }
+      }
+    }
+    
+    const handleResourcePress = () => {
+      if (resourceData && resourceData.resourceId) {
+        router.push(`/(tabs)/resources?openResourceId=${resourceData.resourceId}`);
+      }
+    };
+
+    if (isResourceShare && resourceData) {
+      return (
+        <View className={`mb-3 flex-row gap-2 items-end ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+          {!isOwnMessage && (
+            <ProfilePicture
+              imageUrl={partnerProfilePic}
+              firstName={partnerName}
+              lastName={partnerLastName}
+              size="sm"
+            />
+          )}
+
+          <TouchableOpacity
+            onPress={handleResourcePress}
+            activeOpacity={0.6}
+            className="max-w-[70%]"
+          >
+            <View
+              className={`rounded-lg px-3 py-3 ${
+                isOwnMessage
+                  ? "bg-cyan-500"
+                  : bgCardAlt
+              }`}
+            >
+              <View className="flex-row items-center gap-2 mb-2">
+                <Ionicons
+                  name="share-social"
+                  size={16}
+                  color={isOwnMessage ? "#e0f2fe" : "#22d3ee"}
+                />
+                <ThemedText 
+                  className={`text-xs font-semibold ${isOwnMessage ? "text-cyan-50" : "text-cyan-400"}`}
+                >
+                  {isOwnMessage ? "You shared" : "Shared with you"}
+                </ThemedText>
+              </View>
+              <ThemedText 
+                className={`text-sm font-medium ${isOwnMessage ? "text-white" : textPrimary}`}
+                numberOfLines={3}
+              >
+                {resourceData.title}
+              </ThemedText>
+              <ThemedText
+                className={`text-xs mt-2 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
+              >
+                {formatTime(item.created_at)}
+              </ThemedText>
+            </View>
+          </TouchableOpacity>
+
+          {isOwnMessage && (
+            <TouchableOpacity
+              onPress={() => deleteMessage(item.id)}
+              disabled={isDeleting}
+              className="mb-1"
+            >
+              {isDeleting ? (
+                <ActivityIndicator size="small" color="#ef4444" />
+              ) : (
+                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+              )}
+            </TouchableOpacity>
+          )}
+          {isOwnMessage && (
+            <ProfilePicture
+              imageUrl={userProfilePic}
+              firstName={userFirstName}
+              lastName={userLastName}
+              size="sm"
+            />
+          )}
+        </View>
+      );
+    }
+
+    // Regular text message
     return (
-      <View className={`mb-3 ${isOwnMessage ? "items-end" : "items-start"}`}>
+      <View className={`mb-2 flex-row gap-2 items-end ${isOwnMessage ? "justify-end" : "justify-start"}`}>
+        {!isOwnMessage && (
+          <ProfilePicture
+            imageUrl={partnerProfilePic}
+            firstName={partnerName}
+            lastName={partnerLastName}
+            size="sm"
+          />
+        )}
+
         <View
-          className={`max-w-[75%] px-4 py-3 rounded-2xl ${
+          className={`max-w-[70%] px-4 py-3 rounded-2xl ${
             isOwnMessage
-              ? "bg-cyan-500 rounded-br-sm"
-              : `${bgCardAlt} rounded-bl-sm`
+              ? "bg-cyan-500"
+              : bgCardAlt
           }`}
         >
-          <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary}`}>
+          <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary} text-base leading-6`}>
             {item.message}
           </ThemedText>
-          <View className="flex-row items-center justify-between mt-1">
-            <ThemedText
-              className={`text-xs ${isOwnMessage ? "text-cyan-100" : textMuted}`}
-            >
-              {formatTime(item.created_at)}
-            </ThemedText>
-            {isOwnMessage && (
-              <Ionicons
-                name={item.read ? "checkmark-done" : "checkmark"}
-                size={14}
-                color={item.read ? "#22d3ee" : "#a5f3fc"}
-                style={{ marginLeft: 4 }}
-              />
-            )}
-          </View>
+          <ThemedText
+            className={`text-xs mt-1 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
+          >
+            {formatTime(item.created_at)}
+          </ThemedText>
         </View>
+
+        {isOwnMessage && (
+          <TouchableOpacity
+            onPress={() => deleteMessage(item.id)}
+            disabled={isDeleting}
+            className="mb-1"
+          >
+            {isDeleting ? (
+              <ActivityIndicator size="small" color="#ef4444" />
+            ) : (
+              <Ionicons name="trash-outline" size={16} color="#ef4444" />
+            )}
+          </TouchableOpacity>
+        )}
+        {isOwnMessage && (
+          <ProfilePicture
+            imageUrl={userProfilePic}
+            firstName={userFirstName}
+            lastName={userLastName}
+            size="sm"
+          />
+        )}
       </View>
     );
   };
@@ -257,17 +481,23 @@ export default function DMChatScreen() {
           <TouchableOpacity className="mr-3" onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="#22d3ee" />
           </TouchableOpacity>
-          <View className="bg-cyan-500/20 w-10 h-10 rounded-full items-center justify-center mr-3">
-            <ThemedText className="text-cyan-400 font-bold">
-              {partnerName.charAt(0).toUpperCase()}
-            </ThemedText>
-          </View>
-          <ThemedText
-            className={`${textPrimary} font-bold text-lg`}
-            numberOfLines={1}
+          <ProfilePicture
+            imageUrl={partnerProfilePic}
+            firstName={partnerName}
+            lastName={partnerLastName}
+            size="md"
+          />
+          <TouchableOpacity 
+            className="flex-1 ml-3"
+            onPress={() => setShowProfileModal(true)}
           >
-            {partnerName}
-          </ThemedText>
+            <ThemedText
+              className={`${textPrimary} font-bold text-lg`}
+              numberOfLines={1}
+            >
+              {partnerName}
+            </ThemedText>
+          </TouchableOpacity>
         </View>
 
         {/* Messages list */}
@@ -276,16 +506,19 @@ export default function DMChatScreen() {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          className="flex-1 px-5 pt-4"
+          className="flex-1 px-4 pt-3"
+          contentContainerStyle={{ paddingBottom: 12 }}
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() =>
             flatListRef.current?.scrollToEnd({ animated: false })
           }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
-              <Ionicons name="chatbubble-outline" size={60} color="#374151" />
-              <ThemedText className={`${textSecondary} mt-4`}>No messages yet</ThemedText>
-              <ThemedText className={`${textMuted} text-sm`}>
+              <View className="bg-cyan-500/10 w-20 h-20 rounded-full items-center justify-center mb-4">
+                <Ionicons name="chatbubble-outline" size={50} color="#22d3ee" />
+              </View>
+              <ThemedText className={`${textPrimary} font-semibold text-lg`}>No messages yet</ThemedText>
+              <ThemedText className={`${textMuted} text-sm text-center px-8 mt-2`}>
                 Start the conversation!
               </ThemedText>
             </View>
@@ -324,6 +557,11 @@ export default function DMChatScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <UserProfileModal 
+        visible={showProfileModal}
+        userId={partnerId}
+        onClose={() => setShowProfileModal(false)}
+      />
       <Toast />
     </ScreenWrapper>
   );

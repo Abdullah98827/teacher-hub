@@ -44,24 +44,42 @@ export default function FollowingScreen() {
   }, [userId]);
 
   const loadFollowing = useCallback(async () => {
-    const { data, error } = await supabase.rpc("get_following", {
-      teacher_uuid: userId,
-      limit_count: 100,
-      offset_count: 0,
-    });
+    try {
+      const { data, error } = await supabase.rpc("get_following", {
+        teacher_uuid: userId,
+        limit_count: 100,
+        offset_count: 0,
+      });
 
-    if (error) {
-      console.error("Error loading following:", error);
+      if (error) {
+        console.warn("RPC get_following failed, using fallback query:", error.message);
+        // Fallback: query directly from follows table
+        const { data: followData, error: followError } = await supabase
+          .from("follows")
+          .select("following:teachers(id, first_name, last_name, profile_picture_url, bio, followers_count)")
+          .eq("follower_id", userId);
+
+        if (followError) {
+          throw followError;
+        }
+
+        const followingData = (followData || []).map(f => f.following).filter(Boolean);
+        setFollowing(followingData);
+      } else {
+        setFollowing(data || []);
+      }
+    } catch (err) {
+      console.error("Error loading following:", err);
       Toast.show({
         type: "error",
         text1: "Error",
         text2: "Failed to load following list",
       });
-    } else {
-      setFollowing(data || []);
+      setFollowing([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    setLoading(false);
-    setRefreshing(false);
   }, [userId]);
 
   useEffect(() => {

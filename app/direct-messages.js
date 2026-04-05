@@ -1,4 +1,6 @@
 import LogoHeader from "@/components/logoHeader";
+import ProfilePicture from "@/components/ProfilePicture";
+import UserProfileModal from "@/components/UserProfileModal";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -37,6 +39,8 @@ export default function DirectMessagesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const fetchConversations = useCallback(async () => {
     if (!user?.id) {
@@ -83,7 +87,7 @@ export default function DirectMessagesScreen() {
       Array.from(conversationMap.values()).map(async (conv) => {
         const { data: teacher } = await supabase
           .from("teachers")
-          .select("first_name, last_name")
+          .select("first_name, last_name, profile_picture_url")
           .eq("id", conv.userId)
           .single();
 
@@ -92,6 +96,9 @@ export default function DirectMessagesScreen() {
           userName: teacher
             ? `${teacher.first_name} ${teacher.last_name}`
             : "Unknown",
+          profilePicture: teacher?.profile_picture_url || null,
+          firstName: teacher?.first_name || "Unknown",
+          lastName: teacher?.last_name || "",
         };
       })
     );
@@ -106,7 +113,7 @@ export default function DirectMessagesScreen() {
 
     const { data, error } = await supabase
       .from("teachers")
-      .select("id, first_name, last_name")
+      .select("id, first_name, last_name, profile_picture_url")
       .eq("verified", true)
       .neq("id", user.id)
       .order("first_name");
@@ -157,26 +164,62 @@ export default function DirectMessagesScreen() {
       }}
       activeOpacity={0.7}
     >
-      <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mr-3">
-        <ThemedText className="text-cyan-400 font-bold text-lg">
-          {item.userName.charAt(0).toUpperCase()}
-        </ThemedText>
-      </View>
-      <View className="flex-1">
+      <ProfilePicture
+        imageUrl={item.profilePicture}
+        firstName={item.firstName}
+        lastName={item.lastName}
+        size="md"
+      />
+      <View className="flex-1 ml-3">
         <View className="flex-row items-center justify-between mb-1">
-          <ThemedText className={`${textPrimary} font-bold text-base`}>
-            {item.userName}
-          </ThemedText>
+          <TouchableOpacity 
+            onPress={() => {
+              setSelectedUserId(item.userId);
+              setShowProfileModal(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <ThemedText className={`${textPrimary} font-bold text-base`}>
+              {item.userName}
+            </ThemedText>
+          </TouchableOpacity>
           <ThemedText className={`${textSecondary} text-xs`}>
             {formatTime(item.lastMessageTime)}
           </ThemedText>
         </View>
-        <ThemedText
-          className={`text-sm ${item.unreadCount > 0 ? `${textPrimary} font-semibold` : textSecondary}`}
-          numberOfLines={1}
-        >
-          {item.lastMessage}
-        </ThemedText>
+        {/* Try to parse as resource share */}
+        {(() => {
+          try {
+            const parsed = JSON.parse(item.lastMessage);
+            if (parsed.type === "resource_share" && parsed.title) {
+              return (
+                <View className="flex-row items-center gap-2">
+                  <Ionicons
+                    name="share-social"
+                    size={14}
+                    color="#22d3ee"
+                  />
+                  <ThemedText
+                    className={`text-sm ${item.unreadCount > 0 ? `${textPrimary} font-semibold` : textSecondary}`}
+                    numberOfLines={1}
+                  >
+                    Shared: {parsed.title}
+                  </ThemedText>
+                </View>
+              );
+            }
+          } catch (_) {
+            // Not JSON, fall through to regular message
+          }
+          return (
+            <ThemedText
+              className={`text-sm ${item.unreadCount > 0 ? `${textPrimary} font-semibold` : textSecondary}`}
+              numberOfLines={1}
+            >
+              {item.lastMessage}
+            </ThemedText>
+          );
+        })()}
       </View>
       {item.unreadCount > 0 && (
         <View className="bg-cyan-500 w-6 h-6 rounded-full items-center justify-center ml-2">
@@ -197,14 +240,25 @@ export default function DirectMessagesScreen() {
       }}
       activeOpacity={0.7}
     >
-      <View className="bg-cyan-500/20 w-12 h-12 rounded-full items-center justify-center mr-3">
-        <ThemedText className="text-cyan-400 font-bold text-lg">
-          {item.first_name.charAt(0).toUpperCase()}
+      <ProfilePicture
+        imageUrl={item.profile_picture_url}
+        firstName={item.first_name}
+        lastName={item.last_name}
+        size="md"
+      />
+      <TouchableOpacity 
+        className="flex-1 ml-3"
+        onPress={(e) => {
+          e.stopPropagation?.();
+          setSelectedUserId(item.id);
+          setShowProfileModal(true);
+        }}
+        activeOpacity={0.7}
+      >
+        <ThemedText className={`${textPrimary} font-semibold text-base`}>
+          {item.first_name} {item.last_name}
         </ThemedText>
-      </View>
-      <ThemedText className={`${textPrimary} font-semibold text-base`}>
-        {item.first_name} {item.last_name}
-      </ThemedText>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -309,6 +363,11 @@ export default function DirectMessagesScreen() {
           />
         )}
       </View>
+      <UserProfileModal 
+        visible={showProfileModal}
+        userId={selectedUserId}
+        onClose={() => setShowProfileModal(false)}
+      />
       <Toast />
     </ScreenWrapper>
   );

@@ -25,6 +25,7 @@ export function useFollow(targetUserId) {
       loadFollowStatus();
       loadFollowCounts();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetUserId, currentUserId]);
 
   const getCurrentUser = async () => {
@@ -39,30 +40,89 @@ export function useFollow(targetUserId) {
   const loadFollowStatus = async () => {
     if (!currentUserId || !targetUserId) return;
 
-    const { data, error } = await supabase.rpc("is_following", {
-      follower_uuid: currentUserId,
-      following_uuid: targetUserId,
-    });
+    try {
+      const { data, error } = await supabase.rpc("is_following", {
+        follower_uuid: currentUserId,
+        following_uuid: targetUserId,
+      });
 
-    if (error) {
-      console.error("Error checking follow status:", error);
-    } else {
-      setIsFollowing(data || false);
+      if (error) {
+        console.warn("RPC is_following failed, using fallback query:", error.message);
+        // Fallback: query directly
+        const { data: followData } = await supabase
+          .from("follows")
+          .select("id")
+          .eq("follower_id", currentUserId)
+          .eq("following_id", targetUserId)
+          .single();
+        setIsFollowing(!!followData);
+      } else {
+        setIsFollowing(data || false);
+      }
+    } catch (err) {
+      console.error("Error checking follow status:", err);
+      // Fallback to direct query
+      try {
+        const { data: followData } = await supabase
+          .from("follows")
+          .select("id")
+          .eq("follower_id", currentUserId)
+          .eq("following_id", targetUserId)
+          .single();
+        setIsFollowing(!!followData);
+      } catch (_) {
+        setIsFollowing(false);
+      }
     }
   };
 
   const loadFollowCounts = async () => {
     if (!targetUserId) return;
 
-    const { data, error } = await supabase.rpc("get_follow_stats", {
-      teacher_uuid: targetUserId,
-    });
+    try {
+      const { data, error } = await supabase.rpc("get_follow_stats", {
+        teacher_uuid: targetUserId,
+      });
 
-    if (error) {
-      console.error("Error loading follow counts:", error);
-    } else if (data && data.length > 0) {
-      setFollowersCount(Number(data[0].followers_count) || 0);
-      setFollowingCount(Number(data[0].following_count) || 0);
+      if (error) {
+        console.warn("RPC get_follow_stats failed, using fallback query:", error.message);
+        // Fallback: query directly
+        const { count: followersCount } = await supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", targetUserId);
+
+        const { count: followingCount } = await supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", targetUserId);
+
+        setFollowersCount(followersCount || 0);
+        setFollowingCount(followingCount || 0);
+      } else if (data && data.length > 0) {
+        setFollowersCount(Number(data[0].followers_count) || 0);
+        setFollowingCount(Number(data[0].following_count) || 0);
+      }
+    } catch (err) {
+      console.error("Error loading follow counts:", err);
+      // Fallback to direct queries
+      try {
+        const { count: followersCount } = await supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", targetUserId);
+
+        const { count: followingCount } = await supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", targetUserId);
+
+        setFollowersCount(followersCount || 0);
+        setFollowingCount(followingCount || 0);
+      } catch (_) {
+        setFollowersCount(0);
+        setFollowingCount(0);
+      }
     }
   };
 

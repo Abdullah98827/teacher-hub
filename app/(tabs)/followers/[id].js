@@ -4,11 +4,11 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    RefreshControl,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ProfilePicture from "../../../components/ProfilePicture";
@@ -43,24 +43,42 @@ export default function FollowersScreen() {
   }, [userId]);
 
   const loadFollowers = useCallback(async () => {
-    const { data, error } = await supabase.rpc("get_followers", {
-      teacher_uuid: userId,
-      limit_count: 100,
-      offset_count: 0,
-    });
+    try {
+      const { data, error } = await supabase.rpc("get_followers", {
+        teacher_uuid: userId,
+        limit_count: 100,
+        offset_count: 0,
+      });
 
-    if (error) {
-      console.error("Error loading followers:", error);
+      if (error) {
+        console.warn("RPC get_followers failed, using fallback query:", error.message);
+        // Fallback: query directly from follows table
+        const { data: followData, error: followError } = await supabase
+          .from("follows")
+          .select("follower:teachers(id, first_name, last_name, profile_picture_url, bio, followers_count)")
+          .eq("following_id", userId);
+
+        if (followError) {
+          throw followError;
+        }
+
+        const followersData = (followData || []).map(f => f.follower).filter(Boolean);
+        setFollowers(followersData);
+      } else {
+        setFollowers(data || []);
+      }
+    } catch (err) {
+      console.error("Error loading followers:", err);
       Toast.show({
         type: "error",
         text1: "Error",
         text2: "Failed to load followers",
       });
-    } else {
-      setFollowers(data || []);
+      setFollowers([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    setLoading(false);
-    setRefreshing(false);
   }, [userId]);
 
   useEffect(() => {
