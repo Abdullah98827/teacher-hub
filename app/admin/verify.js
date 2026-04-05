@@ -24,7 +24,7 @@ export default function VerifyTeachersScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
-  const { textSecondary } = useAppTheme();
+  const { textSecondary, textPrimary } = useAppTheme();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -212,7 +212,7 @@ export default function VerifyTeachersScreen() {
             <View className="bg-green-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="checkmark-circle" size={40} color="#22c55e" />
             </View>
-            <ThemedText className="text-white text-xl font-bold mb-2">All Clear!</ThemedText>
+            <ThemedText className={`text-xl font-bold mb-2 ${textPrimary}`}>All Clear!</ThemedText>
             <ThemedText className={`${textSecondary} text-center`}>
               No pending teacher verifications
             </ThemedText>

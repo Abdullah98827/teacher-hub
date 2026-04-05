@@ -191,6 +191,8 @@ export default function FollowersScreen() {
         onClose={() => {
           setShowProfileModal(false);
           setSelectedUserId(null);
+          // Refresh followers list when modal closes
+          setTimeout(() => loadFollowers(), 100);
         }}
         onNavigateToPath={(path) => {
           setShowProfileModal(false);

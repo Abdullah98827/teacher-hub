@@ -192,6 +192,8 @@ export default function FollowingScreen() {
         onClose={() => {
           setShowProfileModal(false);
           setSelectedUserId(null);
+          // Refresh following list when modal closes
+          setTimeout(() => loadFollowing(), 100);
         }}
         onNavigateToPath={(path) => {
           setShowProfileModal(false);

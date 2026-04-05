@@ -1,19 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Modal, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, TouchableOpacity, View } from 'react-native';
+import { useAppTheme } from '../hooks/useAppTheme';
 import { ThemedText } from './themed-text';
 
 const TeacherVerificationCard = ({ teacher, imageUrl, onApprove, onReject, processing }) => {
   const [showImageModal, setShowImageModal] = useState(false);
+  const { bgCard, textMuted, textPrimary } = useAppTheme();
 
   return (
-    <View style={styles.card}>
+    <View className={`p-4 m-2 rounded-lg ${bgCard} shadow-md`}>
       {imageUrl && (
         <>
           <TouchableOpacity onPress={() => setShowImageModal(true)} activeOpacity={0.8}>
             <Image
               source={{ uri: imageUrl }}
-              style={styles.image}
+              className="w-20 h-20 rounded-full self-center mb-3 bg-gray-200"
               resizeMode="cover"
             />
           </TouchableOpacity>
@@ -23,119 +25,49 @@ const TeacherVerificationCard = ({ teacher, imageUrl, onApprove, onReject, proce
             animationType="fade"
             onRequestClose={() => setShowImageModal(false)}
           >
-            <View style={styles.modalOverlay}>
-              <TouchableOpacity style={styles.closeButton} onPress={() => setShowImageModal(false)}>
+            <View className="flex-1 bg-black/95 items-center justify-center">
+              <TouchableOpacity 
+                className="absolute top-10 right-5 z-10 bg-black/50 rounded-full p-1"
+                onPress={() => setShowImageModal(false)}
+              >
                 <Ionicons name="close" size={36} color="#fff" />
               </TouchableOpacity>
               <Image
                 source={{ uri: imageUrl }}
-                style={styles.fullImage}
+                className="w-11/12 h-3/5 rounded-2xl bg-white"
                 resizeMode="contain"
               />
             </View>
           </Modal>
         </>
       )}
-      <ThemedText style={styles.teacherName}>
+      <ThemedText className={`text-lg font-bold mb-1 text-center ${textPrimary}`}>
         {teacher.first_name} {teacher.last_name}
       </ThemedText>
-      <ThemedText style={styles.email}>{teacher.email}</ThemedText>
-      <ThemedText style={styles.trn}>TRN: {teacher.trn}</ThemedText>
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.approve} onPress={onApprove} disabled={processing}>
-          {processing ? <ActivityIndicator color="#fff" /> : <ThemedText style={styles.approveText}>Approve</ThemedText>}
+      <ThemedText className={`text-sm ${textMuted} mb-0.5 text-center`}>{teacher.email}</ThemedText>
+      <ThemedText className={`text-sm ${textMuted} mb-2 text-center`}>TRN: {teacher.trn}</ThemedText>
+      <View className="flex-row justify-around mt-3 w-full">
+        <TouchableOpacity 
+          className="bg-green-500 px-6 py-2.5 rounded-lg min-w-20 items-center mx-2" 
+          onPress={onApprove} 
+          disabled={processing}
+        >
+          {processing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <ThemedText className="text-white font-bold">Approve</ThemedText>
+          )}
         </TouchableOpacity>
-        <TouchableOpacity style={styles.reject} onPress={onReject} disabled={processing}>
-          <ThemedText style={styles.rejectText}>Reject</ThemedText>
+        <TouchableOpacity 
+          className="bg-red-500 px-6 py-2.5 rounded-lg min-w-20 items-center mx-2" 
+          onPress={onReject} 
+          disabled={processing}
+        >
+          <ThemedText className="text-white font-bold">Reject</ThemedText>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    padding: 16,
-    margin: 8,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    alignItems: 'center',
-  },
-  image: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignSelf: 'center',
-    marginBottom: 12,
-    backgroundColor: '#e0e7ef',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fullImage: {
-    width: '90%',
-    height: '70%',
-    borderRadius: 16,
-    backgroundColor: '#fff',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 40,
-    right: 30,
-    zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 24,
-    padding: 4,
-  },
-  teacherName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  email: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  trn: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 12,
-    width: '100%',
-  },
-  approve: {
-    backgroundColor: '#22c55e',
-    padding: 10,
-    borderRadius: 8,
-    minWidth: 90,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  reject: {
-    backgroundColor: '#ef4444',
-    padding: 10,
-    borderRadius: 8,
-    minWidth: 90,
-    alignItems: 'center',
-    marginHorizontal: 8,
-  },
-  approveText: { color: '#fff', fontWeight: 'bold' },
-  rejectText: { color: '#fff', fontWeight: 'bold' },
-});
 
 export default TeacherVerificationCard;
