@@ -5,13 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
@@ -102,7 +102,6 @@ export default function DMChatScreen() {
 
       if (error) {
         console.warn("Error fetching user profile picture:", error);
-        console.log("User ID:", user.id);
       }
     } catch (err) {
       console.error("Exception fetching user profile picture:", err);

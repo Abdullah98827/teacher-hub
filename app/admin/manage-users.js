@@ -709,7 +709,7 @@ export default function ManageUsersScreen() {
                           >
                             {new Date(
                               selectedUser.teacher.disabled_at
-                            ).toLocaleString()}
+                            ).toLocaleString("en-GB")}
                           </ThemedText>
                         )}
                       </View>
@@ -743,7 +743,7 @@ export default function ManageUsersScreen() {
                       >
                         {new Date(
                           selectedUser.created_at
-                        ).toLocaleDateString()}
+                        ).toLocaleDateString("en-GB")}
                       </ThemedText>
                       <ThemedText className={`text-xs ${textMuted}`}>
                         Joined

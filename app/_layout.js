@@ -52,7 +52,6 @@ export default function RootLayout() {
       if (url && url.includes("teacherhub://resource/")) {
         const resourceId = url.split("teacherhub://resource/")[1];
         if (resourceId) {
-          console.log("Deep link detected for resource:", resourceId);
           // Navigate to resources tab with the resource ID
           router.push(`/(tabs)/resources?openResourceId=${resourceId}`);
         }
@@ -67,7 +66,6 @@ export default function RootLayout() {
       if (url && url.includes("teacherhub://resource/")) {
         const resourceId = url.split("teacherhub://resource/")[1];
         if (resourceId) {
-          console.log("Initial URL deep link detected for resource:", resourceId);
           // Small delay to ensure navigation stack is ready
           setTimeout(() => {
             router.push(`/(tabs)/resources?openResourceId=${resourceId}`);

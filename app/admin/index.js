@@ -13,6 +13,12 @@ export default function AdminHub() {
 
   const links = [
     {
+      label: "Manage Users",
+      subtitle: "View and control user accounts",
+      route: "/admin/manage-users",
+      icon: "people-outline",
+    },
+    {
       label: "Verify Teachers",
       subtitle: "Review & approve teacher accounts",
       route: "/admin/verify",
@@ -53,12 +59,6 @@ export default function AdminHub() {
       subtitle: "Add, edit or remove subjects",
       route: "/admin/manage-subjects",
       icon: "book-outline",
-    },
-    {
-      label: "Manage Users",
-      subtitle: "View and control user accounts",
-      route: "/admin/manage-users",
-      icon: "people-outline",
     },
     {
       label: "View Application Logs",

@@ -3,12 +3,12 @@ import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -109,9 +109,6 @@ export default function ShareModal({
           setSubjectTeachers([]);
         } else {
           const teacherIds = (membershipData || []).map((m) => m.id);
-          console.log(
-            `Found ${teacherIds.length} memberships for subject ${targetSubjectId}`
-          );
 
           if (teacherIds.length > 0) {
             // Build teachers query
@@ -134,7 +131,6 @@ export default function ShareModal({
               console.error("Teachers query error:", tErr);
               setSubjectTeachers([]);
             } else {
-              console.log(`Found ${teachers?.length} teachers`);
               setSubjectTeachers(teachers || []);
             }
           } else {
@@ -158,7 +154,6 @@ export default function ShareModal({
             console.error("Group chats error:", chatsErr);
             setGroupChats([]);
           } else {
-            console.log(`Admin: found ${allChats?.length} group chats`);
             setGroupChats(allChats || []);
           }
         } else {
@@ -177,7 +172,6 @@ export default function ShareModal({
             setGroupChats([]);
           } else if (!userMembership) {
             // User doesn't have this subject in their membership
-            console.log("User does not have this subject in their membership");
             setGroupChats([]);
           } else {
             // User has this subject — show all group chats for it
@@ -191,7 +185,6 @@ export default function ShareModal({
               console.error("Group chats error:", chatsErr);
               setGroupChats([]);
             } else {
-              console.log(`User: found ${chats?.length} group chats`);
               setGroupChats(chats || []);
             }
           }

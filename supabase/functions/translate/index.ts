@@ -13,13 +13,8 @@ Deno.serve(async (req: Request) => {
     const SUPABASE_URL  = Deno.env.get('SUPABASE_URL');
     const SUPABASE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    console.log('Starting translation...');
-    console.log('API Key exists:', !!GOOGLE_KEY);
-
     const body = await req.json();
     const { text, target_language, resource_id, user_id } = body;
-
-    console.log('Text length:', text?.length ?? 0, '| Target:', target_language);
 
     if (!text || !target_language) {
       return new Response(
@@ -37,8 +32,6 @@ Deno.serve(async (req: Request) => {
 
     // ── Always call Google Translate with the actual text typed ──────────────
     // No resource-based caching — user's typed text is always translated fresh
-    console.log('Calling Google Translate...');
-
     const googleRes = await fetch(
       `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_KEY}`,
       {
@@ -63,11 +56,8 @@ Deno.serve(async (req: Request) => {
     const translated = googleData?.data?.translations?.[0]?.translatedText;
 
     if (!translated) {
-      console.error('Empty Google response:', JSON.stringify(googleData));
       throw new Error('Google Translate returned no translation');
     }
-
-    console.log('Translation successful — length:', translated.length);
 
     // ── Optionally log translation to Supabase for analytics ─────────────────
     // We save the translation but we NEVER use it to override what user typed

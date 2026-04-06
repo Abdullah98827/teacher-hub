@@ -37,16 +37,17 @@ export default function Signup() {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
   const pickPhoto = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.5,
-      });
-      if (!result.canceled) setPhotoUri(result.assets[0].uri);
-    } catch (error) {
-      showToast("error", "Error", error.message);
+    // Open the device's image library to select a photo
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5,
+    });
+
+    // If user didn't cancel, save the selected image URI
+    if (!result.canceled) {
+      setPhotoUri(result.assets[0].uri);
     }
   };
 
@@ -60,15 +61,23 @@ export default function Signup() {
   };
 
   const uploadPhoto = async (userId) => {
+    // Create a unique filename for the photo using email and user ID
     const fileName = `${formData.email.replace(/[@.]/g, "_")}_${userId}.jpg`;
+    
+    // Fetch the photo from the device and convert to blob
     const response = await fetch(photoUri);
     const blob = await response.blob();
 
+    // Create a promise to handle file reading
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
+      
+      // Handle successful file read
       reader.onloadend = async () => {
+        // Extract base64 data from the file reader result
         const base64 = reader.result.split(",")[1];
 
+        // Upload the photo to Supabase storage
         const { error } = await supabase.storage
           .from("teacher-passes")
           .upload(fileName, base64ToBuffer(base64), {
@@ -76,13 +85,19 @@ export default function Signup() {
             upsert: true,
           });
 
+        // If upload failed, reject the promise with the error
         if (error) {
           reject(error);
         } else {
+          // If upload succeeded, resolve with the filename
           resolve(fileName);
         }
       };
+      
+      // Handle file read errors
       reader.onerror = reject;
+      
+      // Start reading the blob as data URL
       reader.readAsDataURL(blob);
     });
   };
@@ -90,24 +105,32 @@ export default function Signup() {
   const handleSignup = async () => {
     const { email, password, firstName, lastName, trn } = formData;
 
+    // Step 1: Validate that all required fields are filled
     if (!email || !password || !firstName || !lastName || !trn || !photoUri || !consent) {
       return showToast("error", "Missing Info", "Fill all fields, upload photo & accept consent");
     }
+
+    // Step 2: Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return showToast("error", "Invalid Email", "Enter a valid email address");
     }
+
+    // Step 3: Validate password strength (minimum 6 characters)
     if (password.length < 6) {
       return showToast("error", "Weak Password", "Password must be at least 6 characters");
     }
 
+    // Step 4: Start loading state
     setLoading(true);
 
+    // Step 5: Create user account with Supabase Auth
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { verified: false } },
     });
 
+    // Step 6: Check if user creation failed
     if (error || !data.user?.id) {
       logEvent({
         event_type: "SIGNUP_FAILED",
@@ -120,20 +143,24 @@ export default function Signup() {
 
     const userId = data.user.id;
 
+    // Step 7: Log successful signup event
     logEvent({
       event_type: "SIGNUP_SUCCESS",
       user_id: userId,
       details: { email },
     });
 
+    // Step 8: Upload the teacher pass photo
     const fileName = await uploadPhoto(userId);
 
+    // Step 9: Check if photo upload failed
     if (!fileName) {
       showToast("error", "Upload Failed", "Could not upload photo");
       setLoading(false);
       return;
     }
 
+    // Step 10: Create teacher profile in database
     const { error: profileError } = await supabase.from("teachers").insert({
       id: userId,
       email,
@@ -144,18 +171,20 @@ export default function Signup() {
       verified: false,
     });
 
+    // Step 11: Check if profile creation failed
     if (profileError) {
       showToast("error", "Profile Error", "Could not save profile. Please contact support.");
       setLoading(false);
       return;
     }
 
+    // Step 12: Assign teacher role to the user
     await supabase.from("user_roles").insert({
       id: userId,
       role: "teacher",
     });
 
-    // Check if email is confirmed, redirect to verify-email if not
+    // Step 13: Check if email verification is needed
     if (!data.user.email_confirmed_at && !data.user.confirmed_at) {
       showToast("info", "Verify Email", "Please verify your email before continuing.");
       setTimeout(() => router.replace("/verify-email"), 1000);
@@ -163,6 +192,7 @@ export default function Signup() {
       return;
     }
 
+    // Step 14: Account creation complete - redirect to login
     showToast("success", "Success!", "Admin will verify within 24-48 hours");
     setTimeout(() => router.push("/login"), 1500);
     setLoading(false);

@@ -18,38 +18,34 @@ import { supabase } from "../supabase";
  * Pick a profile picture from the user's photo library
  */
 export const pickProfileImage = async () => {
-  try {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Toast.show({
-        type: "error",
-        text1: "Permission Required",
-        text2: "Please allow access to your photo library",
-      });
-      return null;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (result.canceled) {
-      return null;
-    }
-
-    return result.assets[0].uri;
-  } catch (error) {
-    console.error("Error picking image:", error);
+  // Request permission to access photo library
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  
+  // Check if permission was granted
+  if (status !== "granted") {
     Toast.show({
       type: "error",
-      text1: "Failed to Pick Image",
-      text2: "Please try again",
+      text1: "Permission Required",
+      text2: "Please allow access to your photo library",
     });
     return null;
   }
+
+  // Open image picker
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    quality: 0.8,
+  });
+
+  // Check if user canceled
+  if (result.canceled) {
+    return null;
+  }
+
+  // Return selected image URI
+  return result.assets[0].uri;
 };
 
 /**
@@ -57,140 +53,163 @@ export const pickProfileImage = async () => {
  * Returns PUBLIC URL (bucket must be public!)
  */
 export const uploadProfilePicture = async (imageUri, userId) => {
-  try {
-    const fileExtension = imageUri.split(".").pop()?.toLowerCase() || "jpg";
-    const timestamp = Date.now();
-    const filePath = `${userId}/profile_${timestamp}.${fileExtension}`;
+  // Generate file path
+  const fileExtension = imageUri.split(".").pop()?.toLowerCase() || "jpg";
+  const timestamp = Date.now();
+  const filePath = `${userId}/profile_${timestamp}.${fileExtension}`;
 
-    console.log("Uploading to path:", filePath);
+  // Prepare form data
+  const formData = new FormData();
+  const file = {
+    uri: imageUri,
+    type: `image/${fileExtension}`,
+    name: `profile.${fileExtension}`,
+  };
+  formData.append("file", file);
 
-    const formData = new FormData();
-    const file = {
-      uri: imageUri,
-      type: `image/${fileExtension}`,
-      name: `profile.${fileExtension}`,
-    };
-    formData.append("file", file);
-
-    const { error: uploadError } = await supabase.storage
-      .from("profile-pictures")
-      .upload(filePath, formData, {
-        cacheControl: "3600",
-        upsert: true,
-      });
-
-    if (uploadError) {
-      console.error("Upload error:", uploadError);
-      throw uploadError;
-    }
-
-    const { data: publicUrlData } = supabase.storage
-      .from("profile-pictures")
-      .getPublicUrl(filePath);
-
-    const publicUrl = publicUrlData.publicUrl;
-    console.log("Public URL generated:", publicUrl);
-
-    const { error: updateError } = await supabase
-      .from("teachers")
-      .update({ profile_picture_url: publicUrl })
-      .eq("id", userId);
-
-    if (updateError) {
-      console.error("Database update error:", updateError);
-      throw updateError;
-    }
-
-    Toast.show({
-      type: "success",
-      text1: "Profile Picture Updated",
-      text2: "Your picture has been uploaded successfully",
+  // Upload to Supabase Storage
+  const { error: uploadError } = await supabase.storage
+    .from("profile-pictures")
+    .upload(filePath, formData, {
+      cacheControl: "3600",
+      upsert: true,
     });
 
-    return publicUrl;
-  } catch (error) {
-    console.error("Error uploading profile picture:", error);
+  // Check for upload error
+  if (uploadError) {
+    console.error("Upload error:", uploadError);
     Toast.show({
       type: "error",
       text1: "Upload Failed",
-      text2: error.message || "Please try again",
+      text2: uploadError.message || "Please try again",
     });
     return null;
   }
+
+  // Get public URL
+  const { data: publicUrlData } = supabase.storage
+    .from("profile-pictures")
+    .getPublicUrl(filePath);
+
+  const publicUrl = publicUrlData.publicUrl;
+
+  // Update database with new URL
+  const { error: updateError } = await supabase
+    .from("teachers")
+    .update({ profile_picture_url: publicUrl })
+    .eq("id", userId);
+
+  // Check for database update error
+  if (updateError) {
+    console.error("Database update error:", updateError);
+    Toast.show({
+      type: "error",
+      text1: "Upload Failed",
+      text2: updateError.message || "Please try again",
+    });
+    return null;
+  }
+
+  // Success
+  Toast.show({
+    type: "success",
+    text1: "Profile Picture Updated",
+    text2: "Your picture has been uploaded successfully",
+  });
+
+  return publicUrl;
 };
 
 /**
  * Delete user's profile picture
  */
 export const deleteProfilePicture = async (userId, profilePictureUrl) => {
-  try {
-    if (!profilePictureUrl) {
-      Toast.show({
-        type: "info",
-        text1: "No Profile Picture",
-        text2: "You don't have a profile picture to delete",
-      });
-      return false;
-    }
-
-    const urlParts = profilePictureUrl.split("/profile-pictures/");
-    if (urlParts.length < 2) {
-      throw new Error("Invalid profile picture URL");
-    }
-    const filePath = urlParts[1];
-
-    console.log("Deleting file:", filePath);
-
-    const { error: deleteError } = await supabase.storage
-      .from("profile-pictures")
-      .remove([filePath]);
-
-    if (deleteError) {
-      console.error("Storage delete error:", deleteError);
-      throw deleteError;
-    }
-
-    const { error: updateError } = await supabase
-      .from("teachers")
-      .update({ profile_picture_url: null })
-      .eq("id", userId);
-
-    if (updateError) {
-      console.error("Database update error:", updateError);
-      throw updateError;
-    }
-
+  // Check if picture exists
+  if (!profilePictureUrl) {
     Toast.show({
-      type: "success",
-      text1: "Profile Picture Removed",
-      text2: "Your picture has been deleted",
-    });
-
-    return true;
-  } catch (error) {
-    console.error("Error deleting profile picture:", error);
-    Toast.show({
-      type: "error",
-      text1: "Delete Failed",
-      text2: error.message || "Please try again",
+      type: "info",
+      text1: "No Profile Picture",
+      text2: "You don't have a profile picture to delete",
     });
     return false;
   }
+
+  // Extract file path from URL
+  const urlParts = profilePictureUrl.split("/profile-pictures/");
+  
+  // Check if URL format is valid
+  if (urlParts.length < 2) {
+    console.error("Invalid profile picture URL:", profilePictureUrl);
+    Toast.show({
+      type: "error",
+      text1: "Delete Failed",
+      text2: "Invalid picture URL",
+    });
+    return false;
+  }
+  
+  const filePath = urlParts[1];
+
+  // Delete from storage
+  const { error: deleteError } = await supabase.storage
+    .from("profile-pictures")
+    .remove([filePath]);
+
+  // Check for delete error
+  if (deleteError) {
+    console.error("Storage delete error:", deleteError);
+    Toast.show({
+      type: "error",
+      text1: "Delete Failed",
+      text2: deleteError.message || "Please try again",
+    });
+    return false;
+  }
+
+  // Update database to remove URL
+  const { error: updateError } = await supabase
+    .from("teachers")
+    .update({ profile_picture_url: null })
+    .eq("id", userId);
+
+  // Check for database error
+  if (updateError) {
+    console.error("Database update error:", updateError);
+    Toast.show({
+      type: "error",
+      text1: "Delete Failed",
+      text2: updateError.message || "Please try again",
+    });
+    return false;
+  }
+
+  // Success
+  Toast.show({
+    type: "success",
+    text1: "Profile Picture Removed",
+    text2: "Your picture has been deleted",
+  });
+
+  return true;
 };
 
 /**
  * Get the profile picture URL for a specific user
  */
 export const getProfilePictureUrl = async (userId) => {
-  try {
-    const { data } = await supabase
-      .from("teachers")
-      .select("profile_picture_url")
-      .eq("id", userId)
-      .single();
-    return data?.profile_picture_url || null;
-  } catch (error) {
+  // Query database for user's profile picture URL
+  const { data, error } = await supabase
+    .from("teachers")
+    .select("profile_picture_url")
+    .eq("id", userId)
+    .single();
+
+  // Check for error
+  if (error) {
     console.error("Error fetching profile picture:", error);
     return null;
   }
+
+  // Return URL or null
+  return data?.profile_picture_url || null;
 };

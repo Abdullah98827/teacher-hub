@@ -14,41 +14,45 @@ export async function logEvent({ event_type, user_id, target_id, target_table, d
   let ip_address = null;
   let user_agent = null;
 
-  // Try to get device info (user agent) for mobile/web - non-blocking
-  try {
-    // Use dynamic import instead of require to avoid bundling issues
-    import('expo-device').then((Device) => {
+  // Attempt to get device info (user agent) for mobile/web - non-blocking
+  // This is optional and won't break if it fails
+  import('expo-device')
+    .then((Device) => {
       const defaultDevice = Device.default || Device;
       user_agent = `${defaultDevice.manufacturer || ''} ${defaultDevice.modelName || ''} ${defaultDevice.osName || ''} ${defaultDevice.osVersion || ''}`.trim();
-    }).catch(() => {
+    })
+    .catch(() => {
       // Silently fail - device info is optional
     });
-  } catch {}
 
-  // Try to get public IP address (client-side only, best effort)
-  try {
-    const res = await fetch('https://api.ipify.org?format=json');
-    if (res.ok) {
-      const data = await res.json();
-      ip_address = data.ip;
+  // Attempt to get public IP address (client-side only, best effort)
+  // This is optional and won't break if it fails
+  const ipResponse = await fetch('https://api.ipify.org?format=json')
+    .catch(() => null);
+  
+  if (ipResponse && ipResponse.ok) {
+    const ipData = await ipResponse.json()
+      .catch(() => null);
+    
+    if (ipData && ipData.ip) {
+      ip_address = ipData.ip;
     }
-  } catch {}
-
-  // Log the event to Supabase
-  try {
-    await supabase.from('app_logs').insert([
-      {
-        event_type,
-        user_id,
-        target_id,
-        target_table,
-        details,
-        ip_address,
-        user_agent,
-      },
-    ]);
-  } catch (error) {
-    // Silently fail - logging errors should never break app functionality
-    console.debug('Logging error:', error?.message);
   }
+
+  // Attempt to log the event to Supabase
+  // This is optional and won't break if it fails
+  await supabase.from('app_logs').insert([
+    {
+      event_type,
+      user_id,
+      target_id,
+      target_table,
+      details,
+      ip_address,
+      user_agent,
+    },
+  ])
+    .catch(() => {
+      // Silently fail - logging errors should never break app functionality
+    });
 }

@@ -47,6 +47,10 @@ export default function AdminLayout() {
         options={{ title: "Admin Hub", headerShown: false }}
       />
       <Stack.Screen
+        name="manage-users"
+        options={{ title: "Manage Users", headerShown: false }}
+      />
+      <Stack.Screen
         name="verify"
         options={{ title: "Verify Teachers", headerShown: false }}
       />
@@ -77,10 +81,6 @@ export default function AdminLayout() {
       <Stack.Screen
         name="logs"
         options={{ title: "View Application Logs", headerShown: false }}
-      />
-      <Stack.Screen
-        name="manage-users"
-        options={{ title: "Manage Users", headerShown: false }}
       />
     </Stack>
   );

@@ -81,13 +81,10 @@ export default function ProfilePicture({
             height: sizeInPixels,
           }}
           onError={(error) => {
-            console.log("Image failed to load:", imageUrl);
-            console.log("Error details:", error.nativeEvent);
             setImageLoadError(true);
           }}
           onLoad={() => {
-            console.log("Image loaded successfully:", imageUrl);
-            console.log("Image dimensions:", sizeInPixels, "x", sizeInPixels);
+            // Image loaded successfully
           }}
           resizeMode="cover"
         />

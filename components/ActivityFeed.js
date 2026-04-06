@@ -119,9 +119,9 @@ export default function ActivityFeed({ userId, limit = 20 }) {
 
   const handleActivityPress = (activity) => {
     if (activity.resource_id) {
-      console.log("Open resource:", activity.resource_id);
+      // Handle resource navigation
     } else if (activity.target_user_id) {
-      console.log("Open profile:", activity.target_user_id);
+      // Handle profile navigation
     }
   };
 

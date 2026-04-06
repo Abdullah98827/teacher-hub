@@ -64,7 +64,6 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
 
     // ── Call Groq API ─────────────────────────────────────────────────────────
     // Using llama-3.3-70b — Groq's best free model, extremely fast
-    console.log('Calling Groq API...');
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -96,7 +95,6 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
 
     const groqData  = await groqRes.json();
     const rawResponse = groqData.choices?.[0]?.message?.content ?? '';
-    console.log('Groq responded, parsing sections...');
 
     if (!rawResponse) throw new Error('Groq returned empty response');
 
@@ -144,8 +142,6 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
           .filter(Boolean)
           .slice(0, 8);
 
-        console.log(`Translating ${terms.length} glossary terms to ${languageCode}...`);
-
         const googleRes = await fetch(
           `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_KEY}`,
           {
@@ -167,7 +163,6 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
             term,
             translation: translations[i]?.translatedText ?? term,
           }));
-          console.log('Glossary translated successfully');
         }
       } catch (glossaryErr) {
         console.error('Glossary translation failed (non-fatal):', glossaryErr);
@@ -192,8 +187,6 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
         console.error('DB log failed (non-fatal):', dbErr);
       }
     }
-
-    console.log('EAL adaptation complete!');
 
     return new Response(
       JSON.stringify({

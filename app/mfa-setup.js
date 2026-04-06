@@ -31,17 +31,25 @@ function MFASetupScreen() {
   useEffect(() => {
     const checkMfaEnrollment = async () => {
       setLoading(true);
-      try {
-        const data = await startTotpEnrollment();
-        setQrCode(data.totp.qr_code);
-        setOtpAuthUrl(getOtpAuthUrlFromEnrollment(data));
-        setFactorId(data.id);
+      
+      // Attempt to start TOTP enrollment on component mount
+      const enrollmentData = await startTotpEnrollment()
+        .catch(err => {
+          // If user already has MFA enrolled, mark as enrolled
+          if (alreadyEnrolledError(err)) {
+            setEnrolled(true);
+          }
+          return null;
+        });
+
+      // If enrollment succeeded, populate QR code and factor ID
+      if (enrollmentData) {
+        setQrCode(enrollmentData.totp.qr_code);
+        setOtpAuthUrl(getOtpAuthUrlFromEnrollment(enrollmentData));
+        setFactorId(enrollmentData.id);
         setEnrolled(false);
-      } catch (err) {
-        if (alreadyEnrolledError(err)) {
-          setEnrolled(true);
-        }
       }
+      
       setLoading(false);
     };
     checkMfaEnrollment();
@@ -49,23 +57,33 @@ function MFASetupScreen() {
 
   const handleStartEnrollment = async () => {
     setLoading(true);
-    try {
-      const data = await startTotpEnrollment();
-      setQrCode(data.totp.qr_code);
-      setOtpAuthUrl(getOtpAuthUrlFromEnrollment(data));
-      setFactorId(data.id);
-      setEnrolled(false);
-    } catch (err) {
-      if (alreadyEnrolledError(err)) {
-        setEnrolled(true);
-      } else {
+    
+    // Attempt to start TOTP enrollment
+    const enrollmentData = await startTotpEnrollment()
+      .catch(err => {
+        // Check if user already has MFA enrolled
+        if (alreadyEnrolledError(err)) {
+          setEnrolled(true);
+          return null;
+        }
+        
+        // Show error toast for any other errors
         Toast.show({
           type: "error",
           text1: "MFA Enrollment Error",
           text2: err.message || "Something went wrong. Please try again.",
         });
-      }
+        return null;
+      });
+
+    // If enrollment succeeded, populate QR code and factor ID
+    if (enrollmentData) {
+      setQrCode(enrollmentData.totp.qr_code);
+      setOtpAuthUrl(getOtpAuthUrlFromEnrollment(enrollmentData));
+      setFactorId(enrollmentData.id);
+      setEnrolled(false);
     }
+    
     setLoading(false);
   };
 
@@ -79,8 +97,21 @@ function MFASetupScreen() {
       return;
     }
     setLoading(true);
-    try {
-      await verifyTotpEnrollment(factorId, code);
+    
+    // Attempt to verify the TOTP code entered by user
+    const verificationResult = await verifyTotpEnrollment(factorId, code)
+      .catch(err => {
+        // Show error toast if verification fails
+        Toast.show({
+          type: "error",
+          text1: "Verification Error",
+          text2: err.message || "Invalid code. Please try again.",
+        });
+        return false;
+      });
+
+    // If verification succeeded, update state and show success message
+    if (verificationResult !== false) {
       setEnrolled(true);
       setQrCode(null);
       setOtpAuthUrl(null);
@@ -88,13 +119,8 @@ function MFASetupScreen() {
         type: "success",
         text1: "MFA enrollment complete!",
       });
-    } catch (err) {
-      Toast.show({
-        type: "error",
-        text1: "Verification Error",
-        text2: err.message || "Invalid code. Please try again.",
-      });
     }
+    
     setLoading(false);
   };
 
@@ -193,28 +219,37 @@ function MFASetupScreen() {
           <TouchableOpacity
             className="mt-4"
             onPress={async () => {
+              // Reset state before attempting fresh enrollment
               setQrCode(null);
               setFactorId(null);
               setEnrolled(false);
               setCode('');
               setOtpAuthUrl(null);
               setLoading(true);
-              try {
-                const data = await startTotpEnrollment();
-                setQrCode(data.totp.qr_code);
-                setOtpAuthUrl(getOtpAuthUrlFromEnrollment(data));
-                setFactorId(data.id);
+              
+              // Attempt to start fresh TOTP enrollment
+              const enrollmentData = await startTotpEnrollment()
+                .catch(err => {
+                  // If MFA factor still exists, show informational message
+                  if (alreadyEnrolledError(err)) {
+                    setEnrolled(false);
+                    Toast.show({
+                      type: "info",
+                      text1: "MFA factor still exists",
+                      text2: "If you just removed MFA, please wait a minute and try again, or contact support.",
+                    });
+                  }
+                  return null;
+                });
+
+              // If enrollment succeeded, populate QR code and factor ID
+              if (enrollmentData) {
+                setQrCode(enrollmentData.totp.qr_code);
+                setOtpAuthUrl(getOtpAuthUrlFromEnrollment(enrollmentData));
+                setFactorId(enrollmentData.id);
                 setEnrolled(false);
-              } catch (err) {
-                if (alreadyEnrolledError(err)) {
-                  setEnrolled(false);
-                  Toast.show({
-                    type: "info",
-                    text1: "MFA factor still exists",
-                    text2: "If you just removed MFA, please wait a minute and try again, or contact support.",
-                  });
-                }
               }
+              
               setLoading(false);
             }}
           >

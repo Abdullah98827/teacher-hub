@@ -115,7 +115,6 @@ export default function GroupChatScreen() {
 
       if (error) {
         console.warn("Error fetching user profile picture:", error);
-        console.log("User ID:", user.id);
       }
     } catch (err) {
       console.error("Exception fetching user profile picture:", err);
