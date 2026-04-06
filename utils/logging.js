@@ -41,7 +41,7 @@ export async function logEvent({ event_type, user_id, target_id, target_table, d
 
   // Attempt to log the event to Supabase
   // This is optional and won't break if it fails
-  await supabase.from('app_logs').insert([
+  const { error } = await supabase.from('app_logs').insert([
     {
       event_type,
       user_id,
@@ -51,8 +51,10 @@ export async function logEvent({ event_type, user_id, target_id, target_table, d
       ip_address,
       user_agent,
     },
-  ])
-    .catch(() => {
-      // Silently fail - logging errors should never break app functionality
-    });
+  ]);
+  
+  // Silently fail if logging encounters an error - this should never break app functionality
+  if (error) {
+    // Error is logged silently to prevent disrupting the user experience
+  }
 }
