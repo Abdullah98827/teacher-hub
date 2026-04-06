@@ -8,10 +8,11 @@ const colorMap = {
   red: "text-red-400",
   green: "text-green-400",
   orange: "text-orange-400",
+  blue: "text-blue-400",
 };
 
 export default function StatsSummary({ stats }) {
-  const { border, textMuted } = useAppTheme();
+  const { border, textSecondary } = useAppTheme();
 
   return (
     <View className="bg-gradient-to-r from-cyan-500/10 to-purple-500/10 rounded-xl p-4 mb-4 border border-cyan-500/20">
@@ -23,7 +24,7 @@ export default function StatsSummary({ stats }) {
               <ThemedText className={`${colorMap[stat.color]} text-2xl font-bold`}>
                 {stat.value}
               </ThemedText>
-              <ThemedText className={`${textMuted} text-xs`}>{stat.label}</ThemedText>
+              <ThemedText className={`${textSecondary} text-xs`}>{stat.label}</ThemedText>
             </View>
           </View>
         ))}

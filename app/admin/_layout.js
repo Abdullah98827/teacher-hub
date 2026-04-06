@@ -78,6 +78,10 @@ export default function AdminLayout() {
         name="logs"
         options={{ title: "View Application Logs", headerShown: false }}
       />
+      <Stack.Screen
+        name="manage-users"
+        options={{ title: "Manage Users", headerShown: false }}
+      />
     </Stack>
   );
 }

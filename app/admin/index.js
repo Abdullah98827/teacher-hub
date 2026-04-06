@@ -55,6 +55,12 @@ export default function AdminHub() {
       icon: "book-outline",
     },
     {
+      label: "Manage Users",
+      subtitle: "View and control user accounts",
+      route: "/admin/manage-users",
+      icon: "people-outline",
+    },
+    {
       label: "View Application Logs",
       subtitle: "See all application-wide logs",
       route: "/admin/logs",

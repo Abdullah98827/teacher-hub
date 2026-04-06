@@ -15,6 +15,8 @@ export default function Login() {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [showDisabledModal, setShowDisabledModal] = useState(false);
+  const [disabledReason, setDisabledReason] = useState("");
   const router = useRouter();
   const { bgCard, bgInput, borderInput, textPrimary, placeholderColor } =
     useAppTheme();
@@ -107,7 +109,7 @@ export default function Login() {
 
     const { data: teacher, error: teacherError } = await supabase
       .from("teachers")
-      .select("verified")
+      .select("verified, is_disabled, disabled_reason")
       .eq("id", userId)
       .single();
 
@@ -119,6 +121,21 @@ export default function Login() {
         "Profile Error",
         "Could not load profile. Please contact admin."
       );
+      return;
+    }
+
+    // ✅ Check if account is disabled
+    if (teacher.is_disabled) {
+      setLoading(false);
+      setDisabledReason(teacher.disabled_reason || "Your account has been disabled.");
+      setShowDisabledModal(true);
+      
+      logEvent({
+        event_type: "LOGIN_BLOCKED_DISABLED",
+        user_id: userId,
+        details: { reason: teacher.disabled_reason },
+      });
+      
       return;
     }
 
@@ -285,6 +302,65 @@ export default function Login() {
             >
               <Text className="text-center text-cyan-400 font-semibold">
                 Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Account Disabled Modal */}
+      <Modal
+        visible={showDisabledModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowDisabledModal(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/60">
+          <View className={`w-full max-w-md ${bgCard} p-6 rounded-2xl shadow-lg`}>
+            <View className="items-center mb-4">
+              <View className="bg-red-500/20 p-4 rounded-full mb-3">
+                <Text className="text-4xl">🔒</Text>
+              </View>
+              <Text className="text-2xl font-bold text-center text-red-500">
+                Account Disabled
+              </Text>
+            </View>
+
+            <Text className={`text-center ${textPrimary} mb-4 text-base leading-6`}>
+              {disabledReason}
+            </Text>
+
+            <Text className="text-center text-cyan-400 text-sm mb-6">
+              If you believe this is a mistake, please contact us.
+            </Text>
+
+            <TouchableOpacity
+              className="bg-cyan-600 p-4 rounded-xl mb-3 active:scale-95"
+              onPress={() => {
+                setShowDisabledModal(false);
+                router.push({
+                  pathname: "/contact",
+                  params: { 
+                    subject: "Account Reactivation Request",
+                    from: "disabled-account" 
+                  }
+                });
+              }}
+            >
+              <Text className="text-white text-center font-semibold">
+                Contact Admin
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className={`${bgInput} p-4 rounded-xl border ${borderInput}`}
+              onPress={() => {
+                setShowDisabledModal(false);
+                supabase.auth.signOut();
+              }}
+            >
+              <Text className="text-center text-cyan-400 font-semibold">
+                OK
               </Text>
             </TouchableOpacity>
           </View>

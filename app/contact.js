@@ -47,7 +47,7 @@ export default function ContactAdmin() {
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
 
   const showToast = (type, title, msg) =>
     Toast.show({ type, text1: title, text2: msg });
@@ -65,7 +65,7 @@ export default function ContactAdmin() {
     setLoading(true);
 
     // Saves the contact request to database
-    const { error } = await supabase.from("contact_requests").insert({
+    const { error } = await supabase.from("manage_contact_requests").insert({
       email,
       message: message.trim(),
       status: "pending",
@@ -73,7 +73,12 @@ export default function ContactAdmin() {
     });
 
     if (error) {
-      showToast("error", "Error", "Could not send message. Please try again.");
+      console.error("Contact request error:", error);
+      showToast(
+        "error", 
+        "Error", 
+        error.message || "Could not send message. Please try again."
+      );
     } else {
       showToast("success", "Message Sent", "An admin will respond shortly");
       setMessage("");
