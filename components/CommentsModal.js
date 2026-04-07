@@ -16,8 +16,10 @@ import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
 import { useCommentNotifications } from "../utils/notificationIntegrations";
+import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
 import ProfilePicture from "./ProfilePicture";
 import UserProfileModal from "./UserProfileModal";
+import CommentReportModal from "./CommentReportModal";
 import { ThemedTextInput } from './themed-textinput';
 
 export default function CommentsModal({
@@ -57,7 +59,10 @@ export default function CommentsModal({
   const [dmSuggestionUsers, setDmSuggestionUsers] = useState(null);
   const [currentUserName, setCurrentUserName] = useState(null);
   const [resourceOwnerId, setResourceOwnerId] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedCommentForAction, setSelectedCommentForAction] = useState(null);
   const { notifyComment, notifyCommentReply } = useCommentNotifications();
+  const { notifyAdminCommentReported } = useAdminNotifications();
   const pendingNavPath = useRef(null);
 
   const fetchCurrentUser = async () => {
@@ -299,11 +304,6 @@ export default function CommentsModal({
     fetchComments();
   };
 
-  const handleDeletePress = (commentId) => {
-    setDeleteCommentId(commentId);
-    setShowDeleteConfirm(true);
-  };
-
   const deleteComment = async () => {
     if (!deleteCommentId) return;
     setSubmitting(true);
@@ -342,6 +342,40 @@ export default function CommentsModal({
     setDeleteCommentId(null);
     setSubmitting(false);
     fetchComments();
+  };
+
+  const handleCommentReplyAction = (commentId, userName) => {
+    setReplyToId(commentId);
+    setReplyToUser(userName);
+  };
+
+  const handleCommentReportSubmit = async (reportedCommentId, reportedCommentText, reason) => {
+    // The report is already saved in the CommentReportModal
+    // Just notify admins here
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    // Fetch admin IDs
+    const { data: adminUsers } = await supabase
+      .from("user_roles")
+      .select("id")
+      .or("role.eq.admin,role.eq.super_admin");
+
+    if (adminUsers && adminUsers.length > 0) {
+      const adminIds = adminUsers.map(a => a.id);
+      await notifyAdminCommentReported(
+        adminIds,
+        user.id,
+        user.email || 'Anonymous',
+        reportedCommentId,
+        reportedCommentText,
+        resourceId,
+        reason
+      ).catch(err => console.warn('Failed to notify admin:', err));
+    }
   };
 
   const toggleThread = (commentId) => {
@@ -427,12 +461,19 @@ export default function CommentsModal({
               </View>
             </TouchableOpacity>
 
-            {canDelete && (
+            {(canDelete || currentUserId !== comment.user_id) && (
               <TouchableOpacity
-                onPress={() => handleDeletePress(comment.id)}
+                onPress={() => {
+                  setSelectedCommentForAction({
+                    ...comment,
+                    user: { display_name: `${comment.first_name} ${comment.last_name}` }
+                  });
+                  setShowReportModal(true);
+                }}
                 className="p-1"
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <Ionicons name="trash" size={16} color="#ef4444" />
+                <Ionicons name="ellipsis-horizontal" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
               </TouchableOpacity>
             )}
           </View>
@@ -693,6 +734,23 @@ export default function CommentsModal({
       </Modal>
 
       <Toast />
+
+      <CommentReportModal
+        visible={showReportModal}
+        onClose={() => {
+          setShowReportModal(false);
+          setSelectedCommentForAction(null);
+        }}
+        comment={selectedCommentForAction}
+        currentUserId={currentUserId}
+        userRole={userRole}
+        onReport={handleCommentReportSubmit}
+        onReply={handleCommentReplyAction}
+        onDelete={(commentId) => {
+          setDeleteCommentId(commentId);
+          setShowDeleteConfirm(true);
+        }}
+      />
     </Modal>
   );
 }

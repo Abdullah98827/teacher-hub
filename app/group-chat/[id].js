@@ -1,6 +1,7 @@
 import LogoHeader from "@/components/logoHeader";
 import ProfilePicture from "@/components/ProfilePicture";
 import UserProfileModal from "@/components/UserProfileModal";
+import GroupChatReportModal from "@/components/GroupChatReportModal";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -41,6 +42,9 @@ export default function GroupChatScreen() {
   const [userProfilePic, setUserProfilePic] = useState(null);
   const [userFirstName, setUserFirstName] = useState("");
   const [userLastName, setUserLastName] = useState("");
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedMessageForAction, setSelectedMessageForAction] = useState(null);
+  const [replyToMessage, setReplyToMessage] = useState(null);
   const flatListRef = useRef(null);
 
   const isAdmin = role === "admin";
@@ -54,6 +58,7 @@ export default function GroupChatScreen() {
     textSecondary,
     textMuted,
     placeholderColor,
+    isDark,
   } = useAppTheme();
 
   const fetchGroupChat = useCallback(async () => {
@@ -82,7 +87,7 @@ export default function GroupChatScreen() {
 
     const { data, error } = await supabase
       .from("group_messages")
-      .select("id, message, created_at, sender:teachers(id, first_name, last_name, profile_picture_url)")
+      .select("id, message, created_at, reply_to_id, sender:teachers(id, first_name, last_name, profile_picture_url)")
       .eq("group_chat_id", id)
       .is("deleted_at", null)
       .order("created_at", { ascending: true });
@@ -170,11 +175,6 @@ export default function GroupChatScreen() {
     };
   }, [id, fetchGroupChat, fetchMessages, fetchUserProfilePic]);
 
-  const deleteMessage = (messageId) => {
-    if (!isAdmin) return;
-    setPendingDeleteId(messageId);
-  };
-
   const confirmDeleteMessage = async () => {
     if (!pendingDeleteId) return;
     setDeletingMessageId(pendingDeleteId);
@@ -234,9 +234,11 @@ export default function GroupChatScreen() {
       message: messageText,
       created_at: new Date().toISOString(),
       sender: currentUser || { id: user.id, first_name: "You", last_name: "" },
+      reply_to_id: replyToMessage?.id || null,
     };
 
     setMessages((prev) => [...prev, tempMessage]);
+    setReplyToMessage(null);
 
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: true });
@@ -248,6 +250,7 @@ export default function GroupChatScreen() {
         group_chat_id: id,
         sender_id: user.id,
         message: messageText,
+        reply_to_id: replyToMessage?.id || null,
       })
       .select("id, message, created_at")
       .single();
@@ -294,7 +297,6 @@ export default function GroupChatScreen() {
 
   const renderMessage = ({ item }) => {
     const isOwnMessage = item.sender.id === user?.id;
-    const isDeleting = deletingMessageId === item.id;
 
     // Try to parse as resource share message (new JSON format)
     let isResourceShare = false;
@@ -400,48 +402,60 @@ export default function GroupChatScreen() {
               </View>
             </TouchableOpacity>
           ) : (
-            <View
-              className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-                isOwnMessage
-                  ? "bg-cyan-500"
-                  : bgCardAlt
-              }`}
-            >
-              <ThemedText className={`${isOwnMessage ? "text-white" : textPrimary} text-base leading-6`}>
-                {item.message}
-              </ThemedText>
-              <ThemedText
-                className={`text-xs mt-1 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
+            <View className={`max-w-[70%]`}>
+              {/* Reply reference if this message is replying to another */}
+              {item.reply_to_id && (
+                <View
+                  className={`px-3 py-2 rounded-t-2xl border-l-2 border-cyan-400 ${
+                    isOwnMessage ? "bg-cyan-600" : bgCardAlt
+                  }`}
+                >
+                  <ThemedText
+                    className={`text-xs font-semibold ${
+                      isOwnMessage ? "text-cyan-100" : "text-cyan-400"
+                    }`}
+                  >
+                    Replying to message
+                  </ThemedText>
+                </View>
+              )}
+              
+              <View
+                className={`px-4 py-3 ${
+                  item.reply_to_id ? "rounded-b-2xl" : "rounded-2xl"
+                } ${isOwnMessage ? "bg-cyan-500" : bgCardAlt}`}
               >
-                {formatTime(item.created_at)}
-              </ThemedText>
+                <ThemedText
+                  className={`${
+                    isOwnMessage ? "text-white" : textPrimary
+                  } text-base leading-6`}
+                >
+                  {item.message}
+                </ThemedText>
+                <ThemedText
+                  className={`text-xs mt-1 ${
+                    isOwnMessage ? "text-cyan-100" : textMuted
+                  }`}
+                >
+                  {formatTime(item.created_at)}
+                </ThemedText>
+              </View>
             </View>
           )}
 
-          {isOwnMessage && (
+          {(isOwnMessage || (role === "admin" || role === "super_admin")) && (
             <TouchableOpacity
-              onPress={() => deleteMessage(item.id)}
-              disabled={isDeleting}
-              className="mb-1"
+              onPress={() => {
+                setSelectedMessageForAction({
+                  ...item,
+                  sender_id: item.sender.id,
+                });
+                setShowReportModal(true);
+              }}
+              className="mb-1 p-1"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              {isDeleting ? (
-                <ActivityIndicator size="small" color="#ef4444" />
-              ) : (
-                <Ionicons name="trash-outline" size={16} color="#ef4444" />
-              )}
-            </TouchableOpacity>
-          )}
-          {!isOwnMessage && isAdmin && (
-            <TouchableOpacity
-              onPress={() => deleteMessage(item.id)}
-              disabled={isDeleting}
-              className="mb-1"
-            >
-              {isDeleting ? (
-                <ActivityIndicator size="small" color="#ef4444" />
-              ) : (
-                <Ionicons name="trash-outline" size={16} color="#ef4444" />
-              )}
+              <Ionicons name="ellipsis-horizontal" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
             </TouchableOpacity>
           )}
           {isOwnMessage && (
@@ -519,6 +533,27 @@ export default function GroupChatScreen() {
           }
         />
 
+        {replyToMessage && (
+          <View
+            className={`${bgCardAlt} px-4 py-2 flex-row items-center justify-between border-t ${border}`}
+          >
+            <View className="flex-1">
+              <ThemedText className="text-cyan-400 text-xs font-semibold">
+                Replying to {replyToMessage.sender?.first_name}
+              </ThemedText>
+              <ThemedText className={`${textMuted} text-xs mt-1`} numberOfLines={1}>
+                {replyToMessage.message}
+              </ThemedText>
+            </View>
+            <TouchableOpacity
+              onPress={() => setReplyToMessage(null)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="close-circle" size={20} color="#22d3ee" />
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View className={`${bgCard} px-5 py-3 border-t ${border}`}>
           <View className="flex-row items-center">
             <TextInput
@@ -566,6 +601,29 @@ export default function GroupChatScreen() {
         visible={showProfileModal}
         userId={selectedUserId}
         onClose={() => setShowProfileModal(false)}
+      />
+
+      <GroupChatReportModal
+        visible={showReportModal}
+        onClose={() => {
+          setShowReportModal(false);
+          setSelectedMessageForAction(null);
+        }}
+        message={selectedMessageForAction}
+        groupId={id}
+        currentUserId={user?.id}
+        userRole={role}
+        onReport={(messageId, messageText, reason) => {
+          // Notification already handled in the modal
+        }}
+        onReply={(messageId, message) => {
+          setReplyToMessage(message);
+          setShowReportModal(false);
+          setSelectedMessageForAction(null);
+        }}
+        onDelete={(messageId) => {
+          setPendingDeleteId(messageId);
+        }}
       />
 
       <Toast />

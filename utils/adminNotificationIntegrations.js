@@ -258,6 +258,109 @@ export const useAdminNotifications = () => {
     }
   };
 
+  /**
+   * Notify all admins when a comment is reported
+   * @param {string[]} adminIds - Array of admin user IDs
+   * @param {string} reporterId - ID of user reporting the comment
+   * @param {string} reporterName - Name of reporter
+   * @param {string} commentId - ID of reported comment
+   * @param {string} commentText - Text of the comment
+   * @param {string} resourceId - ID of resource containing comment
+   * @param {string} reason - Reason for report
+   */
+  const notifyAdminCommentReported = async (adminIds, reporterId, reporterName, commentId, commentText, resourceId, reason) => {
+    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_COMMENT_REPORTED]?.() || {
+      title: '💬 Comment Reported',
+      body: `${reporterName} reported a comment - ${reason}`,
+    };
+
+    for (const adminId of adminIds) {
+      await sendNotif(
+        adminId,
+        'admin_comment_reported',
+        template.title,
+        template.body,
+        {
+          reporterId,
+          reporterName,
+          commentId,
+          commentText,
+          resourceId,
+          reason,
+          actionType: 'admin_comment_reported',
+        }
+      ).catch(err => console.warn('Failed to notify admin of reported comment:', err));
+    }
+  };
+
+  /**
+   * Notify all admins when a user is reported
+   * @param {string[]} adminIds - Array of admin user IDs
+   * @param {string} reporterId - ID of user reporting
+   * @param {string} reporterName - Name of reporter
+   * @param {string} reportedUserId - ID of reported user
+   * @param {string} reportedUserName - Name of reported user
+   * @param {string} reason - Reason for report
+   * @param {string} description - Additional description
+   */
+  const notifyAdminUserReportedDirect = async (adminIds, reporterId, reporterName, reportedUserId, reportedUserName, reason, description = '') => {
+    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_USER_REPORTED_DIRECT]?.() || {
+      title: '👤 User Reported',
+      body: `${reporterName} reported ${reportedUserName} - ${reason}`,
+    };
+
+    for (const adminId of adminIds) {
+      await sendNotif(
+        adminId,
+        'admin_user_reported_direct',
+        template.title,
+        template.body,
+        {
+          reporterId,
+          reporterName,
+          reportedUserId,
+          reportedUserName,
+          reason,
+          description,
+          actionType: 'admin_user_reported_direct',
+        }
+      ).catch(err => console.warn('Failed to notify admin of reported user:', err));
+    }
+  };
+
+  /**
+   * Notify followers when a teacher uploads a new resource
+   * @param {string[]} followerIds - Array of follower user IDs
+   * @param {string} teacherId - ID of teacher uploading resource
+   * @param {string} teacherName - Name of teacher
+   * @param {string} resourceTitle - Title of resource
+   * @param {string} resourceId - ID of resource
+   * @param {string} category - Resource category
+   */
+  const notifyFollowersResourceUploaded = async (followerIds, teacherId, teacherName, resourceTitle, resourceId, category) => {
+    const template = notificationTemplates[NOTIFICATION_TYPES.FOLLOWERS_RESOURCE_UPLOADED]?.() || {
+      title: '📚 New Resource',
+      body: `${teacherName} uploaded: ${resourceTitle}`,
+    };
+
+    for (const followerId of followerIds) {
+      await sendNotif(
+        followerId,
+        'followers_resource_uploaded',
+        template.title,
+        template.body,
+        {
+          teacherId,
+          teacherName,
+          resourceTitle,
+          resourceId,
+          category,
+          actionType: 'followers_resource_uploaded',
+        }
+      ).catch(err => console.warn('Failed to notify followers:', err));
+    }
+  };
+
   return {
     notifyAdminNewReport,
     notifyAdminResourcePending,
@@ -267,5 +370,8 @@ export const useAdminNotifications = () => {
     notifyAdminResourceFlaggedMultiple,
     notifyAdminUserReportedMultiple,
     notifyAdminReportResolved,
+    notifyAdminCommentReported,
+    notifyAdminUserReportedDirect,
+    notifyFollowersResourceUploaded,
   };
 };

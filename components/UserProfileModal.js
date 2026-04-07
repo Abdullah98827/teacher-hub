@@ -12,6 +12,7 @@ import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { useFollow } from "../hooks/useFollow";
 import { supabase } from "../supabase";
+import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
 import ProfilePicture from "./ProfilePicture";
 import { ThemedText } from './themed-text';
 
@@ -25,6 +26,7 @@ export default function UserProfileModal({
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [reportingUser, setReportingUser] = useState(false);
 
   const {
     isFollowing,
@@ -34,6 +36,8 @@ export default function UserProfileModal({
     loading: followLoading,
     refresh: refreshFollowData,
   } = useFollow(userId);
+
+  const { notifyAdminUserReportedDirect } = useAdminNotifications();
 
   const {
     bg,
@@ -155,6 +159,58 @@ export default function UserProfileModal({
     }, 300);
   };
 
+  const handleReportUser = async () => {
+    if (!currentUserId || !userId || currentUserId === userId) return;
+
+    setReportingUser(true);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      Toast.show({ type: "error", text1: "Please log in" });
+      setReportingUser(false);
+      return;
+    }
+
+    // Fetch admin IDs
+    const { data: adminUsers } = await supabase
+      .from("user_roles")
+      .select("id")
+      .or("role.eq.admin,role.eq.super_admin");
+
+    if (!adminUsers || adminUsers.length === 0) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No admins available to report to",
+      });
+      setReportingUser(false);
+      return;
+    }
+
+    // Notify admins
+    const adminIds = adminUsers.map(a => a.id);
+    await notifyAdminUserReportedDirect(
+      adminIds,
+      user.id,
+      user.email || 'Anonymous',
+      userId,
+      `${profile?.first_name} ${profile?.last_name}`,
+      'User Profile Report',
+      'User flagged via profile modal'
+    ).catch(err => console.warn('Failed to notify admin:', err));
+
+    Toast.show({
+      type: "success",
+      text1: "Report submitted",
+      text2: "Thank you. Our team will review this user.",
+    });
+
+    setReportingUser(false);
+  };
+
   if (!visible) return null;
 
   return (
@@ -252,6 +308,24 @@ export default function UserProfileModal({
                     )}
                   </TouchableOpacity>
                 </View>
+              )}
+              {currentUserId !== userId && (
+                <TouchableOpacity
+                  className="mt-3 mx-4 bg-red-600/20 border border-red-600 py-3 rounded-xl flex-row items-center justify-center"
+                  onPress={handleReportUser}
+                  disabled={reportingUser}
+                >
+                  {reportingUser ? (
+                    <ActivityIndicator size="small" color="#ef4444" />
+                  ) : (
+                    <>
+                      <Ionicons name="flag" size={18} color="#ef4444" />
+                      <ThemedText className="text-red-600 font-bold ml-2">
+                        Report User
+                      </ThemedText>
+                    </>
+                  )}
+                </TouchableOpacity>
               )}
             </View>
 

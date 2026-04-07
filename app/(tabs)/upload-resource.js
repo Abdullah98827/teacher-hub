@@ -26,7 +26,7 @@ export default function UploadResourceScreen() {
   const { bgInput, borderInput, textPrimary, textSecondary, placeholderColor } =
     useAppTheme();
 
-  const { notifyAdminResourcePending } = useAdminNotifications();
+  const { notifyAdminResourcePending, notifyFollowersResourceUploaded } = useAdminNotifications();
 
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -214,6 +214,24 @@ export default function UploadResourceScreen() {
             selectedCategory
           ).catch(err => console.warn('Failed to notify admin:', err));
         }
+      }
+
+      // Notify followers about new resource
+      const { data: followers } = await supabase
+        .from("follows")
+        .select("follower_id")
+        .eq("following_id", user?.id);
+
+      if (followers && followers.length > 0) {
+        const followerIds = followers.map(f => f.follower_id);
+        await notifyFollowersResourceUploaded(
+          followerIds,
+          user?.id,
+          user?.display_name || user?.email || 'Teacher',
+          title.trim(),
+          null,
+          selectedCategory
+        ).catch(err => console.warn('Failed to notify followers:', err));
       }
 
       Toast.show({

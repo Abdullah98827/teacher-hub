@@ -4,16 +4,17 @@ import {
     ActivityIndicator,
     FlatList,
     RefreshControl,
-    TouchableOpacity,
     View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
 import CommentCard from "../../components/CommentCard";
 import ConfirmModal from "../../components/ConfirmModal";
+import ReportedCommentCard from "../../components/ReportedCommentCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
+import TabFilter from "../../components/TabFilter";
 import { ThemedText } from "../../components/themed-text";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
@@ -23,16 +24,17 @@ import { logEvent } from "../../utils/logging";
 export default function ManageCommentsScreen() {
   const { user } = useAuth();
   const [comments, setComments] = useState([]);
+  const [reportedComments, setReportedComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showDeletedOnly, setShowDeletedOnly] = useState(false);
+  const [filter, setFilter] = useState("all"); // all, deleted, reported
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [processing, setProcessing] = useState(false);
 
-  const { bgCardAlt, textPrimary, textSecondary } = useAppTheme();
+  const { textPrimary, textSecondary } = useAppTheme();
 
   const fetchComments = useCallback(async () => {
     setLoading(true); // Ensure loading state is set at the start
@@ -98,6 +100,54 @@ export default function ManageCommentsScreen() {
     });
 
     setComments(enrichedComments);
+    
+    // Fetch reported comments
+    const { data: reportsData } = await supabase
+      .from("comment_reports")
+      .select("*, resource_comments(id, comment_text, created_at, user_id, resource_id)")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (reportsData && reportsData.length > 0) {
+      // Fetch additional user and resource info for reports
+      const reportUserIds = [...new Set(reportsData.map((r) => r.reported_user_id))];
+      const reportResourceIds = [...new Set(reportsData.map((r) => r.resource_comments?.resource_id).filter(Boolean))];
+
+      const [{ data: reportUsers }, { data: reportResources }] = await Promise.all([
+        reportUserIds.length > 0 ? supabase
+          .from("teachers")
+          .select("id, first_name, last_name")
+          .in("id", reportUserIds) : Promise.resolve({ data: [] }),
+        reportResourceIds.length > 0 ? supabase
+          .from("resources")
+          .select("id, title")
+          .in("id", reportResourceIds) : Promise.resolve({ data: [] }),
+      ]);
+
+      const reportUserMap = (reportUsers || []).reduce((acc, u) => {
+        acc[u.id] = u;
+        return acc;
+      }, {});
+      const reportResourceMap = (reportResources || []).reduce((acc, r) => {
+        acc[r.id] = r;
+        return acc;
+      }, {});
+
+      const enrichedReports = reportsData.map((report) => {
+        const reportedUser = reportUserMap[report.reported_user_id] || {};
+        const resource = reportResourceMap[report.resource_comments?.resource_id] || {};
+        return {
+          ...report,
+          reported_user_name: `${reportedUser.first_name || "Unknown"} ${reportedUser.last_name || ""}`.trim(),
+          resource_title: resource.title || "Unknown Resource",
+        };
+      });
+
+      setReportedComments(enrichedReports);
+    } else {
+      setReportedComments([]);
+    }
+
     setLoading(false);
     setRefreshing(false);
   }, []);
@@ -182,6 +232,47 @@ export default function ManageCommentsScreen() {
     setProcessing(false);
   };
 
+  const resolveReport = async (reportId, resolution, notes = "") => {
+    setProcessing(true);
+    try {
+      const { error } = await supabase
+        .from("comment_reports")
+        .update({
+          status: resolution, // 'reviewed', 'resolved', 'dismissed'
+          reviewed_by: user?.id,
+          review_notes: notes,
+          resolved_at: new Date().toISOString(),
+        })
+        .eq("id", reportId);
+
+      if (error) throw error;
+
+      logEvent({
+        event_type: "COMMENT_REPORT_RESOLVED",
+        user_id: user?.id,
+        target_id: reportId,
+        target_table: "comment_reports",
+        details: { resolution, notes },
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Report resolved",
+        text2: `Status changed to ${resolution}`,
+      });
+
+      fetchComments();
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to resolve report",
+        text2: error.message,
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const filteredComments = comments.filter((c) => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -194,7 +285,9 @@ export default function ManageCommentsScreen() {
         return false;
       }
     }
-    if (showDeletedOnly && !c.is_deleted) return false;
+    if (filter === "deleted" && !c.is_deleted) return false;
+    if (filter === "reported") return false; // Reported comments shown separately
+    if (filter === "all" && c.is_deleted) return false; // Hide deleted from all view
     return true;
   });
 
@@ -233,29 +326,42 @@ export default function ManageCommentsScreen() {
           placeholder="Search comments, users, or resources..."
         />
 
-        <TouchableOpacity
-          className={`flex-row items-center justify-center px-4 py-3 rounded-xl mb-4 ${
-            showDeletedOnly
-              ? "bg-red-500/20 border-2 border-red-500"
-              : bgCardAlt
-          }`}
-          onPress={() => setShowDeletedOnly(!showDeletedOnly)}
-        >
-          <Ionicons
-            name={showDeletedOnly ? "eye-off" : "eye"}
-            size={18}
-            color={showDeletedOnly ? "#ef4444" : "#9CA3AF"}
-          />
-          <ThemedText
-            className={`font-semibold ml-2 ${
-              showDeletedOnly ? "text-red-400" : textSecondary
-            }`}
-          >
-            {showDeletedOnly ? "Showing Deleted Only" : "Show Deleted Only"}
-          </ThemedText>
-        </TouchableOpacity>
+        <TabFilter
+          tabs={[
+            { label: "All Comments", value: "all", icon: "list-outline" },
+            { label: `Reported (${reportedComments.length})`, value: "reported", icon: "flag-outline" },
+            { label: "Deleted", value: "deleted", icon: "trash-outline" },
+          ]}
+          activeTab={filter}
+          onTabChange={setFilter}
+        />
 
-        {filteredComments.length === 0 ? (
+        {filter === "reported" && reportedComments.length === 0 ? (
+          <View className="flex-1 items-center justify-center py-8">
+            <View className="bg-amber-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
+              <Ionicons name="checkmark-circle-outline" size={40} color="#F59E0B" />
+            </View>
+            <ThemedText className={`${textPrimary} text-xl font-bold mb-2`}>
+              No Reported Comments
+            </ThemedText>
+            <ThemedText className={`${textSecondary} text-center`}>
+              All reported comments have been reviewed.
+            </ThemedText>
+          </View>
+        ) : filter === "reported" ? (
+          <FlatList
+            data={reportedComments}
+            renderItem={({ item: report }) => <ReportedCommentCard report={report} onResolve={resolveReport} processing={processing} />}
+            keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={() => {
+                setRefreshing(true);
+                fetchComments().then(() => setRefreshing(false));
+              }} />
+            }
+            scrollEnabled={false}
+          />
+        ) : filteredComments.length === 0 ? (
           <View className="flex-1 items-center justify-center">
             <View className="bg-cyan-500/20 w-20 h-20 rounded-full items-center justify-center mb-4">
               <Ionicons name="chatbubble-outline" size={40} color="#22d3ee" />
@@ -264,7 +370,7 @@ export default function ManageCommentsScreen() {
               No Comments
             </ThemedText>
             <ThemedText className={`${textSecondary} text-center`}>
-              {showDeletedOnly
+              {filter === "deleted"
                 ? "No deleted comments found"
                 : "No comments match your search"}
             </ThemedText>

@@ -146,6 +146,30 @@ const NotificationCenter = ({ onClose }) => {
           }
           break;
 
+        case 'admin_comment_reported':
+          // Navigate to manage comments
+          if (data?.resourceId) {
+            onClose?.();
+            router.push('/admin/manage-comments');
+          }
+          break;
+
+        case 'admin_user_reported_direct':
+          // Navigate to manage users with specific user highlighted
+          if (data?.reportedUserId) {
+            onClose?.();
+            router.push('/admin/manage-users');
+          }
+          break;
+
+        case 'followers_resource_uploaded':
+          // Navigate to view the resource
+          if (data?.resourceId) {
+            onClose?.();
+            router.push(`/(tabs)/resources?openResourceId=${data.resourceId}`);
+          }
+          break;
+
         // Non-clickable notifications
         case 'follow':
         case 'unfollow':
@@ -220,11 +244,16 @@ const NotificationCenter = ({ onClose }) => {
       case 'admin_contact_request':
         return 'mail-open';
       case 'admin_user_reported':
+      case 'admin_user_reported_direct':
         return 'alert-circle';
+      case 'admin_comment_reported':
+        return 'chatbubble-outline';
       case 'admin_suspicious_activity':
         return 'warning';
       case 'admin_report_resolved':
         return 'checkmark-done';
+      case 'followers_resource_uploaded':
+        return 'cloud-download';
       default:
         return 'notifications';
     }
@@ -257,11 +286,16 @@ const NotificationCenter = ({ onClose }) => {
       case 'admin_contact_request':
         return '#8B5CF6'; // Purple for contact
       case 'admin_user_reported':
+      case 'admin_user_reported_direct':
         return '#DC2626'; // Dark red for user reports
+      case 'admin_comment_reported':
+        return '#F59E0B'; // Amber for comment reports
       case 'admin_suspicious_activity':
         return '#EA580C'; // Orange red for suspicious
       case 'admin_report_resolved':
         return '#10B981'; // Green for resolved
+      case 'followers_resource_uploaded':
+        return '#06B6D4'; // Cyan for follower updates
       default:
         return '#22d3ee';
     }
@@ -271,7 +305,8 @@ const NotificationCenter = ({ onClose }) => {
     const clickableTypes = [
       'comment', 'rating', 'message', 'group_message', 'upload', 'favorite',
       'admin_new_report', 'admin_resource_pending', 'admin_teacher_verification',
-      'admin_contact_request', 'admin_resource_flagged', 'admin_user_reported'
+      'admin_contact_request', 'admin_resource_flagged', 'admin_user_reported',
+      'admin_comment_reported', 'admin_user_reported_direct', 'followers_resource_uploaded'
     ];
     return clickableTypes.includes(type);
   };
