@@ -24,17 +24,17 @@ import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
 import { deleteFile } from "../../utils/storage";
+import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 
 export default function AdminResourcesScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const { notifyAdminResourcePending } = useAdminNotifications();
   const router = useRouter();
   const {
     bgCardAlt,
     bgCard,
-    bgInput,
     border,
-    borderInput,
     textPrimary,
     textSecondary,
     textMuted,
@@ -138,12 +138,28 @@ export default function AdminResourcesScreen() {
         text2: error.message,
       });
     } else {
+      // Get resource details for notification
+      const resource = resources.find(r => r.id === resourceId);
+      
       logEvent({
         event_type: "RESOURCE_APPROVED",
         user_id: user?.id,
         target_id: resourceId,
         target_table: "resources",
       });
+
+      // Notify admin team of approval (optional - mainly for audit trail)
+      if (resource && user?.display_name) {
+        await notifyAdminResourcePending(
+          [user.id],
+          resource.user_id,
+          resource.uploaded_by || 'Teacher',
+          resource.title,
+          resourceId,
+          resource.category
+        ).catch(err => console.warn('Failed to send notification:', err));
+      }
+
       Toast.show({ type: "success", text1: "Resource approved" });
       fetchResources();
     }

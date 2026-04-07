@@ -13,6 +13,7 @@ import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
+import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
 import { ThemedText } from './themed-text';
 import { ThemedTextInput } from './themed-textinput';
 
@@ -76,6 +77,8 @@ export default function ReportModal({
     textMuted,
     placeholderColor,
   } = useAppTheme();
+
+  const { notifyAdminNewReport } = useAdminNotifications();
 
   const handleClose = () => {
     setSelectedReason("");
@@ -145,6 +148,24 @@ export default function ReportModal({
       target_table: "resources",
       details: { reason: reasonLabel },
     });
+
+    // Notify admins of new report
+    const { data: adminUsers } = await supabase
+      .from("user_roles")
+      .select("id")
+      .or("role.eq.admin,role.eq.super_admin");
+
+    if (adminUsers && adminUsers.length > 0) {
+      const adminIds = adminUsers.map(a => a.id);
+      await notifyAdminNewReport(
+        adminIds,
+        user.id,
+        user.email || 'Anonymous',
+        resourceId,
+        'resource',
+        reasonLabel
+      ).catch(err => console.warn('Failed to notify admin:', err));
+    }
 
     Toast.show({
       type: "success",

@@ -20,6 +20,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
+import { useMessageNotifications } from "../../utils/notificationIntegrations";
 
 export default function DMChatScreen() {
   const { id: partnerId } = useLocalSearchParams();
@@ -47,6 +48,8 @@ export default function DMChatScreen() {
   const [userProfilePic, setUserProfilePic] = useState(null);
   const [userFirstName, setUserFirstName] = useState("");
   const [userLastName, setUserLastName] = useState("");
+  const [currentUserName, setCurrentUserName] = useState("");
+  const { notifyDirectMessage } = useMessageNotifications();
   const flatListRef = useRef(null);
 
   // ── Fetch partner name ────────────────────────────────────────────────────
@@ -98,6 +101,7 @@ export default function DMChatScreen() {
         setUserProfilePic(data.profile_picture_url || null);
         setUserFirstName(data.first_name || "");
         setUserLastName(data.last_name || "");
+        setCurrentUserName(`${data.first_name || ""} ${data.last_name || ""}`.trim());
       }
 
       if (error) {
@@ -233,6 +237,15 @@ export default function DMChatScreen() {
       target_id: partnerId,
       target_table: "teachers",
     });
+
+    // Send notification to receiver
+    await notifyDirectMessage(
+      partnerId,
+      currentUserName || "User",
+      user.id,
+      messageText.substring(0, 50),
+      `${user.id}_${partnerId}`
+    ).catch((err) => console.warn("Failed to send message notification:", err));
 
     if (data) {
       setMessages((prev) =>

@@ -1,11 +1,13 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Animated, Text, TouchableOpacity, View } from "react-native";
+import { Animated, Modal, Text, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { useUserRole } from "../hooks/useUserRole";
 import { supabase } from "../supabase";
 import ConfirmModal from "./ConfirmModal";
+import NotificationBadge from "./NotificationBadge";
+import NotificationCenter from "./NotificationCenter";
 
 export default function LogoHeader({ position = "left" }) {
   const router = useRouter();
@@ -13,6 +15,7 @@ export default function LogoHeader({ position = "left" }) {
   const { isDark } = useAppTheme();
   const [isVerified, setIsVerified] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -24,7 +27,7 @@ export default function LogoHeader({ position = "left" }) {
     }).start();
 
     checkVerification();
-  }, []);
+  }, [fadeAnim]);
 
   const checkVerification = async () => {
     const {
@@ -183,28 +186,59 @@ export default function LogoHeader({ position = "left" }) {
 
       {/* Sign Out Button */}
       <Animated.View style={{ opacity: fadeAnim }}>
-        <TouchableOpacity
-          onPress={handleSignOut}
-          activeOpacity={0.7}
-          style={{
-            width: 38,
-            height: 38,
-            borderRadius: 19,
-            backgroundColor: isDark
-              ? "rgba(239,68,68,0.12)"
-              : "rgba(220,38,38,0.08)",
-            borderWidth: 1,
-            borderColor: isDark ? "rgba(239,68,68,0.3)" : "rgba(220,38,38,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Ionicons
-            name="log-out-outline"
-            size={20}
-            color={isDark ? "#f87171" : "#dc2626"}
-          />
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          {/* Notifications Button */}
+          <TouchableOpacity
+            onPress={() => setShowNotifications(true)}
+            activeOpacity={0.7}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: isDark
+                ? "rgba(6,182,212,0.12)"
+                : "rgba(8,145,178,0.08)",
+              borderWidth: 1,
+              borderColor: isDark
+                ? "rgba(6,182,212,0.3)"
+                : "rgba(8,145,178,0.2)",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+            }}
+          >
+            <Ionicons
+              name="notifications-outline"
+              size={20}
+              color={isDark ? "#22d3ee" : "#0891b2"}
+            />
+            <NotificationBadge size="small" badgeColor="#FF6B6B" />
+          </TouchableOpacity>
+
+          {/* Sign Out Button */}
+          <TouchableOpacity
+            onPress={handleSignOut}
+            activeOpacity={0.7}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 19,
+              backgroundColor: isDark
+                ? "rgba(239,68,68,0.12)"
+                : "rgba(220,38,38,0.08)",
+              borderWidth: 1,
+              borderColor: isDark ? "rgba(239,68,68,0.3)" : "rgba(220,38,38,0.2)",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons
+              name="log-out-outline"
+              size={20}
+              color={isDark ? "#f87171" : "#dc2626"}
+            />
+          </TouchableOpacity>
+        </View>
       </Animated.View>
 
       <ConfirmModal
@@ -217,6 +251,16 @@ export default function LogoHeader({ position = "left" }) {
         onConfirm={confirmSignOut}
         onCancel={() => setShowSignOutModal(false)}
       />
+
+      {/* Notifications Modal */}
+      <Modal
+        visible={showNotifications}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowNotifications(false)}
+      >
+        <NotificationCenter onClose={() => setShowNotifications(false)} />
+      </Modal>
     </View>
   );
 }

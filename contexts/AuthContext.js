@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../supabase";
+import { NotificationProvider } from "./NotificationContext";
 
 const AuthContext = createContext({
   user: null,
@@ -36,7 +37,9 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
-      {children}
+      <NotificationProvider userId={user?.id}>
+        {children}
+      </NotificationProvider>
     </AuthContext.Provider>
   );
 };

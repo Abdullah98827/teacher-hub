@@ -12,6 +12,7 @@ import LogoHeader from "../components/logoHeader";
 import { ThemedTextInput } from '../components/themed-textinput';
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
 
 export default function ContactAdmin() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export default function ContactAdmin() {
   const [loading, setLoading] = useState(false);
   const [fetchingUser, setFetchingUser] = useState(true);
   const router = useRouter();
+  const { notifyAdminContactRequest } = useAdminNotifications();
   const {
     bgCard,
     bgInput,
@@ -80,6 +82,23 @@ export default function ContactAdmin() {
         error.message || "Could not send message. Please try again."
       );
     } else {
+      // Notify admins of contact request
+      const { data: adminUsers } = await supabase
+        .from("user_roles")
+        .select("id")
+        .or("role.eq.admin,role.eq.super_admin");
+
+      if (adminUsers && adminUsers.length > 0) {
+        const adminIds = adminUsers.map(a => a.id);
+        await notifyAdminContactRequest(
+          adminIds,
+          userId,
+          email || 'Unknown',
+          email,
+          message.trim()
+        ).catch(err => console.warn('Failed to notify admin:', err));
+      }
+
       showToast("success", "Message Sent", "An admin will respond shortly");
       setMessage("");
       setTimeout(() => router.back(), 1500);

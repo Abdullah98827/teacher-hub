@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
+import { useRatingNotifications } from "../utils/notificationIntegrations";
 import { ThemedText } from './themed-text';
 
 export default function RatingModal({
@@ -23,6 +24,9 @@ export default function RatingModal({
   const [selectedRating, setSelectedRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resourceOwnerId, setResourceOwnerId] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState(null);
+  const { notifyRating } = useRatingNotifications();
 
   const { bgCard, border, textPrimary, textSecondary, textMuted } =
     useAppTheme();
@@ -52,6 +56,25 @@ export default function RatingModal({
       setSelectedRating(data.rating);
     } else {
       setSelectedRating(0);
+    }
+
+    // Fetch resource owner and user name for notifications
+    const { data: resourceData } = await supabase
+      .from("resources")
+      .select("uploaded_by")
+      .eq("id", resourceId)
+      .single();
+    if (resourceData) {
+      setResourceOwnerId(resourceData.uploaded_by);
+    }
+
+    const { data: teacherData } = await supabase
+      .from("teachers")
+      .select("first_name, last_name")
+      .eq("id", user.id)
+      .single();
+    if (teacherData) {
+      setCurrentUserName(`${teacherData.first_name} ${teacherData.last_name}`);
     }
 
     setLoading(false);
@@ -130,6 +153,18 @@ export default function RatingModal({
       target_table: "resources",
       details: { rating: selectedRating },
     });
+
+    // Send rating notification only for new ratings, not updates
+    if (!existingRating && resourceOwnerId && resourceOwnerId !== user.id) {
+      await notifyRating(
+        resourceOwnerId,
+        currentUserName || "User",
+        user.id,
+        resourceId,
+        selectedRating,
+        resourceTitle
+      ).catch((err) => console.warn("Failed to send rating notification:", err));
+    }
 
     Toast.show({
       type: "success",

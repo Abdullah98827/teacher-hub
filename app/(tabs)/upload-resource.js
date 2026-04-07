@@ -18,12 +18,15 @@ import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
 import { uploadFile } from "../../utils/storage";
+import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 
 export default function UploadResourceScreen() {
   const { user } = useAuth();
   const router = useRouter();
   const { bgInput, borderInput, textPrimary, textSecondary, placeholderColor } =
     useAppTheme();
+
+  const { notifyAdminResourcePending } = useAdminNotifications();
 
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -192,6 +195,26 @@ export default function UploadResourceScreen() {
           status: isAdmin ? "approved" : "pending",
         },
       });
+
+      // Notify admins if resource is pending approval
+      if (!isAdmin) {
+        const { data: adminUsers } = await supabase
+          .from("user_roles")
+          .select("id")
+          .or("role.eq.admin,role.eq.super_admin");
+
+        if (adminUsers && adminUsers.length > 0) {
+          const adminIds = adminUsers.map(a => a.id);
+          await notifyAdminResourcePending(
+            adminIds,
+            user?.id,
+            user?.display_name || user?.email || 'Teacher',
+            title.trim(),
+            null, // resourceId will be available after insert, using null for now
+            selectedCategory
+          ).catch(err => console.warn('Failed to notify admin:', err));
+        }
+      }
 
       Toast.show({
         type: "success",

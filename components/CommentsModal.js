@@ -15,6 +15,7 @@ import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
+import { useCommentNotifications } from "../utils/notificationIntegrations";
 import ProfilePicture from "./ProfilePicture";
 import UserProfileModal from "./UserProfileModal";
 import { ThemedTextInput } from './themed-textinput';
@@ -54,6 +55,9 @@ export default function CommentsModal({
   const [selectedUserId, setSelectedUserId] = useState(null);
   const [showDmSuggestion, setShowDmSuggestion] = useState(false);
   const [dmSuggestionUsers, setDmSuggestionUsers] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState(null);
+  const [resourceOwnerId, setResourceOwnerId] = useState(null);
+  const { notifyComment, notifyCommentReply } = useCommentNotifications();
   const pendingNavPath = useRef(null);
 
   const fetchCurrentUser = async () => {
@@ -70,6 +74,16 @@ export default function CommentsModal({
         .single();
 
       setUserRole(roleData?.role || null);
+
+      // Fetch current user's name for notifications
+      const { data: teacherData } = await supabase
+        .from("teachers")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+      if (teacherData) {
+        setCurrentUserName(`${teacherData.first_name} ${teacherData.last_name}`);
+      }
     }
   };
 
@@ -188,13 +202,25 @@ export default function CommentsModal({
     if (visible) {
       fetchCurrentUser();
       fetchComments();
+      // Fetch resource owner for notifications
+      const fetchResourceOwner = async () => {
+        const { data } = await supabase
+          .from("resources")
+          .select("uploaded_by")
+          .eq("id", resourceId)
+          .single();
+        if (data) {
+          setResourceOwnerId(data.uploaded_by);
+        }
+      };
+      fetchResourceOwner();
     } else if (pendingNavPath.current) {
       // Modal has closed — now safe to navigate
       const path = pendingNavPath.current;
       pendingNavPath.current = null;
       router.push(path);
     }
-  }, [visible, fetchComments, router]);
+  }, [visible, fetchComments, router, resourceId]);
 
   const submitComment = async () => {
     if (!commentText.trim()) return;
@@ -240,6 +266,27 @@ export default function CommentsModal({
       target_table: "resources",
       details: { is_reply: !!replyToId },
     });
+
+    // Send notifications
+    if (replyToId && replyToUser?.id) {
+      // Notify the person being replied to
+      await notifyCommentReply(
+        replyToUser.id,
+        currentUserName || "User",
+        user.id,
+        replyToId,
+        resourceId
+      ).catch((err) => console.warn("Failed to send reply notification:", err));
+    } else if (resourceOwnerId && resourceOwnerId !== user.id) {
+      // Notify resource owner of new comment
+      await notifyComment(
+        resourceOwnerId,
+        currentUserName || "User",
+        user.id,
+        resourceId,
+        resourceTitle
+      ).catch((err) => console.warn("Failed to send comment notification:", err));
+    }
 
     Toast.show({
       type: "success",

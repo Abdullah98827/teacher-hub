@@ -43,7 +43,7 @@ import { deleteFile, getSignedUrl } from "../../utils/storage";
 export default function ResourcesScreen() {
   const { user } = useAuth();
   const router = useRouter();
-  const { openResourceId } = useLocalSearchParams();
+  const { openResourceId, activeTab: activeTabParam } = useLocalSearchParams();
   const {
     bg,
     bgCard,
@@ -289,6 +289,9 @@ export default function ResourcesScreen() {
       if (resource) {
         // Immediately show the preview with the resource
         setSelectedResource(resource);
+        setSelectedResourceId(resource.id);
+        setSelectedResourceTitle(resource.title);
+        setSelectedResourceSubjectId(resource.subject_id);
         
         // Load stats and signed URL in the background
         (async () => {
@@ -312,11 +315,24 @@ export default function ResourcesScreen() {
           setShowPreview(true);
         }, 100);
         
+        // If activeTab is specified, open the corresponding modal after preview
+        if (activeTabParam === 'comments') {
+          setTimeout(() => {
+            setShowPreview(false);
+            setShowCommentsModal(true);
+          }, 600);
+        } else if (activeTabParam === 'ratings') {
+          setTimeout(() => {
+            setShowPreview(false);
+            setShowRatingModal(true);
+          }, 600);
+        }
+        
         // Clear the query param to prevent re-opening on close
-        router.setParams({ openResourceId: undefined });
+        router.setParams({ openResourceId: undefined, activeTab: undefined });
       }
     }
-  }, [openResourceId, resources, user?.id, router]);
+  }, [openResourceId, resources, user?.id, router, activeTabParam]);
 
   const handleTranslateClick = async () => {
     if (!user || !selectedResource) return;

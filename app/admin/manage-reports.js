@@ -20,9 +20,11 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
+import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 
 export default function ManageReportsScreen() {
   const { user } = useAuth();
+  const { notifyAdminReportResolved } = useAdminNotifications();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -31,7 +33,7 @@ export default function ManageReportsScreen() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
+  const { bgCard, bgCardAlt, textPrimary, textSecondary, textMuted } =
     useAppTheme();
 
   const fetchReports = useCallback(async () => {
@@ -113,6 +115,17 @@ export default function ManageReportsScreen() {
         target_table: "resource_reports",
         details: { status },
       });
+      
+      // Notify admin team when report is resolved
+      if (status === 'reviewed' && user?.display_name) {
+        await notifyAdminReportResolved(
+          [user.id], // Notify current admin
+          user.display_name,
+          selectedReport?.reason || 'Unknown',
+          status
+        ).catch(err => console.warn('Failed to send admin notification:', err));
+      }
+      
       Toast.show({ type: "success", text1: `Report marked as ${status}` });
       setShowDetailModal(false);
       fetchReports();

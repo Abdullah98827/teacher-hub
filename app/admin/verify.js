@@ -19,6 +19,7 @@ import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
+import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 
 export default function VerifyTeachersScreen() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export default function VerifyTeachersScreen() {
   const [imageUrls, setImageUrls] = useState(new Map());
 
   const isAdmin = role === "admin";
+  const { notifyAdminTeacherVerification } = useAdminNotifications();
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -129,13 +131,26 @@ export default function VerifyTeachersScreen() {
           target_id: userId,
           target_table: "teachers",
         });
+        
+        // Get verified teacher info for notification
+        const verifiedTeacher = pendingUsers.find(t => t.id === userId);
+        if (verifiedTeacher) {
+          await notifyAdminTeacherVerification(
+            [userId], // Notify the teacher themselves
+            userId,
+            verifiedTeacher.name || 'Teacher',
+            verifiedTeacher.subject || 'Unknown',
+            verifiedTeacher.school || 'Unknown'
+          ).catch(err => console.warn('Failed to notify teacher:', err));
+        }
+        
         Toast.show({ type: "success", text1: "Teacher verified successfully" });
         loadPendingUsers();
       }
 
       setProcessing(false);
     },
-    [loadPendingUsers, user?.id]
+    [loadPendingUsers, user?.id, pendingUsers, notifyAdminTeacherVerification]
   );
 
   const executeReject = async () => {

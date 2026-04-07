@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
 import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
+import { useFollowNotifications } from "../utils/notificationIntegrations";
 
 /**
  * Hook to manage following/unfollowing users
@@ -15,6 +16,8 @@ export function useFollow(targetUserId) {
   const [followingCount, setFollowingCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState(null);
+  const { notifyFollow, notifyUnfollow } = useFollowNotifications();
 
   useEffect(() => {
     getCurrentUser();
@@ -34,6 +37,15 @@ export function useFollow(targetUserId) {
     } = await supabase.auth.getUser();
     if (user) {
       setCurrentUserId(user.id);
+      // Fetch user's full name for notifications
+      const { data: teacherData } = await supabase
+        .from("teachers")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+      if (teacherData) {
+        setCurrentUserName(`${teacherData.first_name} ${teacherData.last_name}`);
+      }
     }
   };
 
@@ -170,6 +182,10 @@ export function useFollow(targetUserId) {
           target_id: targetUserId,
           target_table: "teachers",
         });
+        // Send unfollow notification
+        await notifyUnfollow(targetUserId, currentUserName || "User", currentUserId).catch((err) =>
+          console.warn("Failed to send unfollow notification:", err)
+        );
         Toast.show({
           type: "success",
           text1: "Unfollowed",
@@ -198,6 +214,10 @@ export function useFollow(targetUserId) {
           target_id: targetUserId,
           target_table: "teachers",
         });
+        // Send follow notification
+        await notifyFollow(targetUserId, currentUserName || "User", currentUserId).catch((err) =>
+          console.warn("Failed to send follow notification:", err)
+        );
         Toast.show({
           type: "success",
           text1: "Following",
