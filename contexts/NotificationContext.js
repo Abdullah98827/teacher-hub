@@ -2,14 +2,14 @@ import * as Notifications from 'expo-notifications';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import {
-    deleteAllNotifications,
-    deleteNotification,
-    fetchNotifications,
-    getUnreadNotificationCount,
-    markAllNotificationsAsRead,
-    markNotificationAsRead,
-    registerForPushNotifications,
-    savePushToken,
+  deleteAllNotifications,
+  deleteNotification,
+  fetchNotifications,
+  getUnreadNotificationCount,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  registerForPushNotifications,
+  savePushToken,
 } from '../utils/notificationService';
 
 const NotificationContext = createContext({

@@ -75,6 +75,10 @@ export default function AdminLayout() {
         options={{ title: "Manage Comments", headerShown: false }}
       />
       <Stack.Screen
+        name="manage-group-chats"
+        options={{ title: "Manage Group Chats", headerShown: false }}
+      />
+      <Stack.Screen
         name="manage-subjects"
         options={{ title: "Manage Subjects", headerShown: false }}
       />

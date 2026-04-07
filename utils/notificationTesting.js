@@ -10,16 +10,16 @@
  */
 
 import {
-  sendLocalNotification,
-  createNotification,
-} from './notificationService';
-import {
-  useFollowNotifications,
   useCommentNotifications,
-  useRatingNotifications,
+  useFollowNotifications,
   useMessageNotifications,
+  useRatingNotifications,
   useResourceNotifications,
 } from './notificationIntegrations';
+import {
+  createNotification,
+  sendLocalNotification,
+} from './notificationService';
 
 /**
  * Send a test notification locally

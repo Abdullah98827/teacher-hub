@@ -19,8 +19,8 @@ import { ThemedText } from "../../components/themed-text";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
-import { logEvent } from "../../utils/logging";
 import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
+import { logEvent } from "../../utils/logging";
 
 export default function ManageReportsScreen() {
   const { user } = useAuth();

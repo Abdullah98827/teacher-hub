@@ -1,25 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  TouchableOpacity,
-  View,
-  Text,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
-import { logEvent } from "../utils/logging";
 import {
-  COMMENT_REPORT_REASONS,
-  getReportReasonColor,
-  getReportReasonIcon,
+    COMMENT_REPORT_REASONS,
+    getReportReasonColor,
 } from "../utils/commentReportReasons";
-import { ThemedText } from "./themed-text";
+import { logEvent } from "../utils/logging";
 import { ThemedTextInput } from "./themed-textinput";
 
 export default function CommentReportModal({
@@ -31,12 +29,9 @@ export default function CommentReportModal({
   onReport,
   onReply,
   onDelete,
+  isMenuReply = false,
 }) {
   const {
-    bg,
-    bgCard,
-    bgCardAlt,
-    border,
     textMuted,
     isDark,
   } = useAppTheme();
@@ -58,11 +53,31 @@ export default function CommentReportModal({
     onClose?.();
   };
 
-  const handleReplyClick = () => {
-    if (onReply) {
-      onReply(comment.id, `${comment.first_name} ${comment.last_name}`);
+  // Helper function to parse message content
+  const parseMessageContent = (commentText) => {
+    try {
+      const parsed = JSON.parse(commentText);
+      if (parsed.type === "resource_share") {
+        return {
+          type: "resource_share",
+          title: parsed.title || "Resource",
+          resourceId: parsed.resourceId,
+          link: parsed.link,
+        };
+      }
+    } catch (_) {
+      // Not JSON, return as plain text
     }
-    handleClose();
+    return { type: "text", content: commentText };
+  };
+
+  // Helper function to get display text for comment
+  const getCommentDisplayText = () => {
+    const parsed = parseMessageContent(comment.comment_text);
+    if (parsed.type === "resource_share") {
+      return `Shared: ${parsed.title}`;
+    }
+    return comment.comment_text;
   };
 
   const handleDeleteClick = () => {
@@ -155,7 +170,7 @@ export default function CommentReportModal({
           >
             <View
               style={{
-                backgroundColor: bg,
+                backgroundColor: isDark ? "#111827" : "#FFFFFF",
                 borderTopLeftRadius: 24,
                 borderTopRightRadius: 24,
                 paddingHorizontal: 20,
@@ -184,12 +199,11 @@ export default function CommentReportModal({
                     color={isDark ? "#E5E7EB" : "#1F2937"}
                   />
                 </TouchableOpacity>
-                <ThemedText
-                  style={{ fontSize: 18, fontWeight: "700", flex: 1 }}
-                  type="default"
+                <Text
+                  style={{ fontSize: 18, fontWeight: "700", flex: 1, color: isDark ? "#E5E7EB" : "#1F2937" }}
                 >
                   Report Comment
-                </ThemedText>
+                </Text>
                 <TouchableOpacity
                   onPress={handleClose}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -205,7 +219,7 @@ export default function CommentReportModal({
               {/* Comment Preview */}
               <View
                 style={{
-                  backgroundColor: bgCardAlt,
+                  backgroundColor: isDark ? "#1F293620" : "#F3E8FF15",
                   borderRadius: 12,
                   padding: 12,
                   marginBottom: 20,
@@ -214,7 +228,7 @@ export default function CommentReportModal({
                 }}
               >
                 <Text
-                  style={{ fontSize: 11, fontWeight: "600", color: textMuted }}
+                  style={{ fontSize: 11, fontWeight: "600", color: "#F59E0B" }}
                 >
                   COMMENT BY {comment.first_name?.toUpperCase() || "USER"}
                 </Text>
@@ -226,7 +240,7 @@ export default function CommentReportModal({
                     color: isDark ? "#E5E7EB" : "#1F2937",
                   }}
                 >
-                  {comment.comment_text}
+                  {getCommentDisplayText()}
                 </Text>
               </View>
 
@@ -245,7 +259,7 @@ export default function CommentReportModal({
               {/* Reason Selection List */}
               <ScrollView
                 style={{ maxHeight: 280, marginBottom: 16 }}
-                showsVerticalScrollIndicator={true}
+                showsVerticalScrollIndicator={false}
                 scrollEnabled={COMMENT_REPORT_REASONS.length > 5}
               >
                 {COMMENT_REPORT_REASONS.map((reason) => (
@@ -253,97 +267,87 @@ export default function CommentReportModal({
                     key={reason.value}
                     onPress={() => setSelectedReason(reason.value)}
                     style={{
-                      backgroundColor:
-                        selectedReason === reason.value ? bgCard : bgCardAlt,
-                      borderRadius: 12,
+                      backgroundColor: selectedReason === reason.value 
+                        ? (isDark ? "#1F3A4620" : "#0F172A15")
+                        : "transparent",
+                      borderRadius: 10,
                       paddingHorizontal: 14,
-                      paddingVertical: 12,
-                      marginBottom: 10,
+                      paddingVertical: 13,
+                      marginBottom: 8,
                       flexDirection: "row",
                       alignItems: "center",
-                      borderWidth: 2,
-                      borderColor:
-                        selectedReason === reason.value
-                          ? getReportReasonColor(reason.value)
-                          : "transparent",
+                      borderWidth: 1.5,
+                      borderColor: selectedReason === reason.value
+                        ? getReportReasonColor(reason.value)
+                        : (isDark ? "#374151" : "#E5E7EB"),
                     }}
                   >
-                    <View
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        backgroundColor:
-                          getReportReasonColor(reason.value) + "15",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        marginRight: 12,
-                      }}
-                    >
-                      <Ionicons
-                        name={getReportReasonIcon(reason.value)}
-                        size={16}
-                        color={getReportReasonColor(reason.value)}
-                      />
-                    </View>
                     <Text
                       style={{
                         flex: 1,
-                        fontSize: 13,
-                        fontWeight: "500",
+                        fontSize: 14,
+                        fontWeight: selectedReason === reason.value ? "600" : "500",
                         color: isDark ? "#E5E7EB" : "#1F2937",
                       }}
                     >
                       {reason.label}
                     </Text>
                     {selectedReason === reason.value && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={getReportReasonColor(reason.value)}
+                      <View
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: 3,
+                          backgroundColor: getReportReasonColor(reason.value),
+                          marginLeft: 8,
+                        }}
                       />
                     )}
                   </TouchableOpacity>
                 ))}
               </ScrollView>
 
-              {/* Description Field */}
-              <Text
-                style={{
-                  fontSize: 12,
-                  fontWeight: "600",
-                  marginBottom: 8,
-                  color: isDark ? "#E5E7EB" : "#1F2937",
-                }}
-              >
-                Additional Details (optional)
-              </Text>
+              {/* Description Field - Only show for "Other" reason */}
+              {selectedReason === "other" && (
+                <>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "600",
+                      marginBottom: 8,
+                      color: isDark ? "#E5E7EB" : "#1F2937",
+                    }}
+                  >
+                    Please describe the issue
+                  </Text>
 
-              <ThemedTextInput
-                style={{
-                  minHeight: 100,
-                  textAlignVertical: "top",
-                  marginBottom: 16,
-                }}
-                placeholder="Provide more context if needed..."
-                multiline
-                maxLength={500}
-                value={customDescription}
-                onChangeText={setCustomDescription}
-                editable={!submitting}
-              />
+                  <ThemedTextInput
+                    style={{
+                      minHeight: 100,
+                      textAlignVertical: "top",
+                      marginBottom: 16,
+                    }}
+                    placeholder="Explain what's wrong with this comment..."
+                    multiline
+                    maxLength={500}
+                    value={customDescription}
+                    onChangeText={setCustomDescription}
+                    editable={!submitting}
+                  />
 
-              {/* Character Count */}
-              <Text
-                style={{
-                  fontSize: 11,
-                  textAlign: "right",
-                  marginBottom: 16,
-                  color: textMuted,
-                }}
-              >
-                {customDescription.length}/500
-              </Text>
+                  {/* Character Count */}
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      textAlign: "right",
+                      marginBottom: 16,
+                      color: textMuted,
+                    }}
+                  >
+                    {customDescription.length}/500
+                  </Text>
+                </>
+              )}
 
               {/* Action Buttons */}
               <View style={{ flexDirection: "row", gap: 12 }}>
@@ -354,9 +358,9 @@ export default function CommentReportModal({
                     borderRadius: 10,
                     paddingVertical: 12,
                     alignItems: "center",
-                    backgroundColor: bgCardAlt,
+                    backgroundColor: isDark ? "#374151" : "#F3F4F6",
                     borderWidth: 1,
-                    borderColor: border,
+                    borderColor: isDark ? "#4B5563" : "#E5E7EB",
                   }}
                   disabled={submitting}
                 >
@@ -494,9 +498,17 @@ export default function CommentReportModal({
             </Text>
           </View>
 
-          {/* Reply Option */}
+          {/* Reply Option - Always shown */}
           <TouchableOpacity
-            onPress={handleReplyClick}
+            onPress={() => {
+              if (onReply && comment) {
+                onReply(
+                  isMenuReply ? comment.parent_comment_id || comment.id : comment.id,
+                  { id: comment.user_id, name: `${comment.first_name} ${comment.last_name}` }
+                );
+              }
+              onClose?.();
+            }}
             style={{
               flexDirection: "row",
               alignItems: "center",
@@ -512,7 +524,7 @@ export default function CommentReportModal({
             <Ionicons
               name="arrow-undo"
               size={20}
-              color={isDark ? "#60A5FA" : "#3B82F6"}
+              color={isDark ? "#06B6D4" : "#0891B2"}
               style={{ marginRight: 12 }}
             />
             <Text

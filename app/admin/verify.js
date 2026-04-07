@@ -18,8 +18,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
-import { logEvent } from "../../utils/logging";
 import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
+import { logEvent } from "../../utils/logging";
 
 export default function VerifyTeachersScreen() {
   const { user } = useAuth();

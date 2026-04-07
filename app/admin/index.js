@@ -55,6 +55,12 @@ export default function AdminHub() {
       icon: "chatbubbles-outline",
     },
     {
+      label: "Manage Group Chats",
+      subtitle: "Moderate subject group chats",
+      route: "/admin/manage-group-chats",
+      icon: "people-outline",
+    },
+    {
       label: "Manage Subjects",
       subtitle: "Add, edit or remove subjects",
       route: "/admin/manage-subjects",

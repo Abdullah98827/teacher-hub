@@ -2,25 +2,25 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
 import { logEvent } from "../utils/logging";
 import { useCommentNotifications } from "../utils/notificationIntegrations";
-import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
-import ProfilePicture from "./ProfilePicture";
-import UserProfileModal from "./UserProfileModal";
 import CommentReportModal from "./CommentReportModal";
+import ProfilePicture from "./ProfilePicture";
 import { ThemedTextInput } from './themed-textinput';
+import UserProfileModal from "./UserProfileModal";
 
 export default function CommentsModal({
   visible,
@@ -61,6 +61,7 @@ export default function CommentsModal({
   const [resourceOwnerId, setResourceOwnerId] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedCommentForAction, setSelectedCommentForAction] = useState(null);
+  const [isMenuReply, setIsMenuReply] = useState(false);
   const { notifyComment, notifyCommentReply } = useCommentNotifications();
   const { notifyAdminCommentReported } = useAdminNotifications();
   const pendingNavPath = useRef(null);
@@ -344,9 +345,14 @@ export default function CommentsModal({
     fetchComments();
   };
 
-  const handleCommentReplyAction = (commentId, userName) => {
+  const handleCommentReplyAction = (commentId, userInfo) => {
     setReplyToId(commentId);
-    setReplyToUser(userName);
+    // Handle both string (old format) and object (new format from CommentReportModal)
+    if (typeof userInfo === 'string') {
+      setReplyToUser(userInfo);
+    } else if (userInfo && typeof userInfo === 'object' && userInfo.name) {
+      setReplyToUser(userInfo.name);
+    }
   };
 
   const handleCommentReportSubmit = async (reportedCommentId, reportedCommentText, reason) => {
@@ -468,6 +474,7 @@ export default function CommentsModal({
                     ...comment,
                     user: { display_name: `${comment.first_name} ${comment.last_name}` }
                   });
+                  setIsMenuReply(isReply);
                   setShowReportModal(true);
                 }}
                 className="p-1"
@@ -482,23 +489,8 @@ export default function CommentsModal({
             {comment.comment_text}
           </Text>
 
-          <View className="flex-row items-center mt-3 gap-4">
-            <TouchableOpacity
-              className="flex-row items-center"
-              onPress={() => {
-                setReplyToId(
-                  isReply ? comment.parent_comment_id || comment.id : comment.id
-                );
-                setReplyToUser(`${comment.first_name} ${comment.last_name}`);
-              }}
-            >
-              <Ionicons name="arrow-undo" size={14} color="#22d3ee" />
-              <Text className="text-cyan-400 text-xs ml-1 font-semibold">
-                Reply
-              </Text>
-            </TouchableOpacity>
-
-            {hasReplies && (
+          {hasReplies && (
+            <View className="flex-row items-center mt-3">
               <TouchableOpacity
                 className="flex-row items-center"
                 onPress={() => toggleThread(comment.id)}
@@ -514,8 +506,8 @@ export default function CommentsModal({
                     : `View ${comment.replies.length} ${comment.replies.length === 1 ? "reply" : "replies"}`}
                 </Text>
               </TouchableOpacity>
-            )}
-          </View>
+            </View>
+          )}
         </View>
 
         {isExpanded &&
@@ -599,7 +591,7 @@ export default function CommentsModal({
 
         {loading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator size="large" color="#22d3ee" />
+            <ActivityIndicator size="large" color={isDark ? "#22d3ee" : "#06b6d4"} />
           </View>
         ) : comments.length === 0 ? (
           <View className="flex-1 items-center justify-center px-5">
@@ -750,6 +742,7 @@ export default function CommentsModal({
           setDeleteCommentId(commentId);
           setShowDeleteConfirm(true);
         }}
+        isMenuReply={isMenuReply}
       />
     </Modal>
   );

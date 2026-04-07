@@ -16,9 +16,9 @@ import { ThemedTextInput } from '../../components/themed-textinput';
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
+import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 import { logEvent } from "../../utils/logging";
 import { uploadFile } from "../../utils/storage";
-import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 
 export default function UploadResourceScreen() {
   const { user } = useAuth();

@@ -1,19 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
-import { logEvent } from "../utils/logging";
 import { useAdminNotifications } from "../utils/adminNotificationIntegrations";
+import { logEvent } from "../utils/logging";
 import { ThemedText } from './themed-text';
 import { ThemedTextInput } from './themed-textinput';
 

@@ -1,5 +1,4 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import { Text, View } from 'react-native';
 import { useNotifications } from '../contexts/NotificationContext';
 
 const NotificationBadge = ({ size = 'small', badgeColor = '#FF6B6B' }) => {

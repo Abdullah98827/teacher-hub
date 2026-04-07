@@ -7,7 +7,7 @@
  * await notifyAdminNewReport(adminIds, reporterId, reporterName, reportedType, reason);
  */
 
-import { useSendNotification, NOTIFICATION_TYPES, notificationTemplates } from '../hooks/useNotifications';
+import { NOTIFICATION_TYPES, notificationTemplates, useSendNotification } from '../hooks/useNotifications';
 
 export const useAdminNotifications = () => {
   const { sendNotif } = useSendNotification();

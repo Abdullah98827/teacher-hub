@@ -22,9 +22,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { useUserRole } from "../../hooks/useUserRole";
 import { supabase } from "../../supabase";
+import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 import { logEvent } from "../../utils/logging";
 import { deleteFile } from "../../utils/storage";
-import { useAdminNotifications } from "../../utils/adminNotificationIntegrations";
 
 export default function AdminResourcesScreen() {
   const { user } = useAuth();
@@ -99,7 +99,7 @@ export default function AdminResourcesScreen() {
         return {
           ...resource,
           subject: subject || { name: "Unknown" },
-          uploader: teacher,
+          uploader: teacher || { first_name: "Unknown", last_name: "" },
         };
       })
     );

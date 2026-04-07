@@ -1,4 +1,4 @@
-import { useSendNotification, NOTIFICATION_TYPES, notificationTemplates } from '../hooks/useNotifications';
+import { NOTIFICATION_TYPES, notificationTemplates, useSendNotification } from '../hooks/useNotifications';
 
 /**
  * Integration helpers to send notifications when specific actions occur

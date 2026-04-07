@@ -1,7 +1,7 @@
+import GroupChatReportModal from "@/components/GroupChatReportModal";
 import LogoHeader from "@/components/logoHeader";
 import ProfilePicture from "@/components/ProfilePicture";
 import UserProfileModal from "@/components/UserProfileModal";
-import GroupChatReportModal from "@/components/GroupChatReportModal";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -39,12 +39,13 @@ export default function GroupChatScreen() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
-  const [userProfilePic, setUserProfilePic] = useState(null);
-  const [userFirstName, setUserFirstName] = useState("");
-  const [userLastName, setUserLastName] = useState("");
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedMessageForAction, setSelectedMessageForAction] = useState(null);
   const [replyToMessage, setReplyToMessage] = useState(null);
+  const [expandedThreads, setExpandedThreads] = useState(new Set());
+  const [userProfilePic, setUserProfilePic] = useState(null);
+  const [userFirstName, setUserFirstName] = useState("");
+  const [userLastName, setUserLastName] = useState("");
   const flatListRef = useRef(null);
 
   const isAdmin = role === "admin";
@@ -149,11 +150,19 @@ export default function GroupChatScreen() {
             .single();
 
           const newMsg = {
-            ...payload.new,
+            id: payload.new.id,
+            message: payload.new.message,
+            created_at: payload.new.created_at,
+            reply_to_id: payload.new.reply_to_id,
             sender: sender || { id: "", first_name: "Unknown", last_name: "" },
           };
 
           setMessages((prev) => [...prev, newMsg]);
+
+          // Auto-expand thread if this is a reply
+          if (newMsg.reply_to_id) {
+            setExpandedThreads((prev) => new Set([...prev, newMsg.reply_to_id]));
+          }
         }
       )
       .on(
@@ -290,46 +299,107 @@ export default function GroupChatScreen() {
     setSending(false);
   };
 
+  const toggleThread = (messageId) => {
+    setExpandedThreads((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(messageId)) {
+        newSet.delete(messageId);
+      } else {
+        newSet.add(messageId);
+      }
+      return newSet;
+    });
+  };
+
+  // Build nested message structure with replies - recursively find all nested replies
+  const getReplies = (messageId) => {
+    return messages.filter((m) => m.reply_to_id === messageId);
+  };
+
+  // Find the original message that was replied to (for context display)
+  const getParentMessage = (messageId) => {
+    const msg = messages.find((m) => m.id === messageId);
+    if (msg?.reply_to_id) {
+      return messages.find((m) => m.id === msg.reply_to_id);
+    }
+    return null;
+  };
+
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const renderMessage = ({ item }) => {
-    const isOwnMessage = item.sender.id === user?.id;
-
-    // Try to parse as resource share message (new JSON format)
-    let isResourceShare = false;
-    let resourceData = null;
+  // Helper function to parse and format message content
+  const parseMessageContent = (messageText) => {
     try {
-      const parsed = JSON.parse(item.message);
-      if (parsed.type === "resource_share" && parsed.resourceId && parsed.link) {
-        isResourceShare = true;
-        resourceData = parsed;
+      const parsed = JSON.parse(messageText);
+      if (parsed.type === "resource_share") {
+        return {
+          type: "resource_share",
+          title: parsed.title || "Resource",
+          resourceId: parsed.resourceId,
+          link: parsed.link,
+        };
       }
     } catch (_) {
-      // Not JSON, check if it's old format resource message
-      // Old format: "📚 Check out: RESOURCE_NAME\n\nteacherhub://resource/..."
-      if (item.message && item.message.includes("teacherhub://resource/")) {
-        isResourceShare = true;
-        // Extract title from old format
-        const titleMatch = item.message.match(/Check out:?\s*"?([^"]+)"?/i);
-        const linkMatch = item.message.match(/teacherhub:\/\/resource\/([a-f0-9\-]+)/);
-        if (linkMatch) {
-          resourceData = {
-            title: titleMatch ? titleMatch[1].trim() : "Shared Resource",
-            resourceId: linkMatch[1],
-            link: `teacherhub://resource/${linkMatch[1]}`,
-          };
-        }
-      }
+      // Not JSON, return as plain text
     }
+    return { type: "text", content: messageText };
+  };
 
-    const handleResourcePress = () => {
-      if (resourceData && resourceData.resourceId) {
-        router.push(`/(tabs)/resources?openResourceId=${resourceData.resourceId}`);
-      }
-    };
+  // Helper function to get display text for messages
+  const getMessageDisplayText = (messageText) => {
+    const parsed = parseMessageContent(messageText);
+    if (parsed.type === "resource_share") {
+      return `Shared: ${parsed.title}`;
+    }
+    return parsed.content;
+  };
+
+  // Helper function to render resource share message
+  const renderResourceShare = (resource, isOwnMessage) => {
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          // Handle resource open - can implement navigation later
+          Toast.show({ type: "info", text1: "Opening resource: " + resource.title });
+        }}
+        className={`px-4 py-3 rounded-2xl ${isOwnMessage ? "bg-cyan-500" : bgCardAlt}`}
+      >
+        <View className="flex-row items-center gap-2 mb-2">
+          <Ionicons
+            name="share-social"
+            size={16}
+            color={isOwnMessage ? "#E0F2FE" : "#22d3ee"}
+          />
+          <ThemedText
+            className={`${isOwnMessage ? "text-cyan-100" : "text-cyan-400"} text-xs font-semibold`}
+          >
+            {isOwnMessage ? "You shared" : "Shared with you"}
+          </ThemedText>
+        </View>
+        <ThemedText
+          className={`${
+            isOwnMessage ? "text-white" : textPrimary
+          } text-base font-semibold leading-6`}
+        >
+          {resource.title}
+        </ThemedText>
+        <ThemedText
+          className={`text-xs mt-1 ${
+            isOwnMessage ? "text-cyan-100" : textMuted
+          }`}
+        >
+          {formatTime(new Date().toISOString())}
+        </ThemedText>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderMessage = ({ item }) => {
+    const isOwnMessage = item.sender.id === user?.id;
+    const parsedContent = parseMessageContent(item.message);
 
     return (
       <View className={`mb-3 ${isOwnMessage ? "items-end" : "items-start"}`}>
@@ -363,63 +433,29 @@ export default function GroupChatScreen() {
             />
           )}
 
-          {isResourceShare && resourceData ? (
-            <TouchableOpacity
-              onPress={handleResourcePress}
-              activeOpacity={0.6}
-              className="max-w-[70%]"
-            >
+          <View className={`max-w-[70%]`}>
+            {/* Reply reference if this message is replying to another */}
+            {item.reply_to_id && parsedContent.type !== "resource_share" && (
               <View
-                className={`rounded-lg px-3 py-3 ${
-                  isOwnMessage
-                    ? "bg-cyan-500"
-                    : bgCardAlt
+                className={`px-3 py-2 rounded-t-2xl border-l-2 border-cyan-400 ${
+                  isOwnMessage ? "bg-cyan-600" : bgCardAlt
                 }`}
               >
-                <View className="flex-row items-center gap-2 mb-2">
-                  <Ionicons
-                    name="share-social"
-                    size={16}
-                    color={isOwnMessage ? "#e0f2fe" : "#22d3ee"}
-                  />
-                  <ThemedText 
-                    className={`text-xs font-semibold ${isOwnMessage ? "text-cyan-50" : "text-cyan-400"}`}
-                  >
-                    {isOwnMessage ? "You shared" : "Shared with you"}
-                  </ThemedText>
-                </View>
-                <ThemedText 
-                  className={`text-sm font-medium ${isOwnMessage ? "text-white" : textPrimary}`}
-                  numberOfLines={3}
-                >
-                  {resourceData.title}
-                </ThemedText>
                 <ThemedText
-                  className={`text-xs mt-2 ${isOwnMessage ? "text-cyan-100" : textMuted}`}
-                >
-                  {formatTime(item.created_at)}
-                </ThemedText>
-              </View>
-            </TouchableOpacity>
-          ) : (
-            <View className={`max-w-[70%]`}>
-              {/* Reply reference if this message is replying to another */}
-              {item.reply_to_id && (
-                <View
-                  className={`px-3 py-2 rounded-t-2xl border-l-2 border-cyan-400 ${
-                    isOwnMessage ? "bg-cyan-600" : bgCardAlt
+                  className={`text-xs font-semibold ${
+                    isOwnMessage ? "text-cyan-100" : "text-cyan-400"
                   }`}
                 >
-                  <ThemedText
-                    className={`text-xs font-semibold ${
-                      isOwnMessage ? "text-cyan-100" : "text-cyan-400"
-                    }`}
-                  >
-                    Replying to message
-                  </ThemedText>
-                </View>
-              )}
-              
+                  {getParentMessage(item.id)?.sender?.first_name ? `Replying to ${getParentMessage(item.id).sender.first_name}` : "Replying to message"}
+                </ThemedText>
+              </View>
+            )}
+            
+            {parsedContent.type === "resource_share" ? (
+              <View className={`${item.reply_to_id ? "rounded-b-2xl" : "rounded-2xl"}`}>
+                {renderResourceShare(parsedContent, isOwnMessage)}
+              </View>
+            ) : (
               <View
                 className={`px-4 py-3 ${
                   item.reply_to_id ? "rounded-b-2xl" : "rounded-2xl"
@@ -430,7 +466,7 @@ export default function GroupChatScreen() {
                     isOwnMessage ? "text-white" : textPrimary
                   } text-base leading-6`}
                 >
-                  {item.message}
+                  {parsedContent.content}
                 </ThemedText>
                 <ThemedText
                   className={`text-xs mt-1 ${
@@ -440,24 +476,22 @@ export default function GroupChatScreen() {
                   {formatTime(item.created_at)}
                 </ThemedText>
               </View>
-            </View>
-          )}
+            )}
+          </View>
 
-          {(isOwnMessage || (role === "admin" || role === "super_admin")) && (
-            <TouchableOpacity
-              onPress={() => {
-                setSelectedMessageForAction({
-                  ...item,
-                  sender_id: item.sender.id,
-                });
-                setShowReportModal(true);
-              }}
-              className="mb-1 p-1"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="ellipsis-horizontal" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedMessageForAction({
+                ...item,
+                sender_id: item.sender.id,
+              });
+              setShowReportModal(true);
+            }}
+            className="mb-1 p-1"
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="ellipsis-horizontal" size={16} color={isDark ? "#9CA3AF" : "#6B7280"} />
+          </TouchableOpacity>
           {isOwnMessage && (
             <ProfilePicture
               imageUrl={userProfilePic}
@@ -467,6 +501,37 @@ export default function GroupChatScreen() {
             />
           )}
         </View>
+
+        {/* Replies section */}
+        {!item.reply_to_id && getReplies(item.id).length > 0 && (
+          <View className="mt-2">
+            {expandedThreads.has(item.id) ? (
+              <View className={`ml-8 border-l-2 border-cyan-500/30 pl-3`}>
+                {getReplies(item.id).map((reply) => (
+                  <View key={reply.id} className="mb-2">
+                    {renderMessage({ item: reply })}
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            
+            <TouchableOpacity
+              onPress={() => toggleThread(item.id)}
+              className="flex-row items-center mt-2 ml-8"
+            >
+              <Ionicons
+                name={expandedThreads.has(item.id) ? "chevron-up" : "chevron-down"}
+                size={14}
+                color="#22d3ee"
+              />
+              <ThemedText className="text-cyan-400 text-xs ml-1 font-semibold">
+                {expandedThreads.has(item.id)
+                  ? "Hide replies"
+                  : `View ${getReplies(item.id).length} ${getReplies(item.id).length === 1 ? "reply" : "replies"}`}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     );
   };
@@ -514,7 +579,7 @@ export default function GroupChatScreen() {
 
         <FlatList
           ref={flatListRef}
-          data={messages}
+          data={messages.filter((m) => !m.reply_to_id)}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
           className="flex-1 px-5 pt-4"
@@ -542,7 +607,7 @@ export default function GroupChatScreen() {
                 Replying to {replyToMessage.sender?.first_name}
               </ThemedText>
               <ThemedText className={`${textMuted} text-xs mt-1`} numberOfLines={1}>
-                {replyToMessage.message}
+                {getMessageDisplayText(replyToMessage.message)}
               </ThemedText>
             </View>
             <TouchableOpacity

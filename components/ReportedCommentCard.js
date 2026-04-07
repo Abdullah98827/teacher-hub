@@ -1,17 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  Modal,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Modal,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import {
-  getReportReasonColor,
-  getReportReasonIcon,
-  getReportReasonLabel,
+    getReportReasonColor,
+    getReportReasonIcon,
+    getReportReasonLabel,
 } from "../utils/commentReportReasons";
 import { ThemedText } from "./themed-text";
 
@@ -52,39 +52,66 @@ export default function ReportedCommentCard({ report, onResolve, processing }) {
         onPress={() => setShowDetails(!showDetails)}
         style={{
           backgroundColor: bgCard,
-          borderLeftWidth: 4,
-          borderLeftColor: reasonColor,
           borderRadius: 12,
-          padding: 12,
+          padding: 16,
           marginBottom: 12,
+          borderWidth: 1,
+          borderColor: isDark ? "#374151" : "#E5E7EB",
         }}
       >
-        {/* Header with reason */}
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+        {/* Status Badge */}
+        <View style={{ marginBottom: 12 }}>
           <View
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
+              self: "flex-start",
+              alignSelf: "flex-start",
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 20,
+              backgroundColor: "#F97316" + "20",
+              borderWidth: 1,
+              borderColor: "#F97316",
+            }}
+          >
+            <ThemedText
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                color: "#EA580C",
+                letterSpacing: 0.5,
+              }}
+              type="default"
+            >
+              PENDING REVIEW
+            </ThemedText>
+          </View>
+        </View>
+
+        {/* Reason Badge with Icon */}
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 12, gap: 10 }}>
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
               backgroundColor: reasonColor + "20",
               alignItems: "center",
               justifyContent: "center",
-              marginRight: 12,
             }}
           >
-            <Ionicons name={reasonIcon} size={16} color={reasonColor} />
+            <Ionicons name={reasonIcon} size={20} color={reasonColor} />
           </View>
           <View style={{ flex: 1 }}>
-            <ThemedText style={{ fontWeight: "600", fontSize: 13 }} type="default">
+            <ThemedText style={{ fontWeight: "700", fontSize: 14 }} type="default">
               {reasonLabel}
             </ThemedText>
-            <ThemedText style={{ fontSize: 11, color: textMuted, marginTop: 2 }} type="default">
+            <ThemedText style={{ fontSize: 12, color: textMuted, marginTop: 2 }} type="default">
               Reported {new Date(report.created_at).toLocaleDateString()}
             </ThemedText>
           </View>
           <Ionicons
             name={showDetails ? "chevron-up-outline" : "chevron-down-outline"}
-            size={20}
+            size={22}
             color={textMuted}
           />
         </View>
@@ -92,121 +119,141 @@ export default function ReportedCommentCard({ report, onResolve, processing }) {
         {/* Comment Text Preview */}
         <View
           style={{
-            backgroundColor: isDark ? "#1F2937" : "#F3F4F6",
-            borderRadius: 8,
-            padding: 10,
+            backgroundColor: isDark ? "#1F2937" : "#F9FAFB",
+            borderRadius: 10,
+            padding: 12,
             marginBottom: 12,
           }}
         >
-          <ThemedText
-            style={{ fontSize: 12, color: textMuted, marginBottom: 4 }}
-            type="default"
-          >
-            Comment by {report.reported_user_name}
+          <ThemedText style={{ fontSize: 11, color: textMuted, marginBottom: 6, fontWeight: "600" }} type="default">
+            COMMENT BY {report.reported_user_name?.toUpperCase() || "USER"}
           </ThemedText>
           <ThemedText
             style={{ fontSize: 13, lineHeight: 20 }}
             type="default"
             numberOfLines={showDetails ? undefined : 2}
           >
-            {report.resource_comments?.comment_text || "Comment deleted"}
+            {'"'}{report.comment?.comment_text || "Comment deleted"}{'"'}
           </ThemedText>
         </View>
 
         {/* Reporter Info */}
         {showDetails && (
-          <View
-            style={{
-              backgroundColor: isDark ? "#1F2937" : "#F9FAFB",
-              borderRadius: 8,
-              padding: 10,
-              marginBottom: 12,
-            }}
-          >
-            <ThemedText style={{ fontSize: 12, color: textMuted }} type="default">
-              Reported by: {report.reported_by} (ID: {report.reported_by.substring(0, 8)})
-            </ThemedText>
-            {report.description && (
-              <ThemedText
-                style={{ fontSize: 12, marginTop: 8, lineHeight: 18 }}
-                type="default"
-              >
-                Reporter notes: {report.description}
+          <>
+            <View
+              style={{
+                backgroundColor: isDark ? "#1F2937" : "#F9FAFB",
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 12,
+              }}
+            >
+              <ThemedText style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: "600" }} type="default">
+                RESOURCE
               </ThemedText>
+              <ThemedText style={{ fontSize: 13, fontWeight: "500" }} type="default">
+                {report.resource_title}
+              </ThemedText>
+            </View>
+
+            <View
+              style={{
+                backgroundColor: isDark ? "#1F2937" : "#F9FAFB",
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 12,
+              }}
+            >
+              <ThemedText style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: "600" }} type="default">
+                REPORTED BY
+              </ThemedText>
+              <ThemedText style={{ fontSize: 13, fontWeight: "500" }} type="default">
+                {report.reported_user_name}
+              </ThemedText>
+            </View>
+
+            {report.description && (
+              <View
+                style={{
+                  backgroundColor: isDark ? "#1F2937" : "#F9FAFB",
+                  borderRadius: 10,
+                  padding: 12,
+                  marginBottom: 12,
+                }}
+              >
+                <ThemedText style={{ fontSize: 11, color: textMuted, marginBottom: 4, fontWeight: "600" }} type="default">
+                  REPORTER NOTES
+                </ThemedText>
+                <ThemedText
+                  style={{ fontSize: 13, lineHeight: 18 }}
+                  type="default"
+                >
+                  {report.description}
+                </ThemedText>
+              </View>
             )}
-          </View>
+          </>
         )}
 
         {/* Action Buttons */}
         <View
           style={{
             flexDirection: "row",
-            gap: 8,
+            gap: 10,
+            marginTop: 12,
           }}
         >
-          <TouchableOpacity
-            onPress={() => handleResolve("dismissed")}
-            disabled={processing}
-            style={{
-              flex: 1,
-              borderRadius: 8,
-              paddingVertical: 10,
-              alignItems: "center",
-              backgroundColor: bgInput,
-              borderWidth: 1,
-              borderColor: border,
-            }}
-          >
-            {processing && selectedResolution === "dismissed" ? (
-              <ActivityIndicator size="small" color={textPrimary} />
-            ) : (
-              <ThemedText style={{ fontWeight: "600", fontSize: 12 }} type="default">
-                Dismiss
-              </ThemedText>
-            )}
-          </TouchableOpacity>
-
           <TouchableOpacity
             onPress={() => handleResolve("resolved")}
             disabled={processing}
             style={{
               flex: 1,
-              borderRadius: 8,
-              paddingVertical: 10,
+              borderRadius: 10,
+              paddingVertical: 12,
               alignItems: "center",
-              backgroundColor: "#10B981" + "20",
-              borderWidth: 1,
-              borderColor: "#10B981",
+              justifyContent: "center",
+              backgroundColor: "#10B981",
+              flexDirection: "row",
+              gap: 6,
             }}
           >
             {processing && selectedResolution === "resolved" ? (
-              <ActivityIndicator size="small" color="#10B981" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <ThemedText style={{ fontWeight: "600", fontSize: 12, color: "#10B981" }} type="default">
-                Resolve
-              </ThemedText>
+              <>
+                <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
+                <ThemedText style={{ fontWeight: "700", fontSize: 13, color: "#FFFFFF" }} type="default">
+                  Approve
+                </ThemedText>
+              </>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => handleResolve("reviewed")}
+            onPress={() => handleResolve("dismissed")}
             disabled={processing}
             style={{
               flex: 1,
-              borderRadius: 8,
-              paddingVertical: 10,
+              borderRadius: 10,
+              paddingVertical: 12,
               alignItems: "center",
-              backgroundColor: "#3B82F6" + "20",
+              justifyContent: "center",
+              backgroundColor: isDark ? "#374151" : "#F3F4F6",
               borderWidth: 1,
-              borderColor: "#3B82F6",
+              borderColor: isDark ? "#4B5563" : "#E5E7EB",
+              flexDirection: "row",
+              gap: 6,
             }}
           >
-            {processing && selectedResolution === "reviewed" ? (
-              <ActivityIndicator size="small" color="#3B82F6" />
+            {processing && selectedResolution === "dismissed" ? (
+              <ActivityIndicator size="small" color={textPrimary} />
             ) : (
-              <ThemedText style={{ fontWeight: "600", fontSize: 12, color: "#3B82F6" }} type="default">
-                Review
-              </ThemedText>
+              <>
+                <Ionicons name="close-circle" size={16} color="#EF4444" />
+                <ThemedText style={{ fontWeight: "700", fontSize: 13, color: "#EF4444" }} type="default">
+                  Reject
+                </ThemedText>
+              </>
             )}
           </TouchableOpacity>
         </View>

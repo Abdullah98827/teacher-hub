@@ -1,16 +1,19 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
 import CommentCard from "../../components/CommentCard";
 import ConfirmModal from "../../components/ConfirmModal";
-import ReportedCommentCard from "../../components/ReportedCommentCard";
+import ReportCard from "../../components/ReportCard";
 import ScreenWrapper from "../../components/ScreenWrapper";
 import SearchBar from "../../components/SearchBar";
 import StatsSummary from "../../components/StatsSummary";
@@ -33,8 +36,10 @@ export default function ManageCommentsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedCommentId, setSelectedCommentId] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const { textPrimary, textSecondary } = useAppTheme();
+  const { textPrimary, textSecondary, bgCard, bgCardAlt, textMuted } = useAppTheme();
 
   const fetchComments = useCallback(async () => {
     setLoading(true); // Ensure loading state is set at the start
@@ -104,27 +109,48 @@ export default function ManageCommentsScreen() {
     // Fetch reported comments
     const { data: reportsData } = await supabase
       .from("comment_reports")
-      .select("*, resource_comments(id, comment_text, created_at, user_id, resource_id)")
+      .select("id, comment_id, reason, description, status, created_at, reported_by, reported_user_id, reviewed_by, review_notes, resolved_at")
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     if (reportsData && reportsData.length > 0) {
-      // Fetch additional user and resource info for reports
-      const reportUserIds = [...new Set(reportsData.map((r) => r.reported_user_id))];
-      const reportResourceIds = [...new Set(reportsData.map((r) => r.resource_comments?.resource_id).filter(Boolean))];
+      // Fetch comment details for each report
+      const commentIds = [...new Set(reportsData.map((r) => r.comment_id))];
+      const { data: commentsData } = await supabase
+        .from("resource_comments")
+        .select("id, comment_text, user_id, resource_id")
+        .in("id", commentIds);
 
-      const [{ data: reportUsers }, { data: reportResources }] = await Promise.all([
-        reportUserIds.length > 0 ? supabase
+      const commentMap = (commentsData || []).reduce((acc, c) => {
+        acc[c.id] = c;
+        return acc;
+      }, {});
+
+      // Fetch user and resource info
+      const reporterIds = [...new Set(reportsData.map((r) => r.reported_by))];
+      const commentAuthorIds = [...new Set((commentsData || []).map((c) => c.user_id).filter(Boolean))];
+      const resourceIds = [...new Set((commentsData || []).map((c) => c.resource_id).filter(Boolean))];
+
+      const [{ data: reporters }, { data: commentAuthors }, { data: reportResources }] = await Promise.all([
+        reporterIds.length > 0 ? supabase
           .from("teachers")
           .select("id, first_name, last_name")
-          .in("id", reportUserIds) : Promise.resolve({ data: [] }),
-        reportResourceIds.length > 0 ? supabase
+          .in("id", reporterIds) : Promise.resolve({ data: [] }),
+        commentAuthorIds.length > 0 ? supabase
+          .from("teachers")
+          .select("id, first_name, last_name")
+          .in("id", commentAuthorIds) : Promise.resolve({ data: [] }),
+        resourceIds.length > 0 ? supabase
           .from("resources")
           .select("id, title")
-          .in("id", reportResourceIds) : Promise.resolve({ data: [] }),
+          .in("id", resourceIds) : Promise.resolve({ data: [] }),
       ]);
 
-      const reportUserMap = (reportUsers || []).reduce((acc, u) => {
+      const reporterMap = (reporters || []).reduce((acc, u) => {
+        acc[u.id] = u;
+        return acc;
+      }, {});
+      const commentAuthorMap = (commentAuthors || []).reduce((acc, u) => {
         acc[u.id] = u;
         return acc;
       }, {});
@@ -134,11 +160,21 @@ export default function ManageCommentsScreen() {
       }, {});
 
       const enrichedReports = reportsData.map((report) => {
-        const reportedUser = reportUserMap[report.reported_user_id] || {};
-        const resource = reportResourceMap[report.resource_comments?.resource_id] || {};
+        const comment = commentMap[report.comment_id] || {};
+        const reporterUser = reporterMap[report.reported_by] || {};
+        const commentAuthor = commentAuthorMap[comment.user_id] || {};
+        const resource = reportResourceMap[comment.resource_id] || {};
         return {
           ...report,
-          reported_user_name: `${reportedUser.first_name || "Unknown"} ${reportedUser.last_name || ""}`.trim(),
+          comment: comment,
+          reporter: {
+            first_name: reporterUser.first_name || "Unknown",
+            last_name: reporterUser.last_name || "",
+          },
+          commentAuthor: {
+            first_name: commentAuthor.first_name || "Unknown",
+            last_name: commentAuthor.last_name || "",
+          },
           resource_title: resource.title || "Unknown Resource",
         };
       });
@@ -235,17 +271,31 @@ export default function ManageCommentsScreen() {
   const resolveReport = async (reportId, resolution, notes = "") => {
     setProcessing(true);
     try {
-      const { error } = await supabase
+      // Update report status
+      const { error: reportError } = await supabase
         .from("comment_reports")
         .update({
-          status: resolution, // 'reviewed', 'resolved', 'dismissed'
+          status: resolution,
           reviewed_by: user?.id,
           review_notes: notes,
           resolved_at: new Date().toISOString(),
         })
         .eq("id", reportId);
 
-      if (error) throw error;
+      if (reportError) throw reportError;
+
+      // If approved (resolved), delete the comment
+      if (resolution === "resolved" && selectedReport?.comment_id) {
+        const { error: deleteError } = await supabase
+          .from("resource_comments")
+          .update({
+            is_deleted: true,
+            deleted_at: new Date().toISOString(),
+          })
+          .eq("id", selectedReport.comment_id);
+
+        if (deleteError) throw deleteError;
+      }
 
       logEvent({
         event_type: "COMMENT_REPORT_RESOLVED",
@@ -257,10 +307,11 @@ export default function ManageCommentsScreen() {
 
       Toast.show({
         type: "success",
-        text1: "Report resolved",
-        text2: `Status changed to ${resolution}`,
+        text1: resolution === "resolved" ? "Report approved" : "Report rejected",
+        text2: resolution === "resolved" ? "Comment has been deleted" : undefined,
       });
 
+      setShowDetailModal(false);
       fetchComments();
     } catch (error) {
       Toast.show({
@@ -314,9 +365,10 @@ export default function ManageCommentsScreen() {
 
         <StatsSummary
           stats={[
-            { label: "Total", value: comments.length, color: "cyan" },
-            { label: "Active", value: activeCount, color: "green" },
-            { label: "Deleted", value: deletedCount, color: "red" },
+            { label: "Total", value: comments.length.toString(), color: "blue" },
+            { label: "Active", value: activeCount.toString(), color: "green" },
+            { label: "Reported", value: reportedComments.length.toString(), color: "orange" },
+            { label: "Deleted", value: deletedCount.toString(), color: "red" },
           ]}
         />
 
@@ -328,9 +380,9 @@ export default function ManageCommentsScreen() {
 
         <TabFilter
           tabs={[
-            { label: "All Comments", value: "all", icon: "list-outline" },
-            { label: `Reported (${reportedComments.length})`, value: "reported", icon: "flag-outline" },
-            { label: "Deleted", value: "deleted", icon: "trash-outline" },
+            { key: "all", label: "All Comments" },
+            { key: "reported", label: `Reported (${reportedComments.length})` },
+            { key: "deleted", label: "Deleted" },
           ]}
           activeTab={filter}
           onTabChange={setFilter}
@@ -351,7 +403,18 @@ export default function ManageCommentsScreen() {
         ) : filter === "reported" ? (
           <FlatList
             data={reportedComments}
-            renderItem={({ item: report }) => <ReportedCommentCard report={report} onResolve={resolveReport} processing={processing} />}
+            renderItem={({ item: report }) => (
+              <ReportCard
+                report={{
+                  ...report,
+                  resource: { title: report.resource_title || "Unknown Resource" },
+                }}
+                onPress={() => {
+                  setSelectedReport(report);
+                  setShowDetailModal(true);
+                }}
+              />
+            )}
             keyExtractor={(item) => item.id}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={() => {
@@ -438,6 +501,151 @@ export default function ManageCommentsScreen() {
         }}
         isProcessing={processing}
       />
+
+      {/* Report Detail Modal */}
+      <Modal
+        visible={showDetailModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowDetailModal(false)}
+      >
+        <View className="flex-1 bg-black/80 justify-end">
+          <View className={`${bgCard} rounded-t-3xl max-h-[80%]`}>
+            <ScrollView className="p-6">
+              <View className="flex-row items-center justify-between mb-6">
+                <ThemedText className={`${textPrimary} text-2xl font-bold`}>
+                  Report Details
+                </ThemedText>
+                <TouchableOpacity onPress={() => setShowDetailModal(false)}>
+                  <Ionicons name="close" size={28} color="#6B7280" />
+                </TouchableOpacity>
+              </View>
+
+              {selectedReport && (
+                <>
+                  <View className="mb-4">
+                    <View
+                      className={`self-start px-3 py-1.5 rounded-full ${
+                        selectedReport.status === "pending"
+                          ? "bg-orange-500/20 border border-orange-500/30"
+                          : selectedReport.status === "reviewed"
+                            ? "bg-blue-500/20 border border-blue-500/30"
+                            : selectedReport.status === "resolved"
+                              ? "bg-green-500/20 border border-green-500/30"
+                              : "bg-gray-500/20 border border-gray-500/30"
+                      }`}
+                    >
+                      <ThemedText
+                        className={`text-xs font-bold ${
+                          selectedReport.status === "pending"
+                            ? "text-orange-400"
+                            : selectedReport.status === "reviewed"
+                              ? "text-blue-400"
+                              : selectedReport.status === "resolved"
+                                ? "text-green-400"
+                                : "text-gray-400"
+                        }`}
+                      >
+                        {selectedReport.status.toUpperCase()}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <View className="mb-4">
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Comment</ThemedText>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <ThemedText className={`${textPrimary} leading-5`}>
+                        {selectedReport.comment?.comment_text || "Comment deleted"}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <View className="mb-4">
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Resource</ThemedText>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <ThemedText className={textPrimary}>
+                        {selectedReport.resource_title || "Unknown Resource"}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <View className="mb-4">
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Reason</ThemedText>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <ThemedText className={`${textPrimary} font-semibold`}>
+                        {selectedReport.reason}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  {selectedReport.reason === "other" && selectedReport.description && (
+                    <View className="mb-4">
+                      <ThemedText className={`${textMuted} text-xs mb-1`}>Details</ThemedText>
+                      <View className={`${bgCardAlt} rounded-lg p-3`}>
+                        <ThemedText className={`${textPrimary} leading-5`}>
+                          {selectedReport.description}
+                        </ThemedText>
+                      </View>
+                    </View>
+                  )}
+
+                  <View className="mb-4">
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Comment Author</ThemedText>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <ThemedText className={textPrimary}>
+                        {selectedReport.commentAuthor?.first_name} {selectedReport.commentAuthor?.last_name}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <View className="mb-4">
+                    <ThemedText className={`${textMuted} text-xs mb-1`}>Reported By</ThemedText>
+                    <View className={`${bgCardAlt} rounded-lg p-3`}>
+                      <ThemedText className={textPrimary}>
+                        {selectedReport.reporter?.first_name} {selectedReport.reporter?.last_name}
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  {selectedReport.status === "pending" && (
+                    <View className="gap-3 mt-6">
+                      <TouchableOpacity
+                        onPress={() =>
+                          resolveReport(selectedReport.id, "resolved")
+                        }
+                        disabled={processing}
+                        className="bg-green-500 rounded-lg p-3 flex-row items-center justify-center gap-2"
+                      >
+                        {processing ? (
+                          <ActivityIndicator color="#FFFFFF" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                            <ThemedText className="text-white font-semibold">
+                              Approve & Delete Comment
+                            </ThemedText>
+                          </>
+                        )}
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => resolveReport(selectedReport.id, "dismissed")}
+                        disabled={processing}
+                        className={`${bgCardAlt} rounded-lg p-3 flex-row items-center justify-center gap-2`}
+                      >
+                        <Ionicons name="close-circle" size={18} color="#EF4444" />
+                        <ThemedText className="text-red-500 font-semibold">
+                          Reject Report
+                        </ThemedText>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <Toast />
     </ScreenWrapper>

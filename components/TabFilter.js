@@ -20,9 +20,9 @@ export default function TabFilter({ tabs, activeTab, onTabChange }) {
         contentContainerStyle={{ paddingRight: 16 }}
       >
         <View className="flex-row" style={{ gap: 8 }}>
-          {normalizedTabs.map((tab) => (
+          {normalizedTabs.map((tab, index) => (
             <TouchableOpacity
-              key={tab.key}
+              key={tab.key || index}
               className={`rounded-xl ${
                 activeTab === tab.key ? "bg-cyan-500" : bgCardAlt
               }`}
