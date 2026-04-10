@@ -23,7 +23,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminNewReport = async (adminIds, reporterId, reporterName, reportedUserId, reportType, reason) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_NEW_REPORT]?.() || {
-      title: '🚩 New Report Submitted',
+      title: 'New Report Submitted',
       body: `${reporterName} reported ${reportType}`,
     };
 
@@ -56,7 +56,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminResourcePending = async (adminIds, uploaderId, uploaderName, resourceTitle, resourceId, category) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_RESOURCE_PENDING]?.() || {
-      title: '📚 Resource Pending Approval',
+      title: 'Resource Pending Approval',
       body: `${uploaderName} uploaded: ${resourceTitle}`,
     };
 
@@ -88,7 +88,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminTeacherVerification = async (adminIds, teacherId, teacherName, subject, school) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_TEACHER_VERIFICATION]?.() || {
-      title: '👨‍🏫 Teacher Verification Pending',
+      title: 'Teacher Verification Pending',
       body: `${teacherName} requested teacher verification`,
     };
 
@@ -119,7 +119,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminContactRequest = async (adminIds, requesterId, requesterName, email, subject) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_CONTACT_REQUEST]?.() || {
-      title: '💬 New Contact Request',
+      title: 'New Contact Request',
       body: `${requesterName}: ${subject}`,
     };
 
@@ -150,7 +150,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminSuspiciousActivity = async (adminIds, userId, userName, activityType, details = {}) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_SUSPICIOUS_ACTIVITY]?.() || {
-      title: '⚠️ Suspicious Account Activity',
+      title: 'Suspicious Account Activity',
       body: `${userName} - ${activityType}`,
     };
 
@@ -180,7 +180,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminResourceFlaggedMultiple = async (adminIds, resourceId, resourceTitle, flagCount) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_RESOURCE_FLAGGED]?.() || {
-      title: '🚩 Resource Flagged Multiple Times',
+      title: 'Resource Flagged Multiple Times',
       body: `${resourceTitle} has been flagged ${flagCount} times`,
     };
 
@@ -238,7 +238,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminReportResolved = async (adminIds, resolvedByName, reportType, resolution) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_REPORT_RESOLVED]?.() || {
-      title: '✅ Report Resolved',
+      title: 'Report Resolved',
       body: `${reportType} report resolved: ${resolution}`,
     };
 
@@ -270,7 +270,7 @@ export const useAdminNotifications = () => {
    */
   const notifyAdminCommentReported = async (adminIds, reporterId, reporterName, commentId, commentText, resourceId, reason) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_COMMENT_REPORTED]?.() || {
-      title: '💬 Comment Reported',
+      title: 'Comment Reported',
       body: `${reporterName} reported a comment - ${reason}`,
     };
 
@@ -339,7 +339,7 @@ export const useAdminNotifications = () => {
    */
   const notifyFollowersResourceUploaded = async (followerIds, teacherId, teacherName, resourceTitle, resourceId, category) => {
     const template = notificationTemplates[NOTIFICATION_TYPES.FOLLOWERS_RESOURCE_UPLOADED]?.() || {
-      title: '📚 New Resource',
+      title: 'New Resource',
       body: `${teacherName} uploaded: ${resourceTitle}`,
     };
 

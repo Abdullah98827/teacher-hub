@@ -9,7 +9,11 @@ import ConfirmModal from "./ConfirmModal";
 import NotificationBadge from "./NotificationBadge";
 import NotificationCenter from "./NotificationCenter";
 
-export default function LogoHeader({ position = "left" }) {
+export default function LogoHeader({ 
+  position = "left",
+  showNotificationIcon = true,
+  showSignOutIcon = true
+}) {
   const router = useRouter();
   const { role } = useUserRole();
   const { isDark } = useAppTheme();
@@ -184,60 +188,64 @@ export default function LogoHeader({ position = "left" }) {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Sign Out Button */}
+           {/* Sign Out Button */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          {/* Notifications Button */}
-          <TouchableOpacity
-            onPress={() => setShowNotifications(true)}
-            activeOpacity={0.7}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: isDark
-                ? "rgba(6,182,212,0.12)"
-                : "rgba(8,145,178,0.08)",
-              borderWidth: 1,
-              borderColor: isDark
-                ? "rgba(6,182,212,0.3)"
-                : "rgba(8,145,178,0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-            }}
-          >
-            <Ionicons
-              name="notifications-outline"
-              size={20}
-              color={isDark ? "#22d3ee" : "#0891b2"}
-            />
-            <NotificationBadge size="small" badgeColor="#FF6B6B" />
-          </TouchableOpacity>
-
           {/* Sign Out Button */}
-          <TouchableOpacity
-            onPress={handleSignOut}
-            activeOpacity={0.7}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 19,
-              backgroundColor: isDark
-                ? "rgba(239,68,68,0.12)"
-                : "rgba(220,38,38,0.08)",
-              borderWidth: 1,
-              borderColor: isDark ? "rgba(239,68,68,0.3)" : "rgba(220,38,38,0.2)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons
-              name="log-out-outline"
-              size={20}
-              color={isDark ? "#f87171" : "#dc2626"}
-            />
-          </TouchableOpacity>
+          {showSignOutIcon && (
+            <TouchableOpacity
+              onPress={handleSignOut}
+              activeOpacity={0.7}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: isDark
+                  ? "rgba(239,68,68,0.12)"
+                  : "rgba(220,38,38,0.08)",
+                borderWidth: 1,
+                borderColor: isDark ? "rgba(239,68,68,0.3)" : "rgba(220,38,38,0.2)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color={isDark ? "#f87171" : "#dc2626"}
+              />
+            </TouchableOpacity>
+          )}
+
+          {/* Notifications Button */}
+          {showNotificationIcon && (
+            <TouchableOpacity
+              onPress={() => setShowNotifications(true)}
+              activeOpacity={0.7}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 19,
+                backgroundColor: isDark
+                  ? "rgba(6,182,212,0.12)"
+                  : "rgba(8,145,178,0.08)",
+                borderWidth: 1,
+                borderColor: isDark
+                  ? "rgba(6,182,212,0.3)"
+                  : "rgba(8,145,178,0.2)",
+                alignItems: "center",
+                justifyContent: "center",
+                position: "relative",
+              }}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={20}
+                color={isDark ? "#22d3ee" : "#0891b2"}
+              />
+              <NotificationBadge size="small" badgeColor="#FF6B6B" />
+            </TouchableOpacity>
+          )}
         </View>
       </Animated.View>
 

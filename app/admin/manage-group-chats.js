@@ -1,13 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -20,9 +20,11 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
+import { useReportNotifications } from "../../utils/notificationIntegrations";
 
 export default function ManageGroupChatsScreen() {
   const { user } = useAuth();
+  const { notifyGroupChatReportResolved } = useReportNotifications();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -123,7 +125,7 @@ export default function ManageGroupChatsScreen() {
     };
   }, [fetchReports]);
 
-  const updateReportStatus = async (reportId, status, deleteMessage = false) => {
+   const updateReportStatus = async (reportId, status, deleteMessage = false) => {
     setUpdating(true);
 
     try {
@@ -137,10 +139,7 @@ export default function ManageGroupChatsScreen() {
       if (deleteMessage && selectedReport?.message_id) {
         const { error: deleteError } = await supabase
           .from("group_messages")
-          .update({
-            deleted_at: new Date().toISOString(),
-            deleted_by: user?.id,
-          })
+          .delete()
           .eq("id", selectedReport.message_id);
 
         if (deleteError) throw deleteError;
@@ -154,6 +153,13 @@ export default function ManageGroupChatsScreen() {
         target_table: "group_chat_reports",
         details: { deleted: deleteMessage },
       });
+
+      // Send notification to reporter
+      await notifyGroupChatReportResolved(
+        selectedReport.reported_by,
+        selectedReport.chat?.name,
+        status
+      );
 
       Toast.show({
         type: "success",

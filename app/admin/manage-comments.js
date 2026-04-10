@@ -21,11 +21,14 @@ import TabFilter from "../../components/TabFilter";
 import { ThemedText } from "../../components/themed-text";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAppTheme } from "../../hooks/useAppTheme";
+import { useReportNotifications } from "../../hooks/useNotifications";
 import { supabase } from "../../supabase";
 import { logEvent } from "../../utils/logging";
 
+
 export default function ManageCommentsScreen() {
   const { user } = useAuth();
+  const { notifyCommentReportResolved } = useReportNotifications();
   const [comments, setComments] = useState([]);
   const [reportedComments, setReportedComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +41,7 @@ export default function ManageCommentsScreen() {
   const [processing, setProcessing] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+
 
   const { textPrimary, textSecondary, bgCard, bgCardAlt, textMuted } = useAppTheme();
 
@@ -268,7 +272,7 @@ export default function ManageCommentsScreen() {
     setProcessing(false);
   };
 
-  const resolveReport = async (reportId, resolution, notes = "") => {
+      const resolveReport = async (reportId, resolution, notes = "") => {
     setProcessing(true);
     try {
       // Update report status
@@ -284,14 +288,11 @@ export default function ManageCommentsScreen() {
 
       if (reportError) throw reportError;
 
-      // If approved (resolved), delete the comment
+      // If approved (resolved), permanently delete the comment
       if (resolution === "resolved" && selectedReport?.comment_id) {
         const { error: deleteError } = await supabase
           .from("resource_comments")
-          .update({
-            is_deleted: true,
-            deleted_at: new Date().toISOString(),
-          })
+          .delete()
           .eq("id", selectedReport.comment_id);
 
         if (deleteError) throw deleteError;
@@ -304,6 +305,13 @@ export default function ManageCommentsScreen() {
         target_table: "comment_reports",
         details: { resolution, notes },
       });
+
+      // Send notification to reporter
+      await notifyCommentReportResolved(
+        selectedReport.reported_by,
+        selectedReport.resource_title,
+        resolution
+      );
 
       Toast.show({
         type: "success",
@@ -323,6 +331,7 @@ export default function ManageCommentsScreen() {
       setProcessing(false);
     }
   };
+
 
   const filteredComments = comments.filter((c) => {
     if (searchQuery) {

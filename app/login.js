@@ -1,3 +1,4 @@
+import { FontAwesome, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
@@ -59,7 +60,7 @@ export default function Login() {
       return;
     }
 
-    // ✅ Check if MFA is required
+    // Check if MFA is required
     const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
     if (aalData.nextLevel === "aal2" && aalData.nextLevel !== aalData.currentLevel) {
@@ -124,7 +125,7 @@ export default function Login() {
       return;
     }
 
-    // ✅ Check if account is disabled
+    //Check if account is disabled
     if (teacher.is_disabled) {
       setLoading(false);
       setDisabledReason(teacher.disabled_reason || "Your account has been disabled.");
@@ -173,6 +174,24 @@ export default function Login() {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
+    if (error) {
+      showToast("error", "Apple Sign-In Failed", error.message || "Could not sign in with Apple");
+      setLoading(false);
+    }
+  };
+
+  const handleXSignIn = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({ provider: "X" });
+    if (error) {
+      showToast("error", "X Sign-In Failed", error.message || "Could not sign in with X");
+      setLoading(false);
+    }
+  };
+
   const handleForgotPassword = async () => {
     if (!forgotEmail) {
       showToast("error", "Missing Email", "Please enter your email");
@@ -196,7 +215,10 @@ export default function Login() {
 
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
+      <LogoHeader position="left" 
+      showNotificationIcon={false} 
+      showSignOutIcon={false}
+      />
 
       <View className="flex-1 justify-center items-center">
         <View className={`w-full max-w-md ${bgCard} p-6 rounded-xl shadow-lg`}>
@@ -244,17 +266,48 @@ export default function Login() {
             </Text>
           </TouchableOpacity>
 
+          {/* Divider Text */}
+          <Text className="text-center text-gray-500 text-sm mb-6">
+            or continue with
+          </Text>
+
+            {/* Google Sign In */}
           <TouchableOpacity
-            className="bg-white border border-cyan-400 p-4 rounded-xl mb-4 flex-row items-center justify-center"
+            className={`bg-cyan-200 border-gray-300 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <Text className="text-cyan-600 text-center font-semibold">
+            <FontAwesome name="google" size={20} color="#4285F4" />
+            <Text className="text-gray-800 font-semibold text-center flex-1">
               Sign in with Google
             </Text>
           </TouchableOpacity>
 
-          <Link href="/signup" asChild>
+            {/* Apple Sign In */}
+          <TouchableOpacity
+            className={`bg-cyan-200 border-gray-300 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
+            onPress={handleAppleSignIn}
+            disabled={loading}
+          >
+            <FontAwesome5 name="apple" size={20} color="#000000" />
+            <Text className="text-gray-800 font-semibold text-center flex-1">
+              Sign in with Apple
+            </Text>
+          </TouchableOpacity>
+
+          {/* X (Twitter) Sign In */}
+          <TouchableOpacity
+            className={`bg-cyan-200 border-gray-300 p-3 rounded-xl mb-6 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
+            onPress={handleXSignIn}
+            disabled={loading}
+          >
+            <FontAwesome6 name="x-twitter" size={20} color="#000000" />
+            <Text className="text-gray-800 font-semibold text-center flex-1">
+              Sign in with X (Twitter)
+            </Text>
+          </TouchableOpacity>
+
+          <Link href="/signup" asChild> 
             <TouchableOpacity className="p-3" disabled={loading}>
               <Text className="text-center text-cyan-400 underline">
                 Don`t have an account? Sign up

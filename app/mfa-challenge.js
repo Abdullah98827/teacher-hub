@@ -4,14 +4,18 @@ import { useState } from "react";
 import { ActivityIndicator, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import ConfirmModal from "../components/ConfirmModal";
 import LogoHeader from "../components/logoHeader";
 import { useAppTheme } from "../hooks/useAppTheme";
+import { supabase } from "../supabase";
 import { verifyTotpOnLogin } from "../utils/mfa";
 
 export default function MfaChallengeScreen() {
   const { factorId, challengeId } = useLocalSearchParams();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const router = useRouter();
   const {
     bg,
@@ -40,9 +44,24 @@ export default function MfaChallengeScreen() {
     setLoading(false);
   };
 
+  const handleSignOut = async () => {
+    setShowSignOutModal(true);
+  };
+
+  const confirmSignOut = async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+    setSigningOut(false);
+    setShowSignOutModal(false);
+    router.replace("/login");
+  };
+
   return (
     <SafeAreaView className={`flex-1 ${bg}`} edges={['top']}>
-      <LogoHeader position="left" />
+      <LogoHeader position="left" 
+      showNotificationIcon={false} 
+      showSignOutIcon={false}
+  />
 
       <View className="flex-1 px-6 pt-10">
 
@@ -91,6 +110,17 @@ export default function MfaChallengeScreen() {
               </View>
             )}
           </TouchableOpacity>
+
+          {/* Sign Out Button */}
+          <TouchableOpacity
+            className="bg-red-600/20 border border-red-600/40 p-4 rounded-xl mt-3"
+            onPress={handleSignOut}
+            disabled={loading || signingOut}
+          >
+            <Text className="text-red-600 text-center font-bold text-base">
+              Sign Out
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Helper text */}
@@ -102,6 +132,17 @@ export default function MfaChallengeScreen() {
         </View>
 
       </View>
+
+      <ConfirmModal
+        visible={showSignOutModal}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmText="Sign Out"
+        confirmColor="bg-red-600"
+        isProcessing={signingOut}
+        onConfirm={confirmSignOut}
+        onCancel={() => setShowSignOutModal(false)}
+      />
 
       <Toast />
     </SafeAreaView>

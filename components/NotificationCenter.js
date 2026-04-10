@@ -315,19 +315,19 @@ const NotificationCenter = ({ onClose }) => {
     const isClickable = isNotificationClickable(item.type);
 
     return (
-      <TouchableOpacity
+            <TouchableOpacity
         onPress={() => isClickable && handleNotificationPress(item)}
         disabled={!isClickable}
         activeOpacity={isClickable ? 0.7 : 1}
         className={`flex-row items-center px-4 py-3 border-b ${
           item.is_read
             ? `bg-${isDark ? 'gray-900' : 'gray-50'} border-${isDark ? 'gray-800' : 'gray-200'}`
-            : `bg-${isDark ? 'blue-900' : 'blue-50'} border-${isDark ? 'blue-800' : 'blue-200'}`
+            : `bg-${isDark ? 'cyan-900' : 'cyan-50'} border-${isDark ? 'cyan-800' : 'cyan-200'}`
         }`}
         style={{
           backgroundColor: item.is_read
             ? isDark ? '#111827' : '#F9FAFB'
-            : isDark ? '#0C2D5C' : '#EFF6FF',
+            : isDark ? '#0C3F47' : '#ECFDF5',
           borderBottomColor: isDark ? '#1F2937' : '#E5E7EB',
         }}
       >
@@ -444,20 +444,20 @@ const NotificationCenter = ({ onClose }) => {
             borderBottomColor: isDark ? '#1F2937' : '#E5E7EB',
           }}
         >
-          <TouchableOpacity
+                    <TouchableOpacity
             onPress={handleMarkAllAsRead}
             disabled={unreadCount === 0}
             className={`flex-1 py-2 px-3 rounded-lg ${
               unreadCount === 0
                 ? isDark ? 'bg-gray-800' : 'bg-gray-200'
-                : isDark ? 'bg-blue-900' : 'bg-blue-100'
+                : isDark ? 'bg-cyan-900' : 'bg-cyan-100'
             }`}
           >
             <Text
               className={`text-center text-sm font-semibold ${
                 unreadCount === 0
                   ? isDark ? 'text-gray-500' : 'text-gray-500'
-                  : isDark ? 'text-blue-200' : 'text-blue-700'
+                  : isDark ? 'text-cyan-200' : 'text-cyan-700'
               }`}
             >
               Mark All Read

@@ -200,7 +200,9 @@ export default function Signup() {
 
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" />
+      <LogoHeader position="left" 
+      showNotificationIcon={false} 
+      showSignOutIcon={false}/>
       <View className="flex-1 justify-center items-center">
         <View className={`w-full max-w-md ${bgCard} p-6 rounded-xl shadow-lg`}>
           <Text className="text-3xl font-bold text-center mb-6 text-cyan-400">

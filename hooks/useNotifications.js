@@ -134,3 +134,44 @@ export const notificationTemplates = {
     body: 'Congratulations! Your teacher verification has been approved',
   }),
 };
+
+/**
+ * Hook for sending report resolution notifications
+ * Usage: const { notifyCommentReportResolved } = useReportNotifications();
+ *        await notifyCommentReportResolved(reporterId, resourceTitle, resolution);
+ */
+export const useReportNotifications = () => {
+  const { sendNotif } = useSendNotification();
+
+  const notifyCommentReportResolved = useCallback(
+    async (reporterId, resourceTitle, resolution) => {
+      try {
+        const title = resolution === "resolved" 
+          ? "Report Approved" 
+          : "Report Dismissed";
+        
+        const body = resolution === "resolved"
+          ? `Your report on "${resourceTitle}" has been approved. The comment has been removed.`
+          : `Your report on "${resourceTitle}" has been reviewed and dismissed.`;
+
+        await sendNotif(
+          reporterId,
+          NOTIFICATION_TYPES.REPORT_RESOLVED,
+          title,
+          body,
+          {
+            resourceTitle,
+            resolution,
+            type: NOTIFICATION_TYPES.REPORT_RESOLVED,
+          }
+        );
+      } catch (error) {
+        console.error('Error notifying report resolution:', error);
+        throw error;
+      }
+    },
+    [sendNotif]
+  );
+
+  return { notifyCommentReportResolved };
+};

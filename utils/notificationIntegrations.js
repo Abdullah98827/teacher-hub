@@ -245,7 +245,29 @@ export const useReportNotifications = () => {
     );
   };
 
-  return { notifyReportReceived, notifyReportResolved };
+  const notifyCommentReportResolved = async (reporterId, resourceTitle, status) => {
+    const template = notificationTemplates[NOTIFICATION_TYPES.COMMENT_REPORT_RESOLVED](resourceTitle, status);
+    await sendNotif(
+      reporterId,
+      NOTIFICATION_TYPES.COMMENT_REPORT_RESOLVED,
+      template.title,
+      template.body,
+      { resourceTitle, status, actionType: 'comment_report_resolved' }
+    );
+  };
+
+  const notifyGroupChatReportResolved = async (reporterId, groupChatName, status) => {
+    const template = notificationTemplates[NOTIFICATION_TYPES.GROUP_CHAT_REPORT_RESOLVED](groupChatName, status);
+    await sendNotif(
+      reporterId,
+      NOTIFICATION_TYPES.GROUP_CHAT_REPORT_RESOLVED,
+      template.title,
+      template.body,
+      { groupChatName, status, actionType: 'group_chat_report_resolved' }
+    );
+  };
+
+  return { notifyReportReceived, notifyReportResolved, notifyCommentReportResolved, notifyGroupChatReportResolved };
 };
 
 export const useContactNotifications = () => {
