@@ -73,6 +73,51 @@ export default function SettingsScreen() {
   useEffect(() => {
     loadProfile();
   }, []);
+  // ✅ Realtime subscription for instant follow count updates
+useEffect(() => {
+  if (!userId) return;
+
+  const channel = supabase
+    .channel(`follows-${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*', // INSERT and DELETE
+        schema: 'public',
+        table: 'follows',
+        filter: `following_id=eq.${userId}`,
+      },
+      () => {
+        // Refetch accurate count when someone follows/unfollows
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("following_id", userId)
+          .then(({ count }) => setFollowersCount(count || 0));
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'follows',
+        filter: `follower_id=eq.${userId}`,
+      },
+      () => {
+        supabase
+          .from("follows")
+          .select("*", { count: "exact", head: true })
+          .eq("follower_id", userId)
+          .then(({ count }) => setFollowingCount(count || 0));
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [userId]);
 
   useFocusEffect(
     useCallback(() => {
@@ -81,21 +126,26 @@ export default function SettingsScreen() {
   );
 
   const loadProfile = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
     setUserId(user.id);
 
     const { data: teacherData } = await supabase
       .from("teachers")
-      .select(
-        "first_name, last_name, email, trn, profile_picture_url, followers_count, following_count"
-      )
+      .select("first_name, last_name, email, trn, profile_picture_url")
       .eq("id", user.id)
       .single();
+
+    // Get accurate counts directly from follows table
+    const { count: followersCount } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", user.id);
+
+    const { count: followingCount } = await supabase
+      .from("follows")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", user.id);
 
     const { data: membershipData } = await supabase
       .from("memberships")
@@ -105,20 +155,12 @@ export default function SettingsScreen() {
 
     if (teacherData) {
       let subjectNames = [];
-
-      if (
-        membershipData &&
-        membershipData.subject_ids &&
-        membershipData.subject_ids.length > 0
-      ) {
+      if (membershipData?.subject_ids?.length > 0) {
         const { data: subjects } = await supabase
           .from("subjects")
           .select("name")
           .in("id", membershipData.subject_ids);
-
-        if (subjects) {
-          subjectNames = subjects.map((s) => s.name);
-        }
+        if (subjects) subjectNames = subjects.map((s) => s.name);
       }
 
       setProfile({
@@ -128,11 +170,11 @@ export default function SettingsScreen() {
         trn: teacherData.trn,
         profilePictureUrl: teacherData.profile_picture_url,
         membershipTier: membershipData?.tier || "none",
-        subjectNames: subjectNames,
+        subjectNames,
       });
 
-      setFollowersCount(teacherData.followers_count || 0);
-      setFollowingCount(teacherData.following_count || 0);
+      setFollowersCount(followersCount || 0);
+      setFollowingCount(followingCount || 0);
     }
 
     setLoading(false);

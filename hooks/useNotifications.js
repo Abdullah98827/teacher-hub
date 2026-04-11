@@ -64,6 +64,11 @@ export const notificationTemplates = {
     body: `${userName} started following you`,
   }),
   
+  [NOTIFICATION_TYPES.UNFOLLOW]: (userName) => ({
+    title: 'Follower Unfollowed',
+    body: `${userName} unfollowed you`,
+  }),
+
   [NOTIFICATION_TYPES.COMMENT]: (userName, resourceTitle) => ({
     title: 'New Comment',
     body: `${userName} commented on "${resourceTitle}"`,

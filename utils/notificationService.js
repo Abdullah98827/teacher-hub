@@ -103,39 +103,32 @@ export const sendLocalNotification = async (title, body, data = {}) => {
  */
 export const createNotification = async (userId, type, title, body, data = {}) => {
   try {
-    // Note: The insert will work because we have a service role policy that allows
-    // authenticated users to insert notifications. The RLS policy "Service role can insert notifications"
-    // with check (true) allows the insert from the client.
-    const { data: notification, error } = await supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
-        type,
-        title,
-        body,
-        data,
-        is_read: false,
-      })
-      .select();
-
-    if (error) {
-      console.error('Error creating notification:', error);
-      console.error('Error details:', error.code, error.message, error.details);
-      throw error;
-    }
-
-    if (!notification || notification.length === 0) {
-      console.warn('Notification created but no data returned');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.warn('No active session, skipping notification');
       return null;
     }
 
-    return notification[0];
+    // ✅ Use RPC with SECURITY DEFINER — bypasses RLS completely
+    const { error } = await supabase.rpc('create_notification', {
+      p_user_id: userId,
+      p_type: type,
+      p_title: title,
+      p_body: body,
+      p_data: data,
+    });
+
+    if (error) {
+      console.error('Error creating notification:', error);
+      return null;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error creating notification:', error);
     return null;
   }
 };
-
 /**
  * Mark a notification as read
  * @param {string} notificationId - The notification ID

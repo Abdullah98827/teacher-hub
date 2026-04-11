@@ -1,13 +1,16 @@
-import { FontAwesome, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from "react";
-import { Modal, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Modal, Platform, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../components/logoHeader";
 import ScreenWrapper from "../components/ScreenWrapper";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
+
+WebBrowser.maybeCompleteAuthSession();
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -27,6 +30,131 @@ export default function Login() {
 
   const showToast = (type, title, message) => {
     Toast.show({ type, text1: title, text2: message });
+  };
+
+  // Shared post-auth routing logic
+  const handlePostAuthRouting = async (userId) => {
+    const { data: admin } = await supabase
+      .from("admins")
+      .select("id")
+      .eq("id", userId)
+      .single();
+
+    if (admin) {
+      showToast("success", "Admin Access", "Welcome, Admin!");
+      setTimeout(() => router.replace("/admin"), 1500);
+      return;
+    }
+
+    const { data: teacher, error: teacherError } = await supabase
+      .from("teachers")
+      .select("verified, is_disabled, disabled_reason")
+      .eq("id", userId)
+      .single();
+
+    // New OAuth user — no teacher profile yet, send to signup
+    if (teacherError || !teacher) {
+      router.replace("/signup");
+      return;
+    }
+
+    if (teacher.is_disabled) {
+      setDisabledReason(teacher.disabled_reason || "Your account has been disabled.");
+      setShowDisabledModal(true);
+      logEvent({
+        event_type: "LOGIN_BLOCKED_DISABLED",
+        user_id: userId,
+        details: { reason: teacher.disabled_reason },
+      });
+      return;
+    }
+
+    if (!teacher.verified) {
+      showToast("info", "Pending Approval", "Redirecting to pending page...");
+      setTimeout(() => router.replace("/pending"), 1000);
+      return;
+    }
+
+    const { data: membership } = await supabase
+      .from("memberships")
+      .select("active")
+      .eq("id", userId)
+      .single();
+
+    showToast("success", "Login Successful", "Welcome back!");
+    setTimeout(() => {
+      router.replace(membership?.active ? "/(tabs)" : "/membership");
+    }, 1500);
+  };
+
+  // Generic OAuth handler — works for any provider
+  const handleOAuthSignIn = async (provider) => {
+    setLoading(true);
+    try {
+      const redirectTo = Platform.OS === 'web'
+        ? `${window.location.origin}/auth/callback`
+        : 'teacherhub://auth/callback';
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo,
+          skipBrowserRedirect: Platform.OS !== 'web',
+          ...(provider === 'google' && {
+            queryParams: {
+              access_type: 'offline',
+              prompt: 'consent',
+            },
+          }),
+        },
+      });
+
+      if (error) throw error;
+
+      // Web handles redirect automatically
+      if (Platform.OS === 'web') return;
+
+      // Native: open browser session
+      const result = await WebBrowser.openAuthSessionAsync(
+        data.url,
+        'teacherhub://auth/callback'
+      );
+
+      if (result.type === 'success') {
+        const url = result.url;
+        const fragmentParams = new URLSearchParams(url.split('#')[1] || '');
+        const queryParams = new URLSearchParams(url.split('?')[1] || '');
+
+        const accessToken =
+          fragmentParams.get('access_token') || queryParams.get('access_token');
+        const refreshToken =
+          fragmentParams.get('refresh_token') || queryParams.get('refresh_token');
+
+        if (accessToken) {
+          const { data: sessionData, error: sessionError } =
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+          if (sessionError) throw sessionError;
+
+          logEvent({
+            event_type: `LOGIN_SUCCESS_${provider.toUpperCase()}`,
+            user_id: sessionData.user.id,
+          });
+
+          await handlePostAuthRouting(sessionData.user.id);
+        } else {
+          showToast('error', 'Sign-In Failed', 'Could not retrieve session. Please try again.');
+        }
+      }
+    } catch (error) {
+      const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+      showToast('error', `${providerName} Sign-In Failed`, error.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogin = async () => {
@@ -86,110 +214,15 @@ export default function Login() {
       }
     }
 
-    // No MFA required — continue normal login flow
     const userId = data.user.id;
-
     logEvent({
       event_type: "LOGIN_SUCCESS",
       user_id: userId,
       details: { email },
     });
 
-    const { data: admin } = await supabase
-      .from("admins")
-      .select("id")
-      .eq("id", userId)
-      .single();
-
-    if (admin) {
-      setLoading(false);
-      showToast("success", "Admin Access", "Welcome, Admin!");
-      setTimeout(() => router.replace("/admin"), 1500);
-      return;
-    }
-
-    const { data: teacher, error: teacherError } = await supabase
-      .from("teachers")
-      .select("verified, is_disabled, disabled_reason")
-      .eq("id", userId)
-      .single();
-
-    if (teacherError || !teacher) {
-      setLoading(false);
-      await supabase.auth.signOut();
-      showToast(
-        "error",
-        "Profile Error",
-        "Could not load profile. Please contact admin."
-      );
-      return;
-    }
-
-    //Check if account is disabled
-    if (teacher.is_disabled) {
-      setLoading(false);
-      setDisabledReason(teacher.disabled_reason || "Your account has been disabled.");
-      setShowDisabledModal(true);
-      
-      logEvent({
-        event_type: "LOGIN_BLOCKED_DISABLED",
-        user_id: userId,
-        details: { reason: teacher.disabled_reason },
-      });
-      
-      return;
-    }
-
-    if (!teacher.verified) {
-      setLoading(false);
-      showToast("info", "Pending Approval", "Redirecting to pending page...");
-      setTimeout(() => router.replace("/pending"), 1000);
-      return;
-    }
-
-    const { data: membership } = await supabase
-      .from("memberships")
-      .select("active")
-      .eq("id", userId)
-      .single();
-
+    await handlePostAuthRouting(userId);
     setLoading(false);
-    showToast("success", "Login Successful", "Welcome back!");
-
-    setTimeout(() => {
-      if (!membership || !membership.active) {
-        router.replace("/membership");
-      } else {
-        router.replace("/(tabs)");
-      }
-    }, 1500);
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google" });
-    if (error) {
-      showToast("error", "Google Sign-In Failed", error.message || "Could not sign in with Google");
-      setLoading(false);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "apple" });
-    if (error) {
-      showToast("error", "Apple Sign-In Failed", error.message || "Could not sign in with Apple");
-      setLoading(false);
-    }
-  };
-
-  const handleXSignIn = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "X" });
-    if (error) {
-      showToast("error", "X Sign-In Failed", error.message || "Could not sign in with X");
-      setLoading(false);
-    }
   };
 
   const handleForgotPassword = async () => {
@@ -215,9 +248,9 @@ export default function Login() {
 
   return (
     <ScreenWrapper>
-      <LogoHeader position="left" 
-      showNotificationIcon={false} 
-      showSignOutIcon={false}
+      <LogoHeader position="left"
+        showNotificationIcon={false}
+        showSignOutIcon={false}
       />
 
       <View className="flex-1 justify-center items-center">
@@ -266,49 +299,62 @@ export default function Login() {
             </Text>
           </TouchableOpacity>
 
-          {/* Divider Text */}
-          <Text className="text-center text-gray-500 text-sm mb-6">
+          <Text className="text-center text-gray-500 text-sm mb-4">
             or continue with
           </Text>
 
-            {/* Google Sign In */}
+          {/* Google */}
           <TouchableOpacity
-            className={`bg-cyan-200 border-gray-300 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
-            onPress={handleGoogleSignIn}
+            className={`bg-white border border-gray-200 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
+            onPress={() => handleOAuthSignIn('google')}
             disabled={loading}
           >
             <FontAwesome name="google" size={20} color="#4285F4" />
             <Text className="text-gray-800 font-semibold text-center flex-1">
-              Sign in with Google
+              Continue with Google
             </Text>
           </TouchableOpacity>
 
-            {/* Apple Sign In */}
+          {/* Discord */}
           <TouchableOpacity
-            className={`bg-cyan-200 border-gray-300 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
-            onPress={handleAppleSignIn}
+            className={`bg-indigo-600 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-indigo-700 ${loading ? "opacity-50" : ""}`}
+            onPress={() => handleOAuthSignIn('discord')}
             disabled={loading}
           >
-            <FontAwesome5 name="apple" size={20} color="#000000" />
-            <Text className="text-gray-800 font-semibold text-center flex-1">
-              Sign in with Apple
+            <FontAwesome5 name="discord" size={20} color="#ffffff" />
+            <Text className="text-white font-semibold text-center flex-1">
+              Continue with Discord
             </Text>
           </TouchableOpacity>
 
-          {/* X (Twitter) Sign In */}
+          {/* GitHub */}
           <TouchableOpacity
-            className={`bg-cyan-200 border-gray-300 p-3 rounded-xl mb-6 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
-            onPress={handleXSignIn}
+            className={`bg-gray-900 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-800 ${loading ? "opacity-50" : ""}`}
+            onPress={() => handleOAuthSignIn('github')}
             disabled={loading}
           >
-            <FontAwesome6 name="x-twitter" size={20} color="#000000" />
-            <Text className="text-gray-800 font-semibold text-center flex-1">
-              Sign in with X (Twitter)
+            <FontAwesome name="github" size={20} color="#ffffff" />
+            <Text className="text-white font-semibold text-center flex-1">
+              Continue with GitHub
             </Text>
           </TouchableOpacity>
 
-          <Link href="/signup" asChild> 
-            <TouchableOpacity className="p-3" disabled={loading}>
+          {/* Apple — iOS only */}
+          {/* {Platform.OS === 'ios' && (
+            <TouchableOpacity
+              className={`bg-black p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 ${loading ? "opacity-50" : ""}`}
+              onPress={() => showToast('info', 'Coming Soon', 'Apple Sign-In is not available yet')}
+              disabled={loading}
+            >
+              <FontAwesome5 name="apple" size={20} color="#ffffff" />
+              <Text className="text-white font-semibold text-center flex-1">
+                Continue with Apple
+              </Text>
+            </TouchableOpacity>
+          )} */}
+
+          <Link href="/signup" asChild>
+            <TouchableOpacity className="p-3 mt-2" disabled={loading}>
               <Text className="text-center text-cyan-400 underline">
                 Don`t have an account? Sign up
               </Text>
@@ -393,9 +439,9 @@ export default function Login() {
                 setShowDisabledModal(false);
                 router.push({
                   pathname: "/contact",
-                  params: { 
+                  params: {
                     subject: "Account Reactivation Request",
-                    from: "disabled-account" 
+                    from: "disabled-account"
                   }
                 });
               }}
