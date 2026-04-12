@@ -12,7 +12,8 @@ import NotificationCenter from "./NotificationCenter";
 export default function LogoHeader({ 
   position = "left",
   showNotificationIcon = true,
-  showSignOutIcon = true
+  showSignOutIcon = true,
+  onLogoPress = null, // ✅ optional override for logo press
 }) {
   const router = useRouter();
   const { role } = useUserRole();
@@ -51,6 +52,12 @@ export default function LogoHeader({
   };
 
   const handleLogoClick = () => {
+    // ✅ If onLogoPress is provided (login/signup), use that instead
+    if (onLogoPress) {
+      onLogoPress();
+      return;
+    }
+    // Default behaviour — navigate based on role
     if (role === "admin") {
       router.push("/admin");
     } else if (role === "teacher" && isVerified) {
@@ -70,8 +77,9 @@ export default function LogoHeader({
     router.replace("/login");
   };
 
+  // ✅ When onLogoPress is provided, logo is always clickable
   const isAdmin = role === "admin";
-  const isClickable = isAdmin || (role === "teacher" && isVerified);
+  const isClickable = onLogoPress !== null || isAdmin || (role === "teacher" && isVerified);
 
   const headerBg = isDark ? "#0a0f1a" : "#f0fafb";
   const accentLine = "#06b6d4";
@@ -188,7 +196,7 @@ export default function LogoHeader({
         </TouchableOpacity>
       </Animated.View>
 
-           {/* Sign Out Button */}
+      {/* Right side icons */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           {/* Sign Out Button */}

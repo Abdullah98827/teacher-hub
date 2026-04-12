@@ -14,10 +14,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     const checkSession = async () => {
-      // Safety timeout: goes to login after 5 seconds if check takes too long
+      // Safety timeout: goes to index after 5 seconds if check takes too long
       const timeoutId = setTimeout(() => {
         setIsLoading(false);
-        router.replace("/login");
+        router.replace("/"); // Changed from "/login" to "/"
       }, 5000);
 
       // Checks if user has an active session
@@ -30,7 +30,7 @@ export default function RootLayout() {
       setIsLoading(false);
 
       if (error || !session) {
-        router.replace("/login"); // If no session or error, goes to login
+        router.replace("/"); // Changed from "/login" to "/" - let index.js handle it
       } else {
         router.replace("/(tabs)"); // Has session, goes to main app
       }
@@ -42,7 +42,7 @@ export default function RootLayout() {
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!session) {
-          router.replace("/login");
+          router.replace("/"); // Changed from "/login" to "/"
         }
       }
     );
@@ -91,14 +91,14 @@ export default function RootLayout() {
           <SafeAreaProvider>
             <Stack
               screenOptions={{ headerShown: false }}
-              initialRouteName="login"
+              initialRouteName="index" // Changed from "login" to "index"
             >
+              <Stack.Screen name="index" /> {/* Add this */}
               <Stack.Screen name="login" />
               <Stack.Screen name="signup" />
               <Stack.Screen name="auth-callback" />
               <Stack.Screen name="mfa-challenge" />
               <Stack.Screen name="logout" />
-              <Stack.Screen name="index" />
               <Stack.Screen name="pending" />
               <Stack.Screen name="membership" />
               <Stack.Screen name="checkout" />
