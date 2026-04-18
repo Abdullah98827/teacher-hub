@@ -2,12 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -29,7 +30,7 @@ import { deleteFile } from "../../utils/storage";
 export default function AdminResourcesScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
-  const { notifyAdminResourcePending } = useAdminNotifications();
+  const { notifyResourceApproved, notifyResourceRejected } = useAdminNotifications();
   const router = useRouter();
   const {
     bgCardAlt,
@@ -45,6 +46,7 @@ export default function AdminResourcesScreen() {
   const [filter, setFilter] = useState("pending");
   const [confirmAction, setConfirmAction] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -119,28 +121,45 @@ export default function AdminResourcesScreen() {
     if (isProcessing) return;
     setIsProcessing(true);
 
-    const { error } = await supabase
-      .from("resources")
-      .update({ status: "approved" })
-      .eq("id", resourceId);
-
-    if (error) {
-      logEvent({
-        event_type: "RESOURCE_APPROVAL_FAILED",
-        user_id: user?.id,
-        target_id: resourceId,
-        target_table: "resources",
-        details: { error: error.message },
-      });
-      Toast.show({
-        type: "error",
-        text1: "Failed to approve",
-        text2: error.message,
-      });
-    } else {
+    try {
       // Get resource details for notification
       const resource = resources.find(r => r.id === resourceId);
-      
+      if (!resource) {
+        Alert.alert('Error', 'Resource not found');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Update resource status
+      const { error } = await supabase
+        .from("resources")
+        .update({ status: "approved" })
+        .eq("id", resourceId);
+
+      if (error) {
+        logEvent({
+          event_type: "RESOURCE_APPROVAL_FAILED",
+          user_id: user?.id,
+          target_id: resourceId,
+          target_table: "resources",
+          details: { error: error.message },
+        });
+        Toast.show({
+          type: "error",
+          text1: "Failed to approve",
+          text2: error.message,
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Notify uploader that resource was approved
+      await notifyResourceApproved(
+        resource.uploaded_by,
+        resource.title,
+        resourceId
+      );
+
       logEvent({
         event_type: "RESOURCE_APPROVED",
         user_id: user?.id,
@@ -148,20 +167,20 @@ export default function AdminResourcesScreen() {
         target_table: "resources",
       });
 
-      // Notify admin team of approval (optional - mainly for audit trail)
-      if (resource && user?.display_name) {
-        await notifyAdminResourcePending(
-          [user.id],
-          resource.user_id,
-          resource.uploaded_by || 'Teacher',
-          resource.title,
-          resourceId,
-          resource.category
-        ).catch(err => console.warn('Failed to send notification:', err));
-      }
-
-      Toast.show({ type: "success", text1: "Resource approved" });
+      Toast.show({ 
+        type: "success", 
+        text1: "Resource approved",
+        text2: "Uploader has been notified"
+      });
+      
       fetchResources();
+    } catch (error) {
+      console.error('Error approving resource:', error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      });
     }
 
     setIsProcessing(false);
@@ -171,76 +190,115 @@ export default function AdminResourcesScreen() {
     if (!confirmAction || isProcessing) return;
     setIsProcessing(true);
 
-    if (confirmAction.type === "reject") {
-      const { error } = await supabase
-        .from("resources")
-        .update({
-          status: "rejected",
-          rejection_reason: "Not approved by admin",
-        })
-        .eq("id", confirmAction.resourceId);
+    try {
+      if (confirmAction.type === "reject") {
+        // Get resource details for notification
+        const resource = resources.find(r => r.id === confirmAction.resourceId);
+        if (!resource) {
+          Alert.alert('Error', 'Resource not found');
+          setIsProcessing(false);
+          return;
+        }
 
-      if (error) {
-        logEvent({
-          event_type: "RESOURCE_REJECTION_FAILED",
-          user_id: user?.id,
-          target_id: confirmAction.resourceId,
-          target_table: "resources",
-          details: { error: error.message },
-        });
-        Toast.show({
-          type: "error",
-          text1: "Operation failed",
-          text2: error.message,
-        });
-      } else {
+        const { error } = await supabase
+          .from("resources")
+          .update({
+            status: "rejected",
+            rejection_reason: rejectionReason || "Not approved by admin",
+          })
+          .eq("id", confirmAction.resourceId);
+
+        if (error) {
+          logEvent({
+            event_type: "RESOURCE_REJECTION_FAILED",
+            user_id: user?.id,
+            target_id: confirmAction.resourceId,
+            target_table: "resources",
+            details: { error: error.message },
+          });
+          Toast.show({
+            type: "error",
+            text1: "Operation failed",
+            text2: error.message,
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        // Notify uploader that resource was rejected
+        await notifyResourceRejected(
+          resource.uploaded_by,
+          resource.title,
+          confirmAction.resourceId,
+          rejectionReason
+        );
+
         logEvent({
           event_type: "RESOURCE_REJECTED",
           user_id: user?.id,
           target_id: confirmAction.resourceId,
           target_table: "resources",
         });
-        Toast.show({ type: "success", text1: "Resource rejected" });
+        
+        Toast.show({ 
+          type: "success", 
+          text1: "Resource rejected",
+          text2: "Uploader has been notified"
+        });
+        
+        setRejectionReason("");
         fetchResources();
-      }
-    } else if (confirmAction.type === "delete") {
-      const fileDeleted = await deleteFile(confirmAction.filePath);
-      if (!fileDeleted) {
-        setIsProcessing(false);
-        return;
-      }
 
-      const { error } = await supabase
-        .from("resources")
-        .delete()
-        .eq("id", confirmAction.resourceId);
+      } else if (confirmAction.type === "delete") {
+        const fileDeleted = await deleteFile(confirmAction.filePath);
+        if (!fileDeleted) {
+          setIsProcessing(false);
+          return;
+        }
 
-      if (error) {
-        logEvent({
-          event_type: "RESOURCE_DELETION_FAILED",
-          user_id: user?.id,
-          target_id: confirmAction.resourceId,
-          target_table: "resources",
-          details: { error: error.message },
-        });
-        Toast.show({
-          type: "error",
-          text1: "Operation failed",
-          text2: error.message,
-        });
-      } else {
+        const { error } = await supabase
+          .from("resources")
+          .delete()
+          .eq("id", confirmAction.resourceId);
+
+        if (error) {
+          logEvent({
+            event_type: "RESOURCE_DELETION_FAILED",
+            user_id: user?.id,
+            target_id: confirmAction.resourceId,
+            target_table: "resources",
+            details: { error: error.message },
+          });
+          Toast.show({
+            type: "error",
+            text1: "Operation failed",
+            text2: error.message,
+          });
+          setIsProcessing(false);
+          return;
+        }
+
         logEvent({
           event_type: "RESOURCE_DELETED",
           user_id: user?.id,
           target_id: confirmAction.resourceId,
           target_table: "resources",
         });
+        
         Toast.show({ type: "success", text1: "Resource deleted" });
         fetchResources();
       }
+
+      setConfirmAction(null);
+    } catch (error) {
+      console.error('Error in handleConfirmAction:', error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      });
     }
 
-    setConfirmAction(null);
     setIsProcessing(false);
   };
 
@@ -600,12 +658,19 @@ export default function AdminResourcesScreen() {
       <ConfirmModal
         visible={confirmAction !== null && confirmAction?.type === "reject"}
         title="Reject Resource?"
-        message="This resource will be marked as rejected."
+        message="Provide a reason for rejection (optional):"
         confirmText="Reject"
         confirmColor="bg-red-500"
         onConfirm={handleConfirmAction}
-        onCancel={() => setConfirmAction(null)}
+        onCancel={() => {
+          setConfirmAction(null);
+          setRejectionReason("");
+        }}
         isProcessing={isProcessing}
+        showInput={true}
+        inputPlaceholder="e.g., Poor file quality, inappropriate content..."
+        inputValue={rejectionReason}
+        onInputChange={setRejectionReason}
       />
 
       <ConfirmModal

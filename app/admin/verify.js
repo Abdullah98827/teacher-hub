@@ -2,10 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  View
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -25,17 +25,17 @@ export default function VerifyTeachersScreen() {
   const { user } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const router = useRouter();
-  const { textSecondary, textPrimary } = useAppTheme();
+  const { textSecondary, textPrimary, bgCard, border } = useAppTheme();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
-  const [confirmDeletePhoto, setConfirmDeletePhoto] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [imageUrls, setImageUrls] = useState(new Map());
+  const [rejectionReason, setRejectionReason] = useState("");
 
   const isAdmin = role === "admin";
-  const { notifyAdminTeacherVerification } = useAdminNotifications();
+  const { notifyTeacherVerificationApproved, notifyTeacherVerificationRejected } = useAdminNotifications();
 
   useEffect(() => {
     if (!roleLoading && !isAdmin) {
@@ -103,28 +103,33 @@ export default function VerifyTeachersScreen() {
     async (userId, photoUrl) => {
       setProcessing(true);
 
-      const { error } = await supabase
-        .from("teachers")
-        .update({ verified: true })
-        .eq("id", userId);
+      try {
+        const { error } = await supabase
+          .from("teachers")
+          .update({ verified: true, verified_at: new Date().toISOString() })
+          .eq("id", userId);
 
-      if (error) {
-        logEvent({
-          event_type: "TEACHER_VERIFICATION_FAILED",
-          user_id: user?.id,
-          target_id: userId,
-          target_table: "teachers",
-          details: { error: error.message },
-        });
-        Toast.show({
-          type: "error",
-          text1: "Approval failed",
-          text2: error.message,
-        });
-      } else {
+        if (error) {
+          logEvent({
+            event_type: "TEACHER_VERIFICATION_FAILED",
+            user_id: user?.id,
+            target_id: userId,
+            target_table: "teachers",
+            details: { error: error.message },
+          });
+          Toast.show({
+            type: "error",
+            text1: "Approval failed",
+            text2: error.message,
+          });
+          setProcessing(false);
+          return;
+        }
+
         if (photoUrl) {
           await supabase.storage.from("teacher-passes").remove([photoUrl]);
         }
+
         logEvent({
           event_type: "TEACHER_VERIFIED",
           user_id: user?.id,
@@ -132,67 +137,91 @@ export default function VerifyTeachersScreen() {
           target_table: "teachers",
         });
         
-        // Get verified teacher info for notification
-        const verifiedTeacher = pendingUsers.find(t => t.id === userId);
-        if (verifiedTeacher) {
-          await notifyAdminTeacherVerification(
-            [userId], // Notify the teacher themselves
-            userId,
-            verifiedTeacher.name || 'Teacher',
-            verifiedTeacher.subject || 'Unknown',
-            verifiedTeacher.school || 'Unknown'
-          ).catch(err => console.warn('Failed to notify teacher:', err));
-        }
+        // Notify teacher of approval
+        await notifyTeacherVerificationApproved(userId);
         
-        Toast.show({ type: "success", text1: "Teacher verified successfully" });
+        Toast.show({ 
+          type: "success", 
+          text1: "Teacher verified successfully",
+          text2: "Teacher has been notified"
+        });
+        
         loadPendingUsers();
+      } catch (error) {
+        console.error('Error approving teacher:', error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: error.message,
+        });
       }
 
       setProcessing(false);
     },
-    [loadPendingUsers, user?.id, pendingUsers, notifyAdminTeacherVerification]
+    [loadPendingUsers, user?.id, notifyTeacherVerificationApproved]
   );
 
   const executeReject = async () => {
+    if (!confirmAction || processing) return;
     setProcessing(true);
 
-    if (confirmDeletePhoto) {
-      await supabase.storage
-        .from("teacher-passes")
-        .remove([confirmDeletePhoto]);
-    }
+    try {
+      if (confirmAction.photoUrl) {
+        await supabase.storage
+          .from("teacher-passes")
+          .remove([confirmAction.photoUrl]);
+      }
 
-    const { error } = await supabase
-      .from("teachers")
-      .delete()
-      .eq("id", confirmDeleteId);
+      const { error } = await supabase
+        .from("teachers")
+        .delete()
+        .eq("id", confirmAction.teacherId);
 
-    if (error) {
-      logEvent({
-        event_type: "TEACHER_REJECTION_FAILED",
-        user_id: user?.id,
-        target_id: confirmDeleteId,
-        target_table: "teachers",
-        details: { error: error.message },
-      });
-      Toast.show({
-        type: "error",
-        text1: "Deletion failed",
-        text2: error.message,
-      });
-    } else {
+      if (error) {
+        logEvent({
+          event_type: "TEACHER_REJECTION_FAILED",
+          user_id: user?.id,
+          target_id: confirmAction.teacherId,
+          target_table: "teachers",
+          details: { error: error.message },
+        });
+        Toast.show({
+          type: "error",
+          text1: "Deletion failed",
+          text2: error.message,
+        });
+        setProcessing(false);
+        return;
+      }
+
       logEvent({
         event_type: "TEACHER_REJECTED",
         user_id: user?.id,
-        target_id: confirmDeleteId,
+        target_id: confirmAction.teacherId,
         target_table: "teachers",
       });
-      Toast.show({ type: "success", text1: "Teacher account removed" });
+
+      // Notify teacher of rejection
+      await notifyTeacherVerificationRejected(confirmAction.teacherId, rejectionReason);
+      
+      Toast.show({ 
+        type: "success", 
+        text1: "Teacher account removed",
+        text2: "Teacher has been notified"
+      });
+      
+      setConfirmAction(null);
+      setRejectionReason("");
       loadPendingUsers();
+    } catch (error) {
+      console.error('Error rejecting teacher:', error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      });
     }
 
-    setConfirmDeleteId(null);
-    setConfirmDeletePhoto(null);
     setProcessing(false);
   };
 
@@ -253,8 +282,10 @@ export default function VerifyTeachersScreen() {
                 imageUrl={imageUrls.get(item.id)}
                 onApprove={() => handleApprove(item.id, item.photo_url)}
                 onReject={() => {
-                  setConfirmDeleteId(item.id);
-                  setConfirmDeletePhoto(item.photo_url);
+                  setConfirmAction({
+                    teacherId: item.id,
+                    photoUrl: item.photo_url,
+                  });
                 }}
                 processing={processing}
               />
@@ -264,17 +295,21 @@ export default function VerifyTeachersScreen() {
       </View>
 
       <ConfirmModal
-        visible={confirmDeleteId !== null}
-        title="Reject Teacher?"
-        message="This will permanently delete the teacher's account and photo. This action cannot be undone."
+        visible={confirmAction !== null}
+        title="Reject Teacher Verification?"
+        message="Provide a reason for rejection (optional):"
         confirmText="Reject & Delete"
         confirmColor="bg-red-500"
         onConfirm={executeReject}
         onCancel={() => {
-          setConfirmDeleteId(null);
-          setConfirmDeletePhoto(null);
+          setConfirmAction(null);
+          setRejectionReason("");
         }}
         isProcessing={processing}
+        showInput={true}
+        inputPlaceholder="e.g., Invalid credentials, incomplete documents..."
+        inputValue={rejectionReason}
+        onInputChange={setRejectionReason}
       />
 
       <Toast />

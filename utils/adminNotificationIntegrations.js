@@ -7,7 +7,7 @@
  * await notifyAdminNewReport(adminIds, reporterId, reporterName, reportedType, reason);
  */
 
-import { NOTIFICATION_TYPES, notificationTemplates, useSendNotification } from '../hooks/useNotifications';
+import { useSendNotification } from '../hooks/useNotifications';
 
 export const useAdminNotifications = () => {
   const { sendNotif } = useSendNotification();
@@ -22,17 +22,14 @@ export const useAdminNotifications = () => {
    * @param {string} reason - Reason for the report
    */
   const notifyAdminNewReport = async (adminIds, reporterId, reporterName, reportedUserId, reportType, reason) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_NEW_REPORT]?.() || {
-      title: 'New Report Submitted',
-      body: `${reporterName} reported ${reportType}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_new_report',
-        template.title,
-        template.body,
+        'New Report Submitted',
+        `${reporterName} reported ${reportType}`,
         {
           reporterId,
           reporterName,
@@ -55,17 +52,14 @@ export const useAdminNotifications = () => {
    * @param {string} category - Resource category
    */
   const notifyAdminResourcePending = async (adminIds, uploaderId, uploaderName, resourceTitle, resourceId, category) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_RESOURCE_PENDING]?.() || {
-      title: 'Resource Pending Approval',
-      body: `${uploaderName} uploaded: ${resourceTitle}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_resource_pending',
-        template.title,
-        template.body,
+        'Resource Pending Approval',
+        `${uploaderName} uploaded: ${resourceTitle}`,
         {
           uploaderId,
           uploaderName,
@@ -87,17 +81,14 @@ export const useAdminNotifications = () => {
    * @param {string} school - School name
    */
   const notifyAdminTeacherVerification = async (adminIds, teacherId, teacherName, subject, school) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_TEACHER_VERIFICATION]?.() || {
-      title: 'Teacher Verification Pending',
-      body: `${teacherName} requested teacher verification`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_teacher_verification',
-        template.title,
-        template.body,
+        'Teacher Verification Pending',
+        `${teacherName} requested teacher verification`,
         {
           teacherId,
           teacherName,
@@ -105,7 +96,7 @@ export const useAdminNotifications = () => {
           school,
           actionType: 'admin_teacher_verification',
         }
-      ).catch(err => console.warn('Failed to notify admin of teacher verification:', err));
+      ).catch(err => console.warn('Failed to notify admin of verification request:', err));
     }
   };
 
@@ -118,17 +109,14 @@ export const useAdminNotifications = () => {
    * @param {string} subject - Subject of request
    */
   const notifyAdminContactRequest = async (adminIds, requesterId, requesterName, email, subject) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_CONTACT_REQUEST]?.() || {
-      title: 'New Contact Request',
-      body: `${requesterName}: ${subject}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_contact_request',
-        template.title,
-        template.body,
+        'New Contact Request',
+        `${requesterName}: ${subject}`,
         {
           requesterId,
           requesterName,
@@ -149,17 +137,14 @@ export const useAdminNotifications = () => {
    * @param {object} details - Additional details
    */
   const notifyAdminSuspiciousActivity = async (adminIds, userId, userName, activityType, details = {}) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_SUSPICIOUS_ACTIVITY]?.() || {
-      title: 'Suspicious Account Activity',
-      body: `${userName} - ${activityType}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_suspicious_activity',
-        template.title,
-        template.body,
+        'Suspicious Account Activity',
+        `${userName} - ${activityType}`,
         {
           userId,
           userName,
@@ -179,17 +164,14 @@ export const useAdminNotifications = () => {
    * @param {number} flagCount - Number of times flagged
    */
   const notifyAdminResourceFlaggedMultiple = async (adminIds, resourceId, resourceTitle, flagCount) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_RESOURCE_FLAGGED]?.() || {
-      title: 'Resource Flagged Multiple Times',
-      body: `${resourceTitle} has been flagged ${flagCount} times`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_resource_flagged',
-        template.title,
-        template.body,
+        'Resource Flagged Multiple Times',
+        `${resourceTitle} has been flagged ${flagCount} times`,
         {
           resourceId,
           resourceTitle,
@@ -208,24 +190,21 @@ export const useAdminNotifications = () => {
    * @param {number} reportCount - Number of reports
    */
   const notifyAdminUserReportedMultiple = async (adminIds, userId, userName, reportCount) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_USER_REPORTED]?.() || {
-      title: '⚠️ User Reported Multiple Times',
-      body: `${userName} has been reported ${reportCount} times`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_user_reported',
-        template.title,
-        template.body,
+        '⚠️ User Reported Multiple Times',
+        `${userName} has been reported ${reportCount} times`,
         {
           userId,
           userName,
           reportCount,
           actionType: 'admin_user_reported',
         }
-      ).catch(err => console.warn('Failed to notify admin of user reports:', err));
+      ).catch(err => console.warn('Failed to notify admin of multiple user reports:', err));
     }
   };
 
@@ -237,17 +216,14 @@ export const useAdminNotifications = () => {
    * @param {string} resolution - How it was resolved
    */
   const notifyAdminReportResolved = async (adminIds, resolvedByName, reportType, resolution) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_REPORT_RESOLVED]?.() || {
-      title: 'Report Resolved',
-      body: `${reportType} report resolved: ${resolution}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_report_resolved',
-        template.title,
-        template.body,
+        'Report Resolved',
+        `${reportType} report resolved: ${resolution}`,
         {
           resolvedByName,
           reportType,
@@ -269,17 +245,14 @@ export const useAdminNotifications = () => {
    * @param {string} reason - Reason for report
    */
   const notifyAdminCommentReported = async (adminIds, reporterId, reporterName, commentId, commentText, resourceId, reason) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_COMMENT_REPORTED]?.() || {
-      title: 'Comment Reported',
-      body: `${reporterName} reported a comment - ${reason}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_comment_reported',
-        template.title,
-        template.body,
+        'Comment Reported',
+        `${reporterName} reported a comment - ${reason}`,
         {
           reporterId,
           reporterName,
@@ -304,17 +277,14 @@ export const useAdminNotifications = () => {
    * @param {string} description - Additional description
    */
   const notifyAdminUserReportedDirect = async (adminIds, reporterId, reporterName, reportedUserId, reportedUserName, reason, description = '') => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.ADMIN_USER_REPORTED_DIRECT]?.() || {
-      title: '👤 User Reported',
-      body: `${reporterName} reported ${reportedUserName} - ${reason}`,
-    };
-
+    if (!adminIds || adminIds.length === 0) return;
+    
     for (const adminId of adminIds) {
       await sendNotif(
         adminId,
         'admin_user_reported_direct',
-        template.title,
-        template.body,
+        '👤 User Reported',
+        `${reporterName} reported ${reportedUserName} - ${reason}`,
         {
           reporterId,
           reporterName,
@@ -338,17 +308,14 @@ export const useAdminNotifications = () => {
    * @param {string} category - Resource category
    */
   const notifyFollowersResourceUploaded = async (followerIds, teacherId, teacherName, resourceTitle, resourceId, category) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.FOLLOWERS_RESOURCE_UPLOADED]?.() || {
-      title: 'New Resource',
-      body: `${teacherName} uploaded: ${resourceTitle}`,
-    };
-
+    if (!followerIds || followerIds.length === 0) return;
+    
     for (const followerId of followerIds) {
       await sendNotif(
         followerId,
         'followers_resource_uploaded',
-        template.title,
-        template.body,
+        'New Resource',
+        `${teacherName} uploaded: ${resourceTitle}`,
         {
           teacherId,
           teacherName,
@@ -357,8 +324,88 @@ export const useAdminNotifications = () => {
           category,
           actionType: 'followers_resource_uploaded',
         }
-      ).catch(err => console.warn('Failed to notify followers:', err));
+      ).catch(err => console.warn('Failed to notify follower of resource upload:', err));
     }
+  };
+
+  /**
+   * Notify resource uploader when their resource is approved
+   * @param {string} uploaderId - ID of resource uploader
+   * @param {string} resourceTitle - Title of resource
+   * @param {string} resourceId - ID of resource
+   */
+  const notifyResourceApproved = async (uploaderId, resourceTitle, resourceId) => {
+    await sendNotif(
+      uploaderId,
+      'resource_approved',
+      'Resource Approved!',
+      `Your resource "${resourceTitle}" has been approved and is now live`,
+      {
+        resourceTitle,
+        resourceId,
+        status: 'approved',
+        actionType: 'resource_approved',
+      }
+    ).catch(err => console.warn('Failed to notify uploader of resource approval:', err));
+  };
+
+  /**
+   * Notify resource uploader when their resource is rejected
+   * @param {string} uploaderId - ID of resource uploader
+   * @param {string} resourceTitle - Title of resource
+   * @param {string} resourceId - ID of resource
+   * @param {string} rejectionReason - Reason for rejection
+   */
+  const notifyResourceRejected = async (uploaderId, resourceTitle, resourceId, rejectionReason = '') => {
+    await sendNotif(
+      uploaderId,
+      'resource_rejected',
+      'Resource Not Approved',
+      `Your resource "${resourceTitle}" needs revision${rejectionReason ? ': ' + rejectionReason : ''}`,
+      {
+        resourceTitle,
+        resourceId,
+        status: 'rejected',
+        rejectionReason,
+        actionType: 'resource_rejected',
+      }
+    ).catch(err => console.warn('Failed to notify uploader of resource rejection:', err));
+  };
+
+  /**
+   * Notify teacher when their verification is approved
+   * @param {string} teacherId - ID of teacher
+   */
+  const notifyTeacherVerificationApproved = async (teacherId) => {
+    await sendNotif(
+      teacherId,
+      'teacher_verification_approved',
+      'Verified Teacher',
+      'Congratulations! Your teacher verification has been approved',
+      {
+        status: 'approved',
+        actionType: 'teacher_verification_approved',
+      }
+    ).catch(err => console.warn('Failed to notify teacher of verification approval:', err));
+  };
+
+  /**
+   * Notify teacher when their verification is rejected
+   * @param {string} teacherId - ID of teacher
+   * @param {string} rejectionReason - Reason for rejection
+   */
+  const notifyTeacherVerificationRejected = async (teacherId, rejectionReason = '') => {
+    await sendNotif(
+      teacherId,
+      'teacher_verification_rejected',
+      'Verification Request Needs Revision',
+      `Your teacher verification request needs additional information${rejectionReason ? ': ' + rejectionReason : ''}`,
+      {
+        status: 'rejected',
+        rejectionReason,
+        actionType: 'teacher_verification_rejected',
+      }
+    ).catch(err => console.warn('Failed to notify teacher of verification rejection:', err));
   };
 
   return {
@@ -373,5 +420,9 @@ export const useAdminNotifications = () => {
     notifyAdminCommentReported,
     notifyAdminUserReportedDirect,
     notifyFollowersResourceUploaded,
+    notifyResourceApproved,
+    notifyResourceRejected,
+    notifyTeacherVerificationApproved,
+    notifyTeacherVerificationRejected,
   };
 };

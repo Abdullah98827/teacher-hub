@@ -46,7 +46,11 @@ export const NOTIFICATION_TYPES = {
   GROUP_MESSAGE: 'group_message',
   RESOURCE_UPLOAD: 'resource_upload',
   RESOURCE_FAVORITE: 'resource_favorite',
+  RESOURCE_APPROVED: 'resource_approved',
+  RESOURCE_REJECTED: 'resource_rejected',
   VERIFICATION: 'verification',
+  VERIFICATION_APPROVED: 'verification_approved',
+  VERIFICATION_REJECTED: 'verification_rejected',
   MEMBERSHIP: 'membership',
   REPORT: 'report',
   REPORT_RESOLVED: 'report_resolved',
@@ -54,6 +58,7 @@ export const NOTIFICATION_TYPES = {
   CONTACT_REQUEST_ACCEPTED: 'contact_request_accepted',
   TEACHER_APPROVED: 'teacher_approved',
 };
+
 
 /**
  * Notification templates for different events
@@ -137,6 +142,25 @@ export const notificationTemplates = {
   [NOTIFICATION_TYPES.TEACHER_APPROVED]: () => ({
     title: 'Teacher Verified',
     body: 'Congratulations! Your teacher verification has been approved',
+  }),
+  [NOTIFICATION_TYPES.RESOURCE_APPROVED]: () => ({
+    title: 'Resource Approved!',
+    body: 'Your resource has been approved and is now live',
+  }),
+
+  [NOTIFICATION_TYPES.RESOURCE_REJECTED]: (reason) => ({
+    title: 'Resource Not Approved',
+    body: `Your resource needs revision${reason ? ': ' + reason : ''}`,
+  }),
+
+  [NOTIFICATION_TYPES.VERIFICATION_APPROVED]: () => ({
+    title: 'Verified Teacher',
+    body: 'Congratulations! Your teacher verification has been approved',
+  }),
+
+  [NOTIFICATION_TYPES.VERIFICATION_REJECTED]: (reason) => ({
+    title: 'Verification Request Needs Revision',
+    body: `Your verification request needs additional information${reason ? ': ' + reason : ''}`,
   }),
 };
 

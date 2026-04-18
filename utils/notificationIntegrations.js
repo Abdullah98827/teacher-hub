@@ -14,7 +14,7 @@ export const useFollowNotifications = () => {
       followerId,
       followerName,
       actionType: 'follow',
-    });
+    }).catch(err => console.warn('Failed to notify follow:', err));
   };
 
   const notifyUnfollow = async (targetUserId, userName, userId) => {
@@ -23,10 +23,28 @@ export const useFollowNotifications = () => {
       userId,
       userName,
       actionType: 'unfollow',
-    });
+    }).catch(err => console.warn('Failed to notify unfollow:', err));
   };
 
-  return { notifyFollow, notifyUnfollow };
+  const notifyFollowBack = async (userId, followerName, followerId) => {
+    const template = {
+      title: '👥 Follow Back',
+      body: `${followerName} followed you back!`,
+    };
+    await sendNotif(
+      userId,
+      'follow_back',
+      template.title,
+      template.body,
+      {
+        followerId,
+        followerName,
+        actionType: 'follow_back',
+      }
+    ).catch(err => console.warn('Failed to notify follow back:', err));
+  };
+
+  return { notifyFollow, notifyUnfollow, notifyFollowBack };
 };
 
 export const useCommentNotifications = () => {
@@ -46,7 +64,7 @@ export const useCommentNotifications = () => {
         resourceTitle,
         actionType: 'comment',
       }
-    );
+    ).catch(err => console.warn('Failed to notify comment:', err));
   };
 
   const notifyCommentReply = async (commentOwnerId, replierName, replierId, commentId, resourceId) => {
@@ -63,10 +81,33 @@ export const useCommentNotifications = () => {
         resourceId,
         actionType: 'comment_reply',
       }
-    );
+    ).catch(err => console.warn('Failed to notify comment reply:', err));
   };
 
-  return { notifyComment, notifyCommentReply };
+  const notifyCommentThread = async (resourceOwnerId, commenters, newCommenterName, newCommenterId, resourceId, resourceTitle) => {
+    const uniqueCommenters = [...new Set(commenters)].filter(
+      (id) => id !== resourceOwnerId && id !== newCommenterId
+    );
+
+    for (const commenterId of uniqueCommenters) {
+      const template = notificationTemplates[NOTIFICATION_TYPES.COMMENT](newCommenterName, resourceTitle);
+      await sendNotif(
+        commenterId,
+        NOTIFICATION_TYPES.COMMENT,
+        template.title,
+        template.body,
+        {
+          commenterId: newCommenterId,
+          commenterName: newCommenterName,
+          resourceId,
+          resourceTitle,
+          actionType: 'comment_thread',
+        }
+      ).catch(err => console.warn('Failed to notify comment thread:', err));
+    }
+  };
+
+  return { notifyComment, notifyCommentReply, notifyCommentThread };
 };
 
 export const useRatingNotifications = () => {
@@ -87,7 +128,7 @@ export const useRatingNotifications = () => {
         stars,
         actionType: 'rating',
       }
-    );
+    ).catch(err => console.warn('Failed to notify rating:', err));
   };
 
   return { notifyRating };
@@ -110,7 +151,7 @@ export const useMessageNotifications = () => {
         chatId,
         actionType: 'message',
       }
-    );
+    ).catch(err => console.warn('Failed to notify direct message:', err));
   };
 
   const notifyGroupMessage = async (groupMemberId, groupName, senderName, senderId, messagePreview, groupId) => {
@@ -128,7 +169,7 @@ export const useMessageNotifications = () => {
         groupName,
         actionType: 'group_message',
       }
-    );
+    ).catch(err => console.warn('Failed to notify group message:', err));
   };
 
   return { notifyDirectMessage, notifyGroupMessage };
@@ -152,7 +193,7 @@ export const useResourceNotifications = () => {
         subject,
         actionType: 'resource_upload',
       }
-    );
+    ).catch(err => console.warn('Failed to notify resource upload:', err));
   };
 
   const notifyResourceFavorite = async (resourceOwnerId, favoriterName, favoriterId, resourceTitle, resourceId) => {
@@ -169,7 +210,7 @@ export const useResourceNotifications = () => {
         resourceId,
         actionType: 'resource_favorite',
       }
-    );
+    ).catch(err => console.warn('Failed to notify resource favorite:', err));
   };
 
   return { notifyResourceUpload, notifyResourceFavorite };
@@ -186,7 +227,7 @@ export const useVerificationNotifications = () => {
       template.title,
       template.body,
       { actionType: 'teacher_approved' }
-    );
+    ).catch(err => console.warn('Failed to notify teacher approved:', err));
   };
 
   const notifyVerificationUpdate = async (userId, status) => {
@@ -197,7 +238,7 @@ export const useVerificationNotifications = () => {
       template.title,
       `Your verification status is now: ${status}`,
       { status, actionType: 'verification_update' }
-    );
+    ).catch(err => console.warn('Failed to notify verification update:', err));
   };
 
   return { notifyTeacherApproved, notifyVerificationUpdate };
@@ -214,10 +255,38 @@ export const useMembershipNotifications = () => {
       template.title,
       template.body,
       { plan, features, actionType: 'membership_update' }
-    );
+    ).catch(err => console.warn('Failed to notify membership update:', err));
   };
 
-  return { notifyMembershipUpdate };
+  const notifyMembershipExpiring = async (userId, daysLeft) => {
+    const template = {
+      title: 'Membership Expiring Soon',
+      body: `Your membership expires in ${daysLeft} days. Renew to keep access.`,
+    };
+    await sendNotif(
+      userId,
+      'membership_expiring',
+      template.title,
+      template.body,
+      { daysLeft, actionType: 'membership_expiring' }
+    ).catch(err => console.warn('Failed to notify membership expiring:', err));
+  };
+
+  const notifyMembershipExpired = async (userId) => {
+    const template = {
+      title: 'Membership Expired',
+      body: 'Your membership has expired. Renew to continue accessing resources.',
+    };
+    await sendNotif(
+      userId,
+      'membership_expired',
+      template.title,
+      template.body,
+      { actionType: 'membership_expired' }
+    ).catch(err => console.warn('Failed to notify membership expired:', err));
+  };
+
+  return { notifyMembershipUpdate, notifyMembershipExpiring, notifyMembershipExpired };
 };
 
 export const useReportNotifications = () => {
@@ -231,7 +300,7 @@ export const useReportNotifications = () => {
       template.title,
       template.body,
       { actionType: 'report_received' }
-    );
+    ).catch(err => console.warn('Failed to notify report received:', err));
   };
 
   const notifyReportResolved = async (userId, resolution) => {
@@ -242,29 +311,41 @@ export const useReportNotifications = () => {
       template.title,
       `${template.body} - ${resolution}`,
       { resolution, actionType: 'report_resolved' }
-    );
+    ).catch(err => console.warn('Failed to notify report resolved:', err));
   };
 
   const notifyCommentReportResolved = async (reporterId, resourceTitle, status) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.COMMENT_REPORT_RESOLVED](resourceTitle, status);
+    const isApproved = status === 'resolved' || status === 'approved';
+    const template = {
+      title: isApproved ? 'Report Approved' : 'Report Dismissed',
+      body: isApproved
+        ? `Your report on "${resourceTitle}" has been approved. The comment has been removed.`
+        : `Your report on "${resourceTitle}" has been reviewed and dismissed.`,
+    };
     await sendNotif(
       reporterId,
-      NOTIFICATION_TYPES.COMMENT_REPORT_RESOLVED,
+      'comment_report_resolved',
       template.title,
       template.body,
       { resourceTitle, status, actionType: 'comment_report_resolved' }
-    );
+    ).catch(err => console.warn('Failed to notify comment report resolution:', err));
   };
 
   const notifyGroupChatReportResolved = async (reporterId, groupChatName, status) => {
-    const template = notificationTemplates[NOTIFICATION_TYPES.GROUP_CHAT_REPORT_RESOLVED](groupChatName, status);
+    const isApproved = status === 'resolved' || status === 'approved';
+    const template = {
+      title: isApproved ? 'Report Approved' : 'Report Dismissed',
+      body: isApproved
+        ? `Your report on "${groupChatName}" has been approved.`
+        : `Your report on "${groupChatName}" has been reviewed and dismissed.`,
+    };
     await sendNotif(
       reporterId,
-      NOTIFICATION_TYPES.GROUP_CHAT_REPORT_RESOLVED,
+      'group_chat_report_resolved',
       template.title,
       template.body,
       { groupChatName, status, actionType: 'group_chat_report_resolved' }
-    );
+    ).catch(err => console.warn('Failed to notify group chat report resolution:', err));
   };
 
   return { notifyReportReceived, notifyReportResolved, notifyCommentReportResolved, notifyGroupChatReportResolved };
@@ -281,7 +362,7 @@ export const useContactNotifications = () => {
       template.title,
       template.body,
       { requesterId, requesterName, actionType: 'contact_request' }
-    );
+    ).catch(err => console.warn('Failed to notify contact request:', err));
   };
 
   const notifyContactRequestAccepted = async (requesterUserId, accepterName, accepterId) => {
@@ -292,8 +373,22 @@ export const useContactNotifications = () => {
       template.title,
       template.body,
       { accepterId, accepterName, actionType: 'contact_request_accepted' }
-    );
+    ).catch(err => console.warn('Failed to notify contact request accepted:', err));
   };
 
-  return { notifyContactRequest, notifyContactRequestAccepted };
+  const notifyContactRequestRejected = async (requesterUserId, rejecterName, rejectedId) => {
+    const template = {
+      title: 'Contact Request Declined',
+      body: `${rejecterName} declined your contact request`,
+    };
+    await sendNotif(
+      requesterUserId,
+      'contact_request_rejected',
+      template.title,
+      template.body,
+      { rejectedId, rejecterName, actionType: 'contact_request_rejected' }
+    ).catch(err => console.warn('Failed to notify contact request rejection:', err));
+  };
+
+  return { notifyContactRequest, notifyContactRequestAccepted, notifyContactRequestRejected };
 };

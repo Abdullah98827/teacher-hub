@@ -96,39 +96,33 @@ export default function UploadResourceScreen() {
   }, [fetchSubjects]);
 
   const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          "application/pdf",
-          "application/vnd.ms-powerpoint",
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-          "application/msword",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ],
-        copyToCacheDirectory: true,
-      });
+    const result = await DocumentPicker.getDocumentAsync({
+      type: [
+        "application/pdf",
+        "application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ],
+      copyToCacheDirectory: true,
+    }).catch(() => null);
 
-      if (!result.canceled && result.assets[0]) {
-        const file = result.assets[0];
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size && file.size > maxSize) {
-          Toast.show({
-            type: "error",
-            text1: "File too large",
-            text2: "Maximum file size is 10MB",
-          });
-          return;
-        }
-        setSelectedFile(file);
-        Toast.show({ type: "success", text1: "File selected", text2: file.name });
-      }
-    } catch (error) {
+    if (!result || result.canceled || !result.assets[0]) return;
+
+    const file = result.assets[0];
+    const maxSize = 10 * 1024 * 1024;
+
+    if (file.size && file.size > maxSize) {
       Toast.show({
         type: "error",
-        text1: "Error picking file",
-        text2: error.message,
+        text1: "File too large",
+        text2: "Maximum file size is 10MB",
       });
+      return;
     }
+
+    setSelectedFile(file);
+    Toast.show({ type: "success", text1: "File selected", text2: file.name });
   };
 
   const uploadResource = async () => {
@@ -151,27 +145,29 @@ export default function UploadResourceScreen() {
 
     setUploading(true);
 
-    try {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("id", user?.id)
-        .single();
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("id", user?.id)
+      .single();
 
-      const isAdmin =
-        roleData?.role === "admin" || roleData?.role === "super_admin";
+    const isAdmin =
+      roleData?.role === "admin" || roleData?.role === "super_admin";
 
-      const fileExt = selectedFile.name.split(".").pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${user?.id}/${fileName}`;
+    const fileExt = selectedFile.name.split(".").pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${user?.id}/${fileName}`;
 
-      const response = await fetch(selectedFile.uri);
-      const blob = await response.blob();
+    const success = await uploadFile(filePath, selectedFile.uri, selectedFile.mimeType);
 
-      const success = await uploadFile(filePath, blob);
-      if (!success) throw new Error("Upload failed");
+    if (!success) {
+      setUploading(false);
+      return;
+    }
 
-      const { error: dbError } = await supabase.from("resources").insert({
+    const { data: insertedData, error: dbError } = await supabase
+      .from("resources")
+      .insert({
         title: title.trim(),
         description: description.trim() || null,
         file_url: filePath,
@@ -181,90 +177,92 @@ export default function UploadResourceScreen() {
         category: selectedCategory,
         uploaded_by: user?.id,
         status: isAdmin ? "approved" : "pending",
-      });
+      })
+      .select();
 
-      if (dbError) throw dbError;
-
-      logEvent({
-        event_type: "RESOURCE_UPLOADED",
-        user_id: user?.id,
-        details: {
-          title: title.trim(),
-          subject_id: selectedSubject,
-          category: selectedCategory,
-          status: isAdmin ? "approved" : "pending",
-        },
-      });
-
-      // Notify admins if resource is pending approval
-      if (!isAdmin) {
-        const { data: adminUsers } = await supabase
-          .from("user_roles")
-          .select("id")
-          .or("role.eq.admin,role.eq.super_admin");
-
-        if (adminUsers && adminUsers.length > 0) {
-          const adminIds = adminUsers.map(a => a.id);
-          await notifyAdminResourcePending(
-            adminIds,
-            user?.id,
-            user?.display_name || user?.email || 'Teacher',
-            title.trim(),
-            null, // resourceId will be available after insert, using null for now
-            selectedCategory
-          ).catch(err => console.warn('Failed to notify admin:', err));
-        }
-      }
-
-      // Notify followers about new resource
-      const { data: followers } = await supabase
-        .from("follows")
-        .select("follower_id")
-        .eq("following_id", user?.id);
-
-      if (followers && followers.length > 0) {
-        const followerIds = followers.map(f => f.follower_id);
-        await notifyFollowersResourceUploaded(
-          followerIds,
-          user?.id,
-          user?.display_name || user?.email || 'Teacher',
-          title.trim(),
-          null,
-          selectedCategory
-        ).catch(err => console.warn('Failed to notify followers:', err));
-      }
-
+    if (dbError) {
       Toast.show({
-        type: "success",
-        text1: "Resource uploaded!",
-        text2: isAdmin ? "Auto-approved" : "Waiting for admin approval",
+        type: "error",
+        text1: "Upload failed",
+        text2: dbError.message,
       });
-
-      setTitle("");
-      setDescription("");
-      setSelectedSubject("");
-      setSelectedCategory("");
-      setSelectedFile(null);
-
-      setTimeout(() => router.back(), 1000);
-    } catch (error) {
       logEvent({
         event_type: "RESOURCE_UPLOAD_FAILED",
         user_id: user?.id,
         details: {
           title: title.trim(),
           category: selectedCategory,
-          error: error.message,
+          error: dbError.message,
         },
       });
-      Toast.show({
-        type: "error",
-        text1: "Upload failed",
-        text2: error.message,
-      });
-    } finally {
       setUploading(false);
+      return;
     }
+
+    const resourceId = insertedData?.[0]?.id;
+
+    logEvent({
+      event_type: "RESOURCE_UPLOADED",
+      user_id: user?.id,
+      details: {
+        title: title.trim(),
+        subject_id: selectedSubject,
+        category: selectedCategory,
+        status: isAdmin ? "approved" : "pending",
+        resource_id: resourceId,
+      },
+    });
+
+    if (!isAdmin) {
+      const { data: adminUsers } = await supabase
+        .from("user_roles")
+        .select("id")
+        .or("role.eq.admin,role.eq.super_admin");
+
+      if (adminUsers && adminUsers.length > 0) {
+        const adminIds = adminUsers.map((a) => a.id);
+        await notifyAdminResourcePending(
+          adminIds,
+          user?.id,
+          user?.display_name || user?.email || "Teacher",
+          title.trim(),
+          resourceId,
+          selectedCategory
+        ).catch((err) => console.warn("Failed to notify admin:", err));
+      }
+    }
+
+    const { data: followers } = await supabase
+      .from("follows")
+      .select("follower_id")
+      .eq("following_id", user?.id);
+
+    if (followers && followers.length > 0) {
+      const followerIds = followers.map((f) => f.follower_id);
+      await notifyFollowersResourceUploaded(
+        followerIds,
+        user?.id,
+        user?.display_name || user?.email || "Teacher",
+        title.trim(),
+        resourceId,
+        selectedCategory
+      ).catch((err) => console.warn("Failed to notify followers:", err));
+    }
+
+    Toast.show({
+      type: "success",
+      text1: "Resource uploaded!",
+      text2: isAdmin ? "Auto-approved" : "Waiting for admin approval",
+    });
+
+    setTitle("");
+    setDescription("");
+    setSelectedSubject("");
+    setSelectedCategory("");
+    setSelectedFile(null);
+    setUploading(false);
+
+    setTimeout(() => router.back(), 1000);
   };
 
   if (loading) {
@@ -288,7 +286,6 @@ export default function UploadResourceScreen() {
           Share your materials. Get 20% off after 10 approved uploads!
         </ThemedText>
 
-        {/* Title */}
         <View className="mb-4">
           <ThemedText className={`${textPrimary} font-semibold mb-2`}>Title *</ThemedText>
           <ThemedTextInput
@@ -300,7 +297,6 @@ export default function UploadResourceScreen() {
           />
         </View>
 
-        {/* Description */}
         <View className="mb-4">
           <ThemedText className={`${textPrimary} font-semibold mb-2`}>
             Description (Optional)
@@ -317,7 +313,6 @@ export default function UploadResourceScreen() {
           />
         </View>
 
-        {/* Subject Selection */}
         <View className="mb-4">
           <ThemedText className={`${textPrimary} font-semibold mb-2`}>Subject *</ThemedText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -345,7 +340,6 @@ export default function UploadResourceScreen() {
           </ScrollView>
         </View>
 
-        {/* Category */}
         <View className="mb-4">
           <ThemedText className={`${textPrimary} font-semibold mb-2`}>
             Category *
@@ -378,7 +372,6 @@ export default function UploadResourceScreen() {
           </View>
         </View>
 
-        {/* File Picker */}
         <View className="mb-6">
           <ThemedText className={`${textPrimary} font-semibold mb-2`}>File *</ThemedText>
           <TouchableOpacity
@@ -398,7 +391,6 @@ export default function UploadResourceScreen() {
           </ThemedText>
         </View>
 
-        {/* Upload Button */}
         <TouchableOpacity
           className={`bg-cyan-500 p-4 rounded-xl mb-6 ${uploading ? "opacity-50" : ""}`}
           onPress={uploadResource}

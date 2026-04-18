@@ -23,6 +23,41 @@ where
 
 
 
+  create view public.active_teachers as
+select
+  id,
+  trn,
+  photo_url,
+  verified,
+  updated_at,
+  created_at,
+  email,
+  first_name,
+  last_name,
+  phone_number,
+  school_name,
+  years_experience,
+  bio,
+  profile_picture_url,
+  verified_by,
+  verified_at,
+  approved,
+  allow_dms,
+  profile_visibility,
+  profile_picture_path,
+  followers_count,
+  following_count,
+  is_disabled,
+  disabled_reason,
+  disabled_at,
+  disabled_by
+from
+  teachers
+where
+  is_disabled = false;
+
+
+
 
   create table public.admins (
   id uuid not null,
@@ -37,6 +72,68 @@ where
   constraint admins_email_key unique (email),
   constraint admins_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE
 ) TABLESPACE pg_default;
+
+
+
+
+
+create table public.app_logs (
+  id uuid not null default gen_random_uuid (),
+  created_at timestamp with time zone not null default now(),
+  user_id uuid null,
+  event_type text not null,
+  target_id uuid null,
+  target_table text null,
+  details jsonb null,
+  ip_address text null,
+  user_agent text null,
+  constraint app_logs_pkey primary key (id),
+  constraint app_logs_user_id_fkey foreign KEY (user_id) references auth.users (id)
+) TABLESPACE pg_default;
+
+
+
+
+create table public.comment_reports (
+  id uuid not null default gen_random_uuid (),
+  comment_id uuid not null,
+  reported_by uuid not null,
+  reported_user_id uuid not null,
+  reason character varying(255) not null,
+  description text null,
+  status character varying(50) null default 'pending'::character varying,
+  reviewed_by uuid null,
+  review_notes text null,
+  resolved_at timestamp with time zone null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint comment_reports_pkey primary key (id),
+  constraint comment_reports_comment_id_fkey foreign KEY (comment_id) references resource_comments (id) on delete CASCADE,
+  constraint comment_reports_reported_by_fkey foreign KEY (reported_by) references auth.users (id) on delete CASCADE,
+  constraint comment_reports_reviewed_by_fkey foreign KEY (reviewed_by) references auth.users (id) on delete set null,
+  constraint comment_reports_status_check check (
+    (
+      (status)::text = any (
+        (
+          array[
+            'pending'::character varying,
+            'reviewed'::character varying,
+            'resolved'::character varying,
+            'dismissed'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_comment_reports_status on public.comment_reports using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_comment_reports_comment_id on public.comment_reports using btree (comment_id) TABLESPACE pg_default;
+
+create index IF not exists idx_comment_reports_reported_by on public.comment_reports using btree (reported_by) TABLESPACE pg_default;
+
+create index IF not exists idx_comment_reports_created_at on public.comment_reports using btree (created_at desc) TABLESPACE pg_default;
 
 
 
@@ -58,10 +155,6 @@ create table public.direct_messages (
 create index IF not exists idx_direct_messages_receiver on public.direct_messages using btree (receiver_id, created_at desc) TABLESPACE pg_default;
 
 create index IF not exists idx_direct_messages_sender on public.direct_messages using btree (sender_id, created_at desc) TABLESPACE pg_default;
-
-create trigger trigger_notify_dm
-after INSERT on direct_messages for EACH row
-execute FUNCTION notify_dm ();
 
 
 
@@ -104,6 +197,23 @@ create table public.eal_adaptations (
 
 
 
+create table public.expo_push_tokens (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  expo_push_token text not null,
+  created_at timestamp with time zone null default timezone ('utc'::text, now()),
+  updated_at timestamp with time zone null default timezone ('utc'::text, now()),
+  constraint expo_push_tokens_pkey primary key (id),
+  constraint expo_push_tokens_user_id_unique unique (user_id),
+  constraint expo_push_tokens_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_expo_push_tokens_user_id on public.expo_push_tokens using btree (user_id) TABLESPACE pg_default;
+
+
+
+
+
 create table public.follows (
   id uuid not null default gen_random_uuid (),
   follower_id uuid not null,
@@ -122,16 +232,56 @@ create index IF not exists idx_follows_following on public.follows using btree (
 
 create index IF not exists idx_follows_created on public.follows using btree (created_at desc) TABLESPACE pg_default;
 
-create trigger trigger_notify_new_follower
-after INSERT on follows for EACH row
-execute FUNCTION notify_new_follower ();
-
 create trigger trigger_update_follow_counts
 after INSERT
 or DELETE on follows for EACH row
-execute FUNCTION update_follow_counts ();
+execute FUNCTION update_follower_counts ();
 
 
+
+
+
+
+create table public.group_chat_reports (
+  id uuid not null default gen_random_uuid (),
+  message_id uuid not null,
+  group_id uuid not null,
+  reported_by uuid not null,
+  reported_user_id uuid not null,
+  reason character varying(255) not null,
+  description text null,
+  status character varying(50) null default 'pending'::character varying,
+  reviewed_by uuid null,
+  review_notes text null,
+  resolved_at timestamp with time zone null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint group_chat_reports_pkey primary key (id),
+  constraint group_chat_reports_reported_by_fkey foreign KEY (reported_by) references auth.users (id) on delete CASCADE,
+  constraint group_chat_reports_reviewed_by_fkey foreign KEY (reviewed_by) references auth.users (id) on delete set null,
+  constraint group_chat_reports_status_check check (
+    (
+      (status)::text = any (
+        (
+          array[
+            'pending'::character varying,
+            'reviewed'::character varying,
+            'resolved'::character varying,
+            'dismissed'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_group_chat_reports_status on public.group_chat_reports using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_group_chat_reports_group_id on public.group_chat_reports using btree (group_id) TABLESPACE pg_default;
+
+create index IF not exists idx_group_chat_reports_message_id on public.group_chat_reports using btree (message_id) TABLESPACE pg_default;
+
+create index IF not exists idx_group_chat_reports_created_at on public.group_chat_reports using btree (created_at desc) TABLESPACE pg_default;
 
 
 
@@ -157,7 +307,6 @@ create index IF not exists idx_group_chats_is_public on public.group_chats using
 
 
 
-
 create table public.group_messages (
   id uuid not null default gen_random_uuid (),
   group_chat_id uuid null,
@@ -166,9 +315,11 @@ create table public.group_messages (
   created_at timestamp with time zone null default now(),
   deleted_at timestamp with time zone null,
   deleted_by uuid null,
+  reply_to_id uuid null,
   constraint group_messages_pkey primary key (id),
   constraint group_messages_deleted_by_fkey foreign KEY (deleted_by) references auth.users (id),
   constraint group_messages_group_chat_id_fkey foreign KEY (group_chat_id) references group_chats (id) on delete CASCADE,
+  constraint group_messages_reply_to_id_fkey foreign KEY (reply_to_id) references group_messages (id) on delete set null,
   constraint group_messages_sender_id_fkey foreign KEY (sender_id) references teachers (id) on delete CASCADE
 ) TABLESPACE pg_default;
 
@@ -176,16 +327,19 @@ create index IF not exists idx_group_messages_chat on public.group_messages usin
 
 create index IF not exists idx_group_messages_deleted_at on public.group_messages using btree (deleted_at) TABLESPACE pg_default;
 
-create trigger trigger_notify_group_message
-after INSERT on group_messages for EACH row
-execute FUNCTION notify_group_message ();
+create index IF not exists idx_group_messages_reply_to on public.group_messages using btree (reply_to_id) TABLESPACE pg_default;
+
+create index IF not exists idx_group_messages_replied_by on public.group_messages using btree (reply_to_id) TABLESPACE pg_default
+where
+  (reply_to_id is not null);
 
 
 
 
 
 
-create table public.leaderboard_weekly (
+
+  create table public.leaderboard_weekly (
   id uuid not null default gen_random_uuid (),
   teacher_id uuid not null,
   week_start date not null,
@@ -215,8 +369,6 @@ create index IF not exists idx_leaderboard_teacher on public.leaderboard_weekly 
 
 
 
-
-
 create table public.manage_contact_requests (
   id uuid not null default gen_random_uuid (),
   email text not null,
@@ -226,6 +378,7 @@ create table public.manage_contact_requests (
   user_id uuid null,
   constraint contact_requests_pkey primary key (id)
 ) TABLESPACE pg_default;
+
 
 
 
@@ -251,6 +404,30 @@ create table public.memberships (
 
 
 
+create table public.notifications (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  type text not null,
+  title text not null,
+  body text not null,
+  data jsonb null,
+  is_read boolean null default false,
+  created_at timestamp with time zone null default timezone ('utc'::text, now()),
+  constraint notifications_pkey primary key (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_notifications_user_id on public.notifications using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_notifications_is_read on public.notifications using btree (is_read) TABLESPACE pg_default;
+
+create index IF not exists idx_notifications_created_at on public.notifications using btree (created_at) TABLESPACE pg_default;
+
+
+
+
+
+
+
 
 create table public.resource_bookmarks (
   id uuid not null default gen_random_uuid (),
@@ -264,8 +441,6 @@ create table public.resource_bookmarks (
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_bookmarks_user on public.resource_bookmarks using btree (user_id) TABLESPACE pg_default;
-
-
 
 
 
@@ -291,18 +466,6 @@ create table public.resource_comments (
 create index IF not exists idx_comments_resource on public.resource_comments using btree (resource_id) TABLESPACE pg_default;
 
 create index IF not exists idx_comments_user on public.resource_comments using btree (user_id) TABLESPACE pg_default;
-
-create trigger trigger_notify_comment_reply
-after INSERT on resource_comments for EACH row when (new.parent_comment_id is not null)
-execute FUNCTION notify_comment_reply ();
-
-create trigger trigger_notify_resource_comment
-after INSERT on resource_comments for EACH row when (
-  new.resource_id is not null
-  and new.parent_comment_id is null
-)
-execute FUNCTION notify_resource_comment ();
-
 
 
 
@@ -352,8 +515,6 @@ create index IF not exists idx_ratings_resource on public.resource_ratings using
 
 
 
-
-
 create table public.resource_reports (
   id uuid not null default gen_random_uuid (),
   resource_id uuid not null,
@@ -386,6 +547,65 @@ create index IF not exists idx_reports_status on public.resource_reports using b
 
 
 
+create view public.resource_share_stats as
+select
+  resource_id,
+  count(*) as total_shares,
+  count(distinct shared_by) as unique_sharers,
+  count(distinct shared_with) as unique_recipients,
+  count(
+    case
+      when share_method = 'direct_message'::text then 1
+      else null::integer
+    end
+  ) as dm_shares,
+  count(
+    case
+      when share_method = 'link_copy'::text then 1
+      else null::integer
+    end
+  ) as link_shares,
+  max(created_at) as last_shared
+from
+  resource_shares
+group by
+  resource_id;
+
+
+
+
+
+
+  create table public.resource_shares (
+  id uuid not null default gen_random_uuid (),
+  resource_id uuid not null,
+  shared_by uuid not null,
+  shared_with uuid null,
+  share_method text not null,
+  created_at timestamp with time zone null default now(),
+  constraint resource_shares_pkey primary key (id),
+  constraint resource_shares_resource_id_fkey foreign KEY (resource_id) references resources (id) on delete CASCADE,
+  constraint resource_shares_shared_by_fkey foreign KEY (shared_by) references teachers (id) on delete CASCADE,
+  constraint resource_shares_shared_with_fkey foreign KEY (shared_with) references teachers (id) on delete CASCADE,
+  constraint resource_shares_share_method_check check (
+    (
+      share_method = any (array['link_copy'::text, 'direct_message'::text])
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_resource_shares_resource_id on public.resource_shares using btree (resource_id) TABLESPACE pg_default;
+
+create index IF not exists idx_resource_shares_shared_by on public.resource_shares using btree (shared_by) TABLESPACE pg_default;
+
+create index IF not exists idx_resource_shares_shared_with on public.resource_shares using btree (shared_with) TABLESPACE pg_default;
+
+create index IF not exists idx_resource_shares_created_at on public.resource_shares using btree (created_at) TABLESPACE pg_default;
+
+
+
+
+
 create table public.resource_views (
   id uuid not null default gen_random_uuid (),
   resource_id uuid not null,
@@ -397,8 +617,6 @@ create table public.resource_views (
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_views_resource on public.resource_views using btree (resource_id) TABLESPACE pg_default;
-
-
 
 
 
@@ -457,13 +675,6 @@ after
 update on resources for EACH row
 execute FUNCTION increment_contribution_count ();
 
-create trigger trigger_notify_resource_approved
-after
-update on resources for EACH row when (
-  new.status = 'approved'::text
-  and old.status is distinct from 'approved'::text
-)
-execute FUNCTION notify_resource_approved ();
 
 
 
@@ -483,8 +694,6 @@ create table public.subjects (
 ) TABLESPACE pg_default;
 
 create index IF not exists idx_subjects_is_public on public.subjects using btree (is_public) TABLESPACE pg_default;
-
-
 
 
 
@@ -515,10 +724,27 @@ create table public.teachers (
   profile_picture_path text null,
   followers_count integer null default 0,
   following_count integer null default 0,
+  is_disabled boolean not null default false,
+  disabled_reason text null,
+  disabled_at timestamp with time zone null,
+  disabled_by uuid null,
   constraint profiles_pkey primary key (id),
   constraint profiles_trn_key unique (trn),
   constraint profiles_id_fkey foreign KEY (id) references auth.users (id) on delete CASCADE,
   constraint profiles_verified_by_fkey foreign KEY (verified_by) references admins (id),
+  constraint teachers_disabled_by_fkey foreign KEY (disabled_by) references admins (id) on delete set null,
+  constraint check_profile_visibility check (
+    (
+      (profile_visibility)::text = any (
+        (
+          array[
+            'public'::character varying,
+            'teachers_only'::character varying
+          ]
+        )::text[]
+      )
+    )
+  ),
   constraint check_allow_dms check (
     (
       (allow_dms)::text = any (
@@ -531,22 +757,14 @@ create table public.teachers (
         )::text[]
       )
     )
-  ),
-  constraint check_profile_visibility check (
-    (
-      (profile_visibility)::text = any (
-        (
-          array[
-            'public'::character varying,
-            'teachers_only'::character varying
-          ]
-        )::text[]
-      )
-    )
   )
 ) TABLESPACE pg_default;
 
+create index IF not exists idx_teachers_is_disabled on public.teachers using btree (is_disabled) TABLESPACE pg_default;
+
 create index IF not exists profiles_trn_idx on public.teachers using btree (trn) TABLESPACE pg_default;
+
+create index IF not exists idx_teachers_disabled_at on public.teachers using btree (disabled_at desc) TABLESPACE pg_default;
 
 create index IF not exists idx_teachers_profile_picture on public.teachers using btree (profile_picture_url) TABLESPACE pg_default;
 
@@ -557,6 +775,7 @@ create index IF not exists idx_teachers_following_count on public.teachers using
 create trigger trigger_auto_approve BEFORE
 update on teachers for EACH row
 execute FUNCTION auto_approve_verified_teacher ();
+
 
 
 
@@ -594,6 +813,7 @@ create table public.user_roles (
 
 
 
+
 create view public.user_roles_details as
 select
   ur.id,
@@ -613,8 +833,6 @@ from
 
 
 
-
-
   create table public.users (
   id uuid not null,
   email text null,
@@ -623,3 +841,19 @@ from
   constraint users_pkey primary key (id),
   constraint users_id_fkey foreign KEY (id) references auth.users (id)
 ) TABLESPACE pg_default;
+
+
+
+
+
+create table user_reports (
+  id uuid primary key default gen_random_uuid(),
+  reported_by uuid not null references auth.users(id),
+  reported_user_id uuid not null references teachers(id),
+  reason text not null,
+  details text,
+  status text default 'pending' check (status in ('pending', 'reviewed', 'resolved', 'dismissed')),
+  admin_notes text,
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
