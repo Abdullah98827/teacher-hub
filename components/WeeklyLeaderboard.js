@@ -1,53 +1,80 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
-import ProfilePicture from "./ProfilePicture";
-import { ThemedText } from './themed-text';
+import { ThemedText } from "./themed-text";
 
 export default function WeeklyLeaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } =
-    useAppTheme();
+  const { bgCard, bgCardAlt, border, textPrimary, textSecondary, textMuted } = useAppTheme();
 
   useEffect(() => {
     loadLeaderboard();
   }, []);
 
   const loadLeaderboard = async () => {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() + diff);
-    monday.setHours(0, 0, 0, 0);
+    try {
+      // Get Monday of current week
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() + diff);
+      monday.setHours(0, 0, 0, 0);
+      const weekStartDate = monday.toISOString().split('T')[0];
 
-    const { data, error } = await supabase.rpc("get_weekly_leaderboard", {
-      week_start_date: monday.toISOString().split("T")[0],
-      limit_count: 5,
-    });
+      const { data, error } = await supabase
+        .from("leaderboard_weekly")
+        .select(`
+          id,
+          teacher_id,
+          total_points,
+          resources_uploaded,
+          comments_made,
+          helpful_ratings_received,
+          teacher:teachers(id, first_name, last_name, profile_picture_url)
+        `)
+        .eq("week_start", weekStartDate)
+        .order("total_points", { ascending: false })
+        .limit(10);
 
-    if (error) {
-      console.error("Error loading leaderboard:", error);
-    } else {
+      if (error) {
+        console.error("Error loading leaderboard:", error);
+        Toast.show({
+          type: "error",
+          text1: "Failed to load leaderboard",
+          text2: error.message,
+        });
+        setLoading(false);
+        return;
+      }
+
       setLeaderboard(data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error in loadLeaderboard:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message,
+      });
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const getMedalIcon = (rank) => {
-    if (rank === 1) return { name: "trophy", color: "#fbbf24" };
-    if (rank === 2) return { name: "medal", color: "#d1d5db" };
-    if (rank === 3) return { name: "medal", color: "#f97316" };
-    return null;
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
+    return `${rank}`;
   };
 
   if (loading) {
     return (
-      <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
+      <View className="flex-1 items-center justify-center py-10">
         <ActivityIndicator size="large" color="#22d3ee" />
       </View>
     );
@@ -56,10 +83,20 @@ export default function WeeklyLeaderboard() {
   if (leaderboard.length === 0) {
     return (
       <View className={`${bgCard} rounded-xl p-6 border ${border}`}>
-        <ThemedText className={`${textPrimary} text-lg font-bold mb-2`}>
-          Top Contributors
-        </ThemedText>
-        <ThemedText className={textSecondary}>No activity yet. Be the first!</ThemedText>
+        <View className="mb-4">
+          <ThemedText className={`${textPrimary} text-xl font-bold`}>
+            Top Contributors
+          </ThemedText>
+          <ThemedText className={`${textSecondary} text-sm`}>
+            This week&apos;s most active teachers
+          </ThemedText>
+        </View>
+        <View className="items-center py-8">
+          <Ionicons name="trophy-outline" size={48} color="#22d3ee" />
+          <ThemedText className={`${textSecondary} text-center mt-4`}>
+            No activity yet. Be the first!
+          </ThemedText>
+        </View>
       </View>
     );
   }
@@ -76,68 +113,37 @@ export default function WeeklyLeaderboard() {
       </View>
 
       <View>
-        {leaderboard.map((entry) => {
-          const medal = getMedalIcon(entry.rank);
-
-          return (
-            <TouchableOpacity
-              key={entry.teacher_id}
-              className={`mb-3 p-4 rounded-xl ${
-                entry.rank <= 3
-                  ? "bg-cyan-900/40 border border-cyan-500/30"
-                  : bgCardAlt
-              }`}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center">
+        {leaderboard.map((entry, index) => (
+          <View key={entry.id} className="mb-3">
+            <View className={`${bgCardAlt} p-4 rounded-lg flex-row items-center justify-between`}>
+              <View className="flex-row items-center flex-1">
                 <View className="w-10 items-center">
-                  {medal ? (
-                    <Ionicons
-                      name={medal.name}
-                      size={28}
-                      color={medal.color}
-                    />
-                  ) : (
-                    <ThemedText className={`${textSecondary} font-bold text-xl`}>
-                      {entry.rank}
-                    </ThemedText>
-                  )}
+                  <ThemedText className="text-lg font-bold text-cyan-400">
+                    {getMedalIcon(index + 1)}
+                  </ThemedText>
                 </View>
-
-                <ProfilePicture
-                  imageUrl={entry.profile_picture_url}
-                  firstName={entry.first_name}
-                  lastName={entry.last_name}
-                  size="md"
-                />
-
                 <View className="flex-1 ml-3">
-                  <ThemedText className={`${textPrimary} font-bold text-base`}>
-                    {entry.first_name} {entry.last_name}
+                  <ThemedText className={`${textPrimary} font-bold`}>
+                    {entry.teacher?.first_name} {entry.teacher?.last_name}
                   </ThemedText>
-                  <ThemedText className={`${textSecondary} text-sm`}>
-                    {entry.total_points} points
-                  </ThemedText>
-                </View>
-
-                <View className={`${bgCard} px-3 py-2 rounded-lg`}>
-                  <ThemedText className="text-cyan-400 text-xs">
-                    {entry.resources_uploaded} resources
-                  </ThemedText>
-                  <ThemedText className="text-purple-400 text-xs">
-                    {entry.comments_made} comments
+                  <ThemedText className={`${textMuted} text-xs`}>
+                    {entry.resources_uploaded} uploads • {entry.comments_made} comments
                   </ThemedText>
                 </View>
               </View>
-            </TouchableOpacity>
-          );
-        })}
+              <View className="items-center">
+                <ThemedText className="text-cyan-400 font-bold text-lg">
+                  {entry.total_points}
+                </ThemedText>
+                <ThemedText className={`${textMuted} text-xs`}>pts</ThemedText>
+              </View>
+            </View>
+          </View>
+        ))}
       </View>
 
       <View className={`${bgCardAlt} p-4 rounded-lg mt-4`}>
-        <ThemedText
-          className={`${textPrimary} text-sm font-semibold mb-2 text-center`}
-        >
+        <ThemedText className={`${textPrimary} text-sm font-semibold mb-2 text-center`}>
           How to Earn Points
         </ThemedText>
         <View className="flex-row justify-around">
@@ -150,7 +156,7 @@ export default function WeeklyLeaderboard() {
             <ThemedText className={`${textMuted} text-xs`}>Comment</ThemedText>
           </View>
           <View className="items-center">
-            <ThemedText className={`${textMuted} font-bold text-lg`}>+5</ThemedText>
+            <ThemedText className="text-green-400 font-bold text-lg">+5</ThemedText>
             <ThemedText className={`${textMuted} text-xs`}>Rating</ThemedText>
           </View>
         </View>

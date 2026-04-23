@@ -17,10 +17,10 @@ export default function RootLayout() {
       // Safety timeout: goes to index after 5 seconds if check takes too long
       const timeoutId = setTimeout(() => {
         setIsLoading(false);
-        router.replace("/"); // Changed from "/login" to "/"
+        router.replace("/");
       }, 5000);
 
-      // Checks if user has an active session
+      // Check if user has an active session
       const {
         data: { session },
         error,
@@ -30,10 +30,29 @@ export default function RootLayout() {
       setIsLoading(false);
 
       if (error || !session) {
-        router.replace("/"); // Changed from "/login" to "/" - let index.js handle it
-      } else {
-        router.replace("/(tabs)"); // Has session, goes to main app
+        router.replace("/");
+        return;
       }
+
+      // Check MFA assurance level before routing to app
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+        // Session exists but MFA not yet verified — re-challenge
+        const { data: factorsData } = await supabase.auth.mfa.listFactors();
+        const totpFactor = factorsData?.totp?.[0];
+
+        if (totpFactor) {
+          const { data: challenge } = await supabase.auth.mfa.challenge({ factorId: totpFactor.id });
+          router.replace({
+            pathname: '/mfa-challenge',
+            params: { factorId: totpFactor.id, challengeId: challenge.id }
+          });
+          return;
+        }
+      }
+
+      router.replace("/(tabs)");
     };
 
     checkSession();
@@ -42,7 +61,7 @@ export default function RootLayout() {
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (!session) {
-          router.replace("/"); // Changed from "/login" to "/"
+          router.replace("/");
         }
       }
     );
@@ -52,7 +71,6 @@ export default function RootLayout() {
       if (url && url.includes("teacherhub://resource/")) {
         const resourceId = url.split("teacherhub://resource/")[1];
         if (resourceId) {
-          // Navigate to resources tab with the resource ID
           router.push(`/(tabs)/resources?openResourceId=${resourceId}`);
         }
       }
@@ -66,7 +84,6 @@ export default function RootLayout() {
       if (url && url.includes("teacherhub://resource/")) {
         const resourceId = url.split("teacherhub://resource/")[1];
         if (resourceId) {
-          // Small delay to ensure navigation stack is ready
           setTimeout(() => {
             router.push(`/(tabs)/resources?openResourceId=${resourceId}`);
           }, 1000);
@@ -87,13 +104,12 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <DyslexiaProvider>
-          {/* wraps everything inside AuthProvider */}
           <SafeAreaProvider>
             <Stack
               screenOptions={{ headerShown: false }}
-              initialRouteName="index" // Changed from "login" to "index"
+              initialRouteName="index"
             >
-              <Stack.Screen name="index" /> {/* Add this */}
+              <Stack.Screen name="index" />
               <Stack.Screen name="login" />
               <Stack.Screen name="signup" />
               <Stack.Screen name="auth-callback" />

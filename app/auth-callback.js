@@ -9,12 +9,31 @@ export default function AuthCallback() {
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace("/(tabs)");
-      } else {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
         router.replace("/login");
+        return;
       }
+
+      // Check MFA assurance level before routing to app
+      const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+        // Session exists but MFA not yet verified — re-challenge
+        const { data: factorsData } = await supabase.auth.mfa.listFactors();
+        const totpFactor = factorsData?.totp?.[0];
+
+        if (totpFactor) {
+          const { data: challenge } = await supabase.auth.mfa.challenge({ factorId: totpFactor.id });
+          router.replace({
+            pathname: '/mfa-challenge',
+            params: { factorId: totpFactor.id, challengeId: challenge.id }
+          });
+          return;
+        }
+      }
+
+      router.replace("/(tabs)");
     });
   }, [router]);
 

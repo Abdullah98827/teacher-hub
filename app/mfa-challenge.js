@@ -14,8 +14,8 @@ export default function MfaChallengeScreen() {
   const { factorId, challengeId } = useLocalSearchParams();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSignOutModal, setShowSignOutModal] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const [showLogOutModal, setShowLogOutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
   const {
     bg,
@@ -44,15 +44,15 @@ export default function MfaChallengeScreen() {
     setLoading(false);
   };
 
-  const handleSignOut = async () => {
-    setShowSignOutModal(true);
+  const handleLogOut = async () => {
+    setShowLogOutModal(true);
   };
 
-  const confirmSignOut = async () => {
-    setSigningOut(true);
+  const confirmLogOut = async () => {
+    setLoggingOut(true);
     await supabase.auth.signOut();
-    setSigningOut(false);
-    setShowSignOutModal(false);
+    setLoggingOut(false);
+    setShowLogOutModal(false);
     router.replace("/login");
   };
 
@@ -111,14 +111,14 @@ export default function MfaChallengeScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Sign Out Button */}
+          {/* Log Out Button */}
           <TouchableOpacity
             className="bg-red-600/20 border border-red-600/40 p-4 rounded-xl mt-3"
-            onPress={handleSignOut}
-            disabled={loading || signingOut}
+            onPress={handleLogOut}
+            disabled={loading || loggingOut}
           >
             <Text className="text-red-600 text-center font-bold text-base">
-              Sign Out
+              Log Out
             </Text>
           </TouchableOpacity>
         </View>
@@ -134,14 +134,14 @@ export default function MfaChallengeScreen() {
       </View>
 
       <ConfirmModal
-        visible={showSignOutModal}
-        title="Sign Out"
-        message="Are you sure you want to sign out?"
-        confirmText="Sign Out"
+        visible={showLogOutModal}
+        title="Log Out"
+        message="Are you sure you want to log out?"
+        confirmText="Log Out"
         confirmColor="bg-red-600"
-        isProcessing={signingOut}
-        onConfirm={confirmSignOut}
-        onCancel={() => setShowSignOutModal(false)}
+        isProcessing={loggingOut}
+        onConfirm={confirmLogOut}
+        onCancel={() => setShowLogOutModal(false)}
       />
 
       <Toast />

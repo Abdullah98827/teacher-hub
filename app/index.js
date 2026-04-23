@@ -31,15 +31,36 @@ export default function Index() {
 
     supabase.auth
       .getSession()
-      .then(({ data: { session } }) => {
+      .then(async ({ data: { session } }) => {
         clearTimeout(timeoutId);
         setIsChecking(false);
-        if (session) {
-          setIsLoggedIn(true);
-          router.replace("/(tabs)");
-        } else {
+
+        if (!session) {
           setIsLoggedIn(false);
+          return;
         }
+
+        // Check MFA assurance level before routing to app
+        const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+        if (aalData?.nextLevel === 'aal2' && aalData?.currentLevel !== 'aal2') {
+          // Session exists but MFA not yet verified — re-challenge
+          const { data: factorsData } = await supabase.auth.mfa.listFactors();
+          const totpFactor = factorsData?.totp?.[0];
+
+          if (totpFactor) {
+            const { data: challenge } = await supabase.auth.mfa.challenge({ factorId: totpFactor.id });
+            setIsLoggedIn(false);
+            router.replace({
+              pathname: '/mfa-challenge',
+              params: { factorId: totpFactor.id, challengeId: challenge.id }
+            });
+            return;
+          }
+        }
+
+        setIsLoggedIn(true);
+        router.replace("/(tabs)");
       })
       .catch(() => {
         clearTimeout(timeoutId);
@@ -94,12 +115,12 @@ export default function Index() {
   ];
 
   const membershipPerks = [
-  { icon: "checkmark-circle", text: "Access to resources in your chosen subject(s)" },
-  { icon: "checkmark-circle", text: "Subject-specific group chats for discussion & collaboration" },
-  { icon: "checkmark-circle", text: "Upload and share your own teaching resources" },
-  { icon: "checkmark-circle", text: "Direct messaging with fellow educators" },
-  { icon: "checkmark-circle", text: "Follow and be followed by other teachers" },
-];
+    { icon: "checkmark-circle", text: "Access to resources in your chosen subject(s)" },
+    { icon: "checkmark-circle", text: "Subject-specific group chats for discussion & collaboration" },
+    { icon: "checkmark-circle", text: "Upload and share your own teaching resources" },
+    { icon: "checkmark-circle", text: "Direct messaging with fellow educators" },
+    { icon: "checkmark-circle", text: "Follow and be followed by other teachers" },
+  ];
 
   if (isChecking) {
     return (
@@ -120,7 +141,6 @@ export default function Index() {
 
   return (
     <ScreenWrapper>
-      {/* Logo — tapping goes back to this index page (no-op here, but consistent on login/signup) */}
       <LogoHeader
         position="left"
         showNotificationIcon={false}
@@ -274,89 +294,89 @@ export default function Index() {
           </View>
 
           {/* Membership Notice */}
-<View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
-  <View style={{
-    backgroundColor: isDark ? "rgba(251,191,36,0.08)" : "rgba(251,191,36,0.06)",
-    borderRadius: 14, borderWidth: 1,
-    borderColor: isDark ? "rgba(251,191,36,0.25)" : "rgba(251,191,36,0.3)",
-    padding: 16,
-  }}>
-    {/* Header */}
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
-      <Ionicons name="card-outline" size={20} color="#f59e0b" />
-      <Text style={{ fontSize: 14, fontWeight: "700", color: "#f59e0b" }}>
-        Membership Required
-      </Text>
-    </View>
+          <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
+            <View style={{
+              backgroundColor: isDark ? "rgba(251,191,36,0.08)" : "rgba(251,191,36,0.06)",
+              borderRadius: 14, borderWidth: 1,
+              borderColor: isDark ? "rgba(251,191,36,0.25)" : "rgba(251,191,36,0.3)",
+              padding: 16,
+            }}>
+              {/* Header */}
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <Ionicons name="card-outline" size={20} color="#f59e0b" />
+                <Text style={{ fontSize: 14, fontWeight: "700", color: "#f59e0b" }}>
+                  Membership Required
+                </Text>
+              </View>
 
-    <Text style={{
-      fontSize: 12, color: isDark ? "#94a3b8" : "#64748b",
-      lineHeight: 19, marginBottom: 14,
-    }}>
-      After your account is verified, a paid membership is required to access
-      the platform. Plans are available by subject. A credit or debit card is needed.
-    </Text>
+              <Text style={{
+                fontSize: 12, color: isDark ? "#94a3b8" : "#64748b",
+                lineHeight: 19, marginBottom: 14,
+              }}>
+                After your account is verified, a paid membership is required to access
+                the platform. Plans are available by subject. A credit or debit card is needed.
+              </Text>
 
-    {/* Pricing Cards */}
-    <View style={{ flexDirection: "row", gap: 8, marginBottom: 14 }}>
-      {/* Single Subject */}
-      <View style={{
-        flex: 1, backgroundColor: isDark ? "rgba(6,182,212,0.08)" : "rgba(8,145,178,0.06)",
-        borderRadius: 10, borderWidth: 1,
-        borderColor: isDark ? "rgba(6,182,212,0.2)" : "rgba(8,145,178,0.2)",
-        padding: 12, alignItems: "center",
-      }}>
-        <Text style={{ fontSize: 10, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
-          Single Subject
-        </Text>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: "#06b6d4", lineHeight: 26 }}>
-          £9.99
-        </Text>
-        <Text style={{ fontSize: 10, color: isDark ? "#64748b" : "#94a3b8" }}>
-          per month
-        </Text>
-      </View>
+              {/* Pricing Cards */}
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 14 }}>
+                {/* Single Subject */}
+                <View style={{
+                  flex: 1, backgroundColor: isDark ? "rgba(6,182,212,0.08)" : "rgba(8,145,178,0.06)",
+                  borderRadius: 10, borderWidth: 1,
+                  borderColor: isDark ? "rgba(6,182,212,0.2)" : "rgba(8,145,178,0.2)",
+                  padding: 12, alignItems: "center",
+                }}>
+                  <Text style={{ fontSize: 10, fontWeight: "600", color: isDark ? "#94a3b8" : "#64748b", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Single Subject
+                  </Text>
+                  <Text style={{ fontSize: 22, fontWeight: "800", color: "#06b6d4", lineHeight: 26 }}>
+                    £9.99
+                  </Text>
+                  <Text style={{ fontSize: 10, color: isDark ? "#64748b" : "#94a3b8" }}>
+                    per month
+                  </Text>
+                </View>
 
-      {/* Multi Subject */}
-      <View style={{
-        flex: 1, backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.07)",
-        borderRadius: 10, borderWidth: 1.5,
-        borderColor: isDark ? "rgba(245,158,11,0.35)" : "rgba(245,158,11,0.4)",
-        padding: 12, alignItems: "center",
-      }}>
-        <View style={{
-          backgroundColor: "#f59e0b", borderRadius: 4,
-          paddingHorizontal: 6, paddingVertical: 2, marginBottom: 4,
-        }}>
-          <Text style={{ fontSize: 9, fontWeight: "700", color: "#fff", letterSpacing: 0.5 }}>
-            MULTI SUBJECTS
-          </Text>
-        </View>
-        <Text style={{ fontSize: 22, fontWeight: "800", color: "#f59e0b", lineHeight: 26 }}>
-          £17.99
-        </Text>
-        <Text style={{ fontSize: 10, color: isDark ? "#64748b" : "#94a3b8" }}>
-          per month
-        </Text>
-        <Text style={{ fontSize: 10, color: isDark ? "#64748b" : "#94a3b8" }}>
-          for 2 subjects
-        </Text>
-      </View>
-    </View>
+                {/* Multi Subject */}
+                <View style={{
+                  flex: 1, backgroundColor: isDark ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.07)",
+                  borderRadius: 10, borderWidth: 1.5,
+                  borderColor: isDark ? "rgba(245,158,11,0.35)" : "rgba(245,158,11,0.4)",
+                  padding: 12, alignItems: "center",
+                }}>
+                  <View style={{
+                    backgroundColor: "#f59e0b", borderRadius: 4,
+                    paddingHorizontal: 6, paddingVertical: 2, marginBottom: 4,
+                  }}>
+                    <Text style={{ fontSize: 9, fontWeight: "700", color: "#fff", letterSpacing: 0.5 }}>
+                      MULTI SUBJECTS
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 22, fontWeight: "800", color: "#f59e0b", lineHeight: 26 }}>
+                    £17.99
+                  </Text>
+                  <Text style={{ fontSize: 10, color: isDark ? "#64748b" : "#94a3b8" }}>
+                    per month
+                  </Text>
+                  <Text style={{ fontSize: 10, color: isDark ? "#64748b" : "#94a3b8" }}>
+                    for 2 subjects
+                  </Text>
+                </View>
+              </View>
 
-    {/* Perks */}
-    <View style={{ gap: 6 }}>
-      {membershipPerks.map((perk, i) => (
-        <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Ionicons name={perk.icon} size={14} color="#06b6d4" />
-          <Text style={{ fontSize: 12, color: isDark ? "#94a3b8" : "#64748b" }}>
-            {perk.text}
-          </Text>
-        </View>
-      ))}
-    </View>
-  </View>
-</View>
+              {/* Perks */}
+              <View style={{ gap: 6 }}>
+                {membershipPerks.map((perk, i) => (
+                  <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <Ionicons name={perk.icon} size={14} color="#06b6d4" />
+                    <Text style={{ fontSize: 12, color: isDark ? "#94a3b8" : "#64748b" }}>
+                      {perk.text}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
 
           {/* Trust / Verification Banner */}
           <View style={{ paddingHorizontal: 20, marginBottom: 20 }}>
@@ -404,19 +424,6 @@ export default function Index() {
               <Ionicons name="arrow-forward" size={17} color="#fff" />
             </TouchableOpacity>
           </View>
-
-          {/* Footer  */}
-          {/* <View style={{
-            flexDirection: "row", justifyContent: "center", gap: 20,
-            marginTop: 24, paddingTop: 16, marginHorizontal: 20,
-            borderTopWidth: 1, borderTopColor: cardBorder,
-          }}>
-            {["Privacy", "Terms", "Contact"].map((item, i) => (
-              <TouchableOpacity key={i} onPress={() => item === "Contact" && router.push("/contact")}>
-                <Text style={{ color: "#0891b2", fontSize: 12 }}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View> */}
 
         </Animated.View>
       </ScrollView>

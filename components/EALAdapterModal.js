@@ -1,16 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Clipboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Share,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Clipboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
@@ -1096,7 +1096,7 @@ export default function EALAdapterModal({ visible, onClose, resourceId }) {
                   >
                     {isOverLimit
                       ? `Remove ${wordCount - MAX_WORDS} words`
-                      : `Adapt for EAL — ${selectedLang.name}`}
+                      : `Adapt for EAL - ${selectedLang.name}`}
                   </Text>
                 </>
               )}
