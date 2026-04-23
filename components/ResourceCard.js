@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
-import { ThemedText } from './themed-text';
+import { ThemedText } from "./themed-text";
 
 export default function ResourceCard({
+  id,
   title,
   description,
   category,
@@ -63,7 +64,9 @@ export default function ResourceCard({
 
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
-        stars.push(<Ionicons key={i} name="star" size={14} color="#fbbf24" />);
+        stars.push(
+          <Ionicons key={i} name="star" size={14} color="#fbbf24" />
+        );
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
           <Ionicons key={i} name="star-half" size={14} color="#fbbf24" />
@@ -100,7 +103,7 @@ export default function ResourceCard({
                 className="text-xs font-bold ml-1"
                 style={{ color: categoryColors[category] }}
               >
-                {category.replace("_", " ").toUpperCase()}
+                {category.replace(/_/g, " ").toUpperCase()}
               </ThemedText>
             </View>
           </View>
@@ -109,7 +112,9 @@ export default function ResourceCard({
             <View
               className={`px-3 py-1 rounded-full ${statusBgColors[status]}`}
             >
-              <ThemedText className={`text-xs font-bold ${statusTextColors[status]}`}>
+              <ThemedText
+                className={`text-xs font-bold ${statusTextColors[status]}`}
+              >
                 {status.toUpperCase()}
               </ThemedText>
             </View>
@@ -117,11 +122,16 @@ export default function ResourceCard({
         </View>
 
         {/* Title */}
-        <ThemedText className={`${textPrimary} text-lg font-bold mb-2`}>{title}</ThemedText>
+        <ThemedText className={`${textPrimary} text-lg font-bold mb-2`}>
+          {title}
+        </ThemedText>
 
         {/* Description */}
         {description && (
-          <ThemedText className={`${textSecondary} text-sm mb-3`} numberOfLines={2}>
+          <ThemedText
+            className={`${textSecondary} text-sm mb-3`}
+            numberOfLines={2}
+          >
             {description}
           </ThemedText>
         )}
@@ -135,29 +145,41 @@ export default function ResourceCard({
             <ThemedText className="text-yellow-400 font-bold text-sm mr-1">
               {averageRating.toFixed(1)}
             </ThemedText>
-            <ThemedText className={`${textMuted} text-xs`}>({ratingCount})</ThemedText>
+            <ThemedText className={`${textMuted} text-xs`}>
+              ({ratingCount})
+            </ThemedText>
           </View>
         )}
 
         {/* Subject */}
-        <View className="flex-row items-center mb-3">
-          <Ionicons name="school" size={16} color="#22d3ee" />
-          <ThemedText className="text-cyan-400 text-sm ml-1">{subjectName}</ThemedText>
-        </View>
+        {subjectName && (
+          <View className="flex-row items-center mb-3">
+            <Ionicons name="school" size={16} color="#22d3ee" />
+            <ThemedText className="text-cyan-400 text-sm ml-1">
+              {subjectName}
+            </ThemedText>
+          </View>
+        )}
 
         {/* Stats Row */}
         <View className="flex-row items-center gap-4 mb-3">
           <View className="flex-row items-center">
             <Ionicons name="eye" size={16} color="#9CA3AF" />
-            <ThemedText className={`${textMuted} text-xs ml-1`}>{views}</ThemedText>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>
+              {views}
+            </ThemedText>
           </View>
           <View className="flex-row items-center">
             <Ionicons name="download" size={16} color="#9CA3AF" />
-            <ThemedText className={`${textMuted} text-xs ml-1`}>{downloads}</ThemedText>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>
+              {downloads}
+            </ThemedText>
           </View>
           <View className="flex-row items-center">
             <Ionicons name="chatbubble" size={16} color="#9CA3AF" />
-            <ThemedText className={`${textMuted} text-xs ml-1`}>{commentCount}</ThemedText>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>
+              {commentCount}
+            </ThemedText>
           </View>
         </View>
 
@@ -165,28 +187,19 @@ export default function ResourceCard({
         <View className="flex-row items-center justify-between mb-3">
           <View className="flex-row items-center">
             <Ionicons name="time" size={14} color="#6B7280" />
-            <ThemedText className={`${textMuted} text-xs ml-1`}>{createdAt}</ThemedText>
+            <ThemedText className={`${textMuted} text-xs ml-1`}>
+              {createdAt}
+            </ThemedText>
           </View>
 
-          {uploadedBy && (
+          {uploadedBy && uploadedById && onViewProfile && (
             <TouchableOpacity
               className="flex-row items-center"
-              onPress={() => {
-                if (uploadedById && onViewProfile) {
-                  onViewProfile(uploadedById);
-                }
-              }}
-              disabled={!uploadedById || !onViewProfile}
-              activeOpacity={uploadedById && onViewProfile ? 0.6 : 1}
+              onPress={() => onViewProfile(uploadedById)}
+              activeOpacity={0.6}
             >
               <Ionicons name="person" size={14} color="#22d3ee" />
-              <ThemedText
-                className={`text-xs ml-1 ${
-                  uploadedById && onViewProfile
-                    ? "text-cyan-400 font-semibold"
-                    : textSecondary
-                }`}
-              >
+              <ThemedText className="text-xs ml-1 text-cyan-400 font-semibold">
                 {uploadedBy}
               </ThemedText>
             </TouchableOpacity>
@@ -194,18 +207,21 @@ export default function ResourceCard({
         </View>
 
         {/* Action Buttons Row */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View
-            className={`flex-row items-center pt-3 border-t ${border}`}
-            style={{ minWidth: 400 }} // Ensures enough width for all actions
-          >
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className={`border-t ${border}`}
+        >
+          <View className="flex-row items-center pt-3" style={{ minWidth: 400 }}>
             {onComment && (
               <TouchableOpacity
                 className="flex-row items-center py-2 px-3"
                 onPress={onComment}
               >
                 <Ionicons name="chatbubble-outline" size={18} color="#22d3ee" />
-                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                <ThemedText
+                  className={`${textMuted} text-xs ml-1 font-semibold`}
+                >
                   Comment
                 </ThemedText>
               </TouchableOpacity>
@@ -217,7 +233,9 @@ export default function ResourceCard({
                 onPress={onRate}
               >
                 <Ionicons name="star-outline" size={18} color="#fbbf24" />
-                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                <ThemedText
+                  className={`${textMuted} text-xs ml-1 font-semibold`}
+                >
                   Rate
                 </ThemedText>
               </TouchableOpacity>
@@ -249,7 +267,9 @@ export default function ResourceCard({
                 onPress={onShare}
               >
                 <Ionicons name="share-outline" size={18} color="#9CA3AF" />
-                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                <ThemedText
+                  className={`${textMuted} text-xs ml-1 font-semibold`}
+                >
                   Share
                 </ThemedText>
               </TouchableOpacity>
@@ -261,7 +281,9 @@ export default function ResourceCard({
                 onPress={onReport}
               >
                 <Ionicons name="flag-outline" size={18} color="#ef4444" />
-                <ThemedText className={`${textMuted} text-xs ml-1 font-semibold`}>
+                <ThemedText
+                  className={`${textMuted} text-xs ml-1 font-semibold`}
+                >
                   Report
                 </ThemedText>
               </TouchableOpacity>
@@ -278,7 +300,9 @@ export default function ResourceCard({
                 onPress={onEdit}
               >
                 <Ionicons name="create" size={18} color="#fff" />
-                <ThemedText className="text-white font-semibold ml-1">Edit</ThemedText>
+                <ThemedText className="text-white font-semibold ml-1">
+                  Edit
+                </ThemedText>
               </TouchableOpacity>
             )}
             {onDelete && (
@@ -287,7 +311,9 @@ export default function ResourceCard({
                 onPress={onDelete}
               >
                 <Ionicons name="trash" size={18} color="#fff" />
-                <ThemedText className="text-white font-semibold ml-1">Delete</ThemedText>
+                <ThemedText className="text-white font-semibold ml-1">
+                  Delete
+                </ThemedText>
               </TouchableOpacity>
             )}
           </View>

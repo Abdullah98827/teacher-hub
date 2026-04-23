@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, TouchableOpacity, View } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
+import {
+  getResourcesStatsBatched,
+  getUploadersBatched,
+} from "../utils/resourceHelpers";
 import ProfilePicture from "./ProfilePicture";
-import { ThemedText } from './themed-text';
+import { ThemedText } from "./themed-text";
 
 export default function TrendingResources() {
   const router = useRouter();
@@ -27,125 +31,53 @@ export default function TrendingResources() {
   }, []);
 
   const loadTrendingResources = async () => {
-    // Fetch approved resources from database
-    const { data, error } = await supabase
-      .from("resources")
-      .select(
-        `
-        id,
-        title,
-        category,
-        downloads_count,
-        created_at,
-        subject_id,
-        uploaded_by
-      `
-      )
-      .eq("status", "approved")
-      .order("created_at", { ascending: false })
-      .limit(50);
+    try {
+      setLoading(true);
 
-    // Check for query error
-    if (error) {
-      console.error("Error loading trending resources:", error);
+      // Single query to get approved resources
+      const { data, error } = await supabase
+        .from("resources")
+        .select(
+          "id, title, category, downloads_count, view_count, created_at, subject:subjects(name), uploaded_by"
+        )
+        .eq("status", "approved")
+        .order("view_count", { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error("Error loading trending resources:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setResources([]);
+        setLoading(false);
+        return;
+      }
+
+      // BATCH query stats and uploaders instead of per-resource
+      const resourceIds = data.map((r) => r.id);
+      const uploaderIds = data.map((r) => r.uploaded_by);
+
+      const [statsMap, uploaderMap] = await Promise.all([
+        getResourcesStatsBatched(resourceIds),
+        getUploadersBatched(uploaderIds),
+      ]);
+
+      // Enrich resources
+      const enriched = data.map((resource) => ({
+        ...resource,
+        stats: statsMap.get(resource.id),
+        uploader: uploaderMap.get(resource.uploaded_by),
+      }));
+
+      setResources(enriched);
       setLoading(false);
-      return;
-    }
-
-    // Check if data exists
-    if (!data || data.length === 0) {
-      setResources([]);
+    } catch (err) {
+      console.error("Error in loadTrendingResources:", err);
       setLoading(false);
-      return;
     }
-
-    // Enrich each resource with additional data
-    const enriched = await Promise.all(
-      data.map(async (resource) => {
-        const { data: subject } = await supabase
-          .from("subjects")
-          .select("name")
-          .eq("id", resource.subject_id)
-          .single();
-
-        const { data: uploader } = await supabase
-          .from("teachers")
-          .select("first_name, last_name, profile_picture_url")
-          .eq("id", resource.uploaded_by)
-          .single();
-
-        const { count: views } = await supabase
-          .from("resource_views")
-          .select("*", { count: "exact", head: true })
-          .eq("resource_id", resource.id);
-
-        const { data: ratings } = await supabase
-          .from("resource_ratings")
-          .select("rating")
-          .eq("resource_id", resource.id);
-
-        const { count: comments } = await supabase
-          .from("resource_comments")
-          .select("*", { count: "exact", head: true })
-          .eq("resource_id", resource.id)
-          .eq("is_deleted", false);
-
-        const avgRating =
-          ratings && ratings.length > 0
-            ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
-            : 0;
-
-        return {
-          id: resource.id,
-          title: resource.title,
-          category: resource.category,
-          subject_name: subject?.name || "Unknown",
-          uploader_first_name: uploader?.first_name || "Unknown",
-          uploader_last_name: uploader?.last_name || "",
-          uploader_profile_picture: uploader?.profile_picture_url || null,
-          downloads_count: resource.downloads_count || 0,
-          views_count: views || 0,
-          rating_avg: Math.round(avgRating * 10) / 10,
-          rating_count: ratings?.length || 0,
-          comment_count: comments || 0,
-          created_at: resource.created_at,
-        };
-      })
-    );
-
-    // Multi-level sort: views > downloads > ratings > comments > date
-    const sorted = enriched
-      .sort((a, b) => {
-        // 1. Sort by views (highest first)
-        if (b.views_count !== a.views_count) {
-          return b.views_count - a.views_count;
-        }
-
-        // 2. If views are equal, sort by downloads
-        if (b.downloads_count !== a.downloads_count) {
-          return b.downloads_count - a.downloads_count;
-        }
-
-        // 3. If downloads are equal, sort by rating average
-        if (b.rating_avg !== a.rating_avg) {
-          return b.rating_avg - a.rating_avg;
-        }
-
-        // 4. If ratings are equal, sort by comment count
-        if (b.comment_count !== a.comment_count) {
-          return b.comment_count - a.comment_count;
-        }
-
-        // 5. If all equal, sort by date (newest first)
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-      })
-      .slice(0, 5);
-
-    // Update state with sorted resources
-    setResources(sorted);
-    setLoading(false);
   };
 
   const getCategoryColor = (category) => {
@@ -170,9 +102,12 @@ export default function TrendingResources() {
 
     if (days === 0) return "Today";
     if (days === 1) return "Yesterday";
-    if (days < 7) return `${days} days ago`;
-    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
-    return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    if (days < 7) return `${days}d ago`;
+    if (days < 30) return `${Math.floor(days / 7)}w ago`;
+    return date.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+    });
   };
 
   if (loading) {
@@ -210,7 +145,9 @@ export default function TrendingResources() {
         <ThemedText className={`${textPrimary} text-xl font-bold`}>
           Trending Resources
         </ThemedText>
-        <ThemedText className={`${textSecondary} text-sm`}>Most popular content</ThemedText>
+        <ThemedText className={`${textSecondary} text-sm`}>
+          Most popular content
+        </ThemedText>
       </View>
 
       <View>
@@ -230,7 +167,9 @@ export default function TrendingResources() {
               >
                 <ThemedText
                   className="text-xs font-bold"
-                  style={{ color: getCategoryColor(resource.category) }}
+                  style={{
+                    color: getCategoryColor(resource.category),
+                  }}
                 >
                   {getCategoryName(resource.category)}
                 </ThemedText>
@@ -251,12 +190,16 @@ export default function TrendingResources() {
             </ThemedText>
 
             <View
-              className={`px-3 py-1 rounded-lg mb-3 self-start ${isDark ? "bg-cyan-900/40" : "bg-cyan-100"}`}
+              className={`px-3 py-1 rounded-lg mb-3 self-start ${
+                isDark ? "bg-cyan-900/40" : "bg-cyan-100"
+              }`}
             >
               <ThemedText
-                className={`text-xs font-semibold ${isDark ? "text-cyan-400" : "text-cyan-700"}`}
+                className={`text-xs font-semibold ${
+                  isDark ? "text-cyan-400" : "text-cyan-700"
+                }`}
               >
-                {resource.subject_name}
+                {resource.subject?.name || "General"}
               </ThemedText>
             </View>
 
@@ -267,28 +210,29 @@ export default function TrendingResources() {
                 <View className="flex-row items-center">
                   <Ionicons name="eye" size={14} color="#9CA3AF" />
                   <ThemedText className={`${textMuted} text-xs ml-1`}>
-                    {resource.views_count}
+                    {resource.stats?.viewCount || 0}
                   </ThemedText>
                 </View>
                 <View className="flex-row items-center">
                   <Ionicons name="download" size={14} color="#22d3ee" />
                   <ThemedText className={`${textMuted} text-xs ml-1`}>
-                    {resource.downloads_count}
+                    {resource.stats?.downloadsCount || 0}
                   </ThemedText>
                 </View>
-                {resource.rating_count > 0 && (
+                {resource.stats?.ratingCount > 0 && (
                   <View className="flex-row items-center">
                     <Ionicons name="star" size={14} color="#f59e0b" />
                     <ThemedText className={`${textMuted} text-xs ml-1`}>
-                      {resource.rating_avg} ({resource.rating_count})
+                      {resource.stats?.averageRating?.toFixed(1)} (
+                      {resource.stats?.ratingCount})
                     </ThemedText>
                   </View>
                 )}
-                {resource.comment_count > 0 && (
+                {resource.stats?.commentCount > 0 && (
                   <View className="flex-row items-center">
                     <Ionicons name="chatbubble" size={14} color="#a855f7" />
                     <ThemedText className={`${textMuted} text-xs ml-1`}>
-                      {resource.comment_count}
+                      {resource.stats?.commentCount}
                     </ThemedText>
                   </View>
                 )}
@@ -298,13 +242,17 @@ export default function TrendingResources() {
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center flex-1">
                 <ProfilePicture
-                  imageUrl={resource.uploader_profile_picture}
-                  firstName={resource.uploader_first_name}
-                  lastName={resource.uploader_last_name}
+                  imageUrl={null}
+                  firstName={resource.uploader?.first_name}
+                  lastName={resource.uploader?.last_name}
                   size="sm"
                 />
-                <ThemedText className={`${textMuted} text-xs ml-2`} numberOfLines={1}>
-                  {resource.uploader_first_name} {resource.uploader_last_name}
+                <ThemedText
+                  className={`${textMuted} text-xs ml-2`}
+                  numberOfLines={1}
+                >
+                  {resource.uploader?.first_name}{" "}
+                  {resource.uploader?.last_name}
                 </ThemedText>
               </View>
 

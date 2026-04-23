@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
@@ -36,48 +36,63 @@ export default function RatingModal({
 
     setLoading(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      // Fetch existing rating
+      const { data, error: ratingError } = await supabase
+        .from("resource_ratings")
+        .select("rating")
+        .eq("resource_id", resourceId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (ratingError && ratingError.code !== "PGRST116") {
+        console.error("Error fetching rating:", ratingError);
+      }
+
+      if (data) {
+        setSelectedRating(data.rating);
+      } else {
+        setSelectedRating(0);
+      }
+
+      // Fetch resource owner
+      const { data: resourceData, error: resError } = await supabase
+        .from("resources")
+        .select("uploaded_by")
+        .eq("id", resourceId)
+        .single();
+
+      if (!resError && resourceData) {
+        setResourceOwnerId(resourceData.uploaded_by);
+      }
+
+      // Fetch current user name
+      const { data: teacherData, error: teachError } = await supabase
+        .from("teachers")
+        .select("first_name, last_name")
+        .eq("id", user.id)
+        .single();
+
+      if (!teachError && teacherData) {
+        setCurrentUserName(
+          `${teacherData.first_name} ${teacherData.last_name}`
+        );
+      }
+
       setLoading(false);
-      return;
+    } catch (error) {
+      console.error("Error in fetchUserRating:", error);
+      setLoading(false);
     }
-
-    const { data } = await supabase
-      .from("resource_ratings")
-      .select("rating")
-      .eq("resource_id", resourceId)
-      .eq("user_id", user.id)
-      .single();
-
-    if (data) {
-      setSelectedRating(data.rating);
-    } else {
-      setSelectedRating(0);
-    }
-
-    // Fetch resource owner and user name for notifications
-    const { data: resourceData } = await supabase
-      .from("resources")
-      .select("uploaded_by")
-      .eq("id", resourceId)
-      .single();
-    if (resourceData) {
-      setResourceOwnerId(resourceData.uploaded_by);
-    }
-
-    const { data: teacherData } = await supabase
-      .from("teachers")
-      .select("first_name, last_name")
-      .eq("id", user.id)
-      .single();
-    if (teacherData) {
-      setCurrentUserName(`${teacherData.first_name} ${teacherData.last_name}`);
-    }
-
-    setLoading(false);
   }, [resourceId]);
 
   useEffect(() => {
@@ -94,86 +109,111 @@ export default function RatingModal({
 
     setSubmitting(true);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
-      Toast.show({ type: "error", text1: "Please log in" });
-      setSubmitting(false);
-      return;
-    }
+      if (!user) {
+        Toast.show({ type: "error", text1: "Please log in" });
+        setSubmitting(false);
+        return;
+      }
 
-    const { data: existingRating } = await supabase
-      .from("resource_ratings")
-      .select("id")
-      .eq("resource_id", resourceId)
-      .eq("user_id", user.id)
-      .single();
-
-    let error;
-
-    if (existingRating) {
-      const result = await supabase
+      // Check if rating already exists
+      const { data: existingRating, error: checkError } = await supabase
         .from("resource_ratings")
-        .update({ rating: selectedRating })
+        .select("id")
         .eq("resource_id", resourceId)
-        .eq("user_id", user.id);
-      error = result.error;
-    } else {
-      const result = await supabase.from("resource_ratings").insert({
-        resource_id: resourceId,
-        user_id: user.id,
-        rating: selectedRating,
-      });
-      error = result.error;
-    }
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-    if (error) {
-      Toast.show({
-        type: "error",
-        text1: "Failed to submit rating",
-        text2: error.message,
-      });
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("Error checking existing rating:", checkError);
+        throw checkError;
+      }
+
+      let error;
+
+      if (existingRating) {
+        // Update existing rating
+        const result = await supabase
+          .from("resource_ratings")
+          .update({ rating: selectedRating })
+          .eq("resource_id", resourceId)
+          .eq("user_id", user.id);
+        error = result.error;
+      } else {
+        // Insert new rating
+        const result = await supabase.from("resource_ratings").insert({
+          resource_id: resourceId,
+          user_id: user.id,
+          rating: selectedRating,
+        });
+        error = result.error;
+      }
+
+      if (error) {
+        console.error("Rating submission error:", error);
+        Toast.show({
+          type: "error",
+          text1: "Failed to submit rating",
+          text2: error.message,
+        });
+        logEvent({
+          event_type: "RATING_FAILED",
+          user_id: user.id,
+          target_id: resourceId,
+          target_table: "resources",
+          details: {
+            error: error.message,
+            rating: selectedRating,
+            is_update: !!existingRating,
+          },
+        });
+        setSubmitting(false);
+        return;
+      }
+
       logEvent({
-        event_type: "RATING_FAILED",
+        event_type: existingRating ? "RATING_UPDATED" : "RATING_CREATED",
         user_id: user.id,
         target_id: resourceId,
         target_table: "resources",
-        details: { error: error.message, rating: selectedRating, is_update: !!existingRating },
+        details: { rating: selectedRating },
+      });
+
+      // Send notification only for new ratings
+      if (!existingRating && resourceOwnerId && resourceOwnerId !== user.id) {
+        await notifyRating(
+          resourceOwnerId,
+          currentUserName || "User",
+          user.id,
+          resourceId,
+          selectedRating,
+          resourceTitle
+        ).catch((err) =>
+          console.warn("Failed to send rating notification:", err)
+        );
+      }
+
+      Toast.show({
+        type: "success",
+        text1: existingRating ? "Rating updated!" : "Rating submitted!",
+      });
+
+      setSubmitting(false);
+      onRatingSubmitted();
+      onClose();
+    } catch (error) {
+      console.error("Error in submitRating:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.message || "Failed to submit rating",
       });
       setSubmitting(false);
-      return;
     }
-
-    logEvent({
-      event_type: existingRating ? "RATING_UPDATED" : "RATING_CREATED",
-      user_id: user.id,
-      target_id: resourceId,
-      target_table: "resources",
-      details: { rating: selectedRating },
-    });
-
-    // Send rating notification only for new ratings, not updates
-    if (!existingRating && resourceOwnerId && resourceOwnerId !== user.id) {
-      await notifyRating(
-        resourceOwnerId,
-        currentUserName || "User",
-        user.id,
-        resourceId,
-        selectedRating,
-        resourceTitle
-      ).catch((err) => console.warn("Failed to send rating notification:", err));
-    }
-
-    Toast.show({
-      type: "success",
-      text1: existingRating ? "Rating updated!" : "Rating submitted!",
-    });
-
-    setSubmitting(false);
-    onRatingSubmitted();
-    onClose();
   };
 
   const ratingLabels = ["Poor", "Fair", "Good", "Very Good", "Excellent"];
@@ -263,7 +303,9 @@ export default function RatingModal({
                 onPress={onClose}
                 disabled={submitting}
               >
-                <ThemedText className={`${textSecondary} text-center`}>Cancel</ThemedText>
+                <ThemedText className={`${textSecondary} text-center`}>
+                  Cancel
+                </ThemedText>
               </TouchableOpacity>
             </View>
           )}

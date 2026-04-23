@@ -1,17 +1,29 @@
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': process.env.NODE_ENV === 'production' 
+    ? 'https://teacher-hub.vercel.app'
+    : 'http://localhost:3000',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 Deno.serve(async (req: Request) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const GOOGLE_KEY    = Deno.env.get('GOOGLE_TRANSLATE_API_KEY');
-    const SUPABASE_URL  = Deno.env.get('SUPABASE_URL');
-    const SUPABASE_KEY  = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    // Verify the request has a valid auth token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorisation header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const GOOGLE_KEY = Deno.env.get('GOOGLE_TRANSLATE_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     const body = await req.json();
     const { text, target_language, resource_id, user_id } = body;
@@ -30,8 +42,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // ── Always call Google Translate with the actual text typed ──────────────
-    // No resource-based caching — user's typed text is always translated fresh
+    // Call Google Translate with the actual text
     const googleRes = await fetch(
       `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_KEY}`,
       {
@@ -59,15 +70,12 @@ Deno.serve(async (req: Request) => {
       throw new Error('Google Translate returned no translation');
     }
 
-    // ── Optionally log translation to Supabase for analytics ─────────────────
-    // We save the translation but we NEVER use it to override what user typed
-    // This is just for dissertation analytics (how many translations were made)
+    // Log translation to Supabase for analytics
     if (resource_id && user_id) {
       try {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.0');
         const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!);
 
-        // Upsert so we don't get duplicate rows — just update the count
         const { data: existing } = await supabase
           .from('document_translations')
           .select('id, usage_count')
@@ -93,7 +101,6 @@ Deno.serve(async (req: Request) => {
           });
         }
       } catch (dbErr) {
-        // DB logging failed — don't fail the whole request over this
         console.error('DB logging error (non-fatal):', dbErr);
       }
     }
