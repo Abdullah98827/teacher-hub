@@ -100,7 +100,7 @@ export default function ResourcesScreen() {
     useState(false);
   const [showEALOnboarding, setShowEALOnboarding] = useState(false);
 
-  // BATCHED enrichment function - replaces individual Promise.all loops
+  // BATCHED enrichment function 
   const enrichResourcesBatched = useCallback(
     async (resourcesToEnrich) => {
       if (!resourcesToEnrich || resourcesToEnrich.length === 0) return [];

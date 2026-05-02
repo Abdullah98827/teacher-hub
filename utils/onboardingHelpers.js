@@ -1,11 +1,9 @@
-// Utility for managing onboarding walkthrough state per user and per screen
-// Uses AsyncStorage for native and localStorage for web
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const STORAGE_KEY_PREFIX = 'onboarding_seen_';
 
-// Returns a key like onboarding_seen_<userId>_<screen>
+
 function getKey(userId, screen) {
   return `${STORAGE_KEY_PREFIX}${userId}_${screen}`;
 }

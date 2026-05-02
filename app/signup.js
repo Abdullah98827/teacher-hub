@@ -89,8 +89,8 @@ export default function Signup() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return showToast("error", "Invalid Email", "Enter a valid email address");
     }
-    if (password.length < 6) {
-      return showToast("error", "Weak Password", "Password must be at least 6 characters");
+    if (password.length < 8) {
+      return showToast("error", "Weak Password", "Password must be at least 8 characters");
     }
 
     setLoading(true);

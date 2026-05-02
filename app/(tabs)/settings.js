@@ -12,7 +12,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import ConfirmModal from "../../components/ConfirmModal";
 import LogoHeader from "../../components/logoHeader";
-import OnboardingDevReset from "../../components/OnboardingDevReset";
 import ProfilePicture from "../../components/ProfilePicture";
 import { ThemedText } from '../../components/themed-text';
 import { DyslexiaContext } from '../../contexts/DyslexiaContext';
@@ -260,7 +259,7 @@ useEffect(() => {
   return (
     <View className={`flex-1 ${bg}`} style={{ paddingTop: insets.top }}>
       <LogoHeader position="left" />
-      <OnboardingDevReset />
+      {/* <OnboardingDevReset /> */}
       <ScrollView className="flex-1 px-5">
         <View className="py-6">
           <ThemedText className="text-3xl font-bold text-cyan-400 mb-2">
