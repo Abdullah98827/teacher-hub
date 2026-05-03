@@ -1,11 +1,3 @@
-/**
- * Admin Notification Integration Hooks
- * For notifying admins of system events and actions requiring admin review
- * 
- * Usage:
- * const { notifyAdminNewReport } = useAdminNotifications();
- * await notifyAdminNewReport(adminIds, reporterId, reporterName, reportedType, reason);
- */
 
 import { useSendNotification } from '../hooks/useNotifications';
 

@@ -72,7 +72,7 @@ export default function SettingsScreen() {
   useEffect(() => {
     loadProfile();
   }, []);
-  // ✅ Realtime subscription for instant follow count updates
+  // Realtime subscription for instant follow count updates
 useEffect(() => {
   if (!userId) return;
 
@@ -81,7 +81,7 @@ useEffect(() => {
     .on(
       'postgres_changes',
       {
-        event: '*', // INSERT and DELETE
+        event: '*', 
         schema: 'public',
         table: 'follows',
         filter: `following_id=eq.${userId}`,

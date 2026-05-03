@@ -1,5 +1,3 @@
-// components/OnboardingDevReset.js
-// A dev utility to clear onboarding state for the current user for all screens/features
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';

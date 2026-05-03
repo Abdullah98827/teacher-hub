@@ -5,7 +5,7 @@ import { ThemedText } from './themed-text';
 export default function TabFilter({ tabs, activeTab, onTabChange }) {
   const { bgCardAlt, textSecondary } = useAppTheme();
 
-  // Normalize tabs - handle both string arrays and object arrays
+  // Normalize tabs: handle both string arrays and object arrays
   const normalizedTabs = tabs.map((tab) =>
     typeof tab === "string"
       ? { key: tab, label: tab.charAt(0).toUpperCase() + tab.slice(1) }

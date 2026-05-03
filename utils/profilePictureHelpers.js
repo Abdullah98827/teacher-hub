@@ -2,17 +2,6 @@ import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-toast-message";
 import { supabase } from "../supabase";
 
-/**
- * PROFILE PICTURE HELPERS
- *
- * These functions help you:
- * 1. Pick an image from the user's device
- * 2. Upload it to Supabase Storage (PUBLIC bucket)
- * 3. Delete profile pictures
- * 4. Get profile picture URLs
- *
- * IMPORTANT: Your 'profile-pictures' bucket MUST be set to PUBLIC in Supabase Dashboard
- */
 
 /**
  * Pick a profile picture from the user's photo library

@@ -109,7 +109,7 @@ export const createNotification = async (userId, type, title, body, data = {}) =
       return null;
     }
 
-    // ✅ Use RPC with SECURITY DEFINER — bypasses RLS completely
+    // Use RPC with SECURITY DEFINER — bypasses RLS completely
     const { error } = await supabase.rpc('create_notification', {
       p_user_id: userId,
       p_type: type,

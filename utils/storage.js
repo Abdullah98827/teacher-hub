@@ -23,7 +23,7 @@ export const getSignedUrl = async (path, expiresIn = 60) => {
 export const uploadFile = async (filePath, fileUri, mimeType) => {
   const contentType = mimeType || "application/octet-stream";
 
-  // ── WEB ──────────────────────────────────────────────────────────────────
+  // WEB 
   // On web, fileUri is already a blob:// or data: URL so fetch() works fine
   if (Platform.OS === "web") {
     const response = await fetch(fileUri).catch(() => null);
@@ -64,7 +64,7 @@ export const uploadFile = async (filePath, fileUri, mimeType) => {
     return true;
   }
 
-  // ── iOS & ANDROID ─────────────────────────────────────────────────────────
+  //  iOS & ANDROID 
   // On mobile, fetch() on a local file:// URI returns 0 bytes.
   // We must use expo-file-system to read the file as base64 first.
   const base64Result = await FileSystem.readAsStringAsync(fileUri, {

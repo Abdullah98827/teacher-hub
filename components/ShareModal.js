@@ -3,12 +3,12 @@ import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -71,7 +71,7 @@ export default function ShareModal({
       if (!user) return;
       setCurrentUserId(user.id);
 
-      // ── Load resource + subject ───────────────────────────────────
+      // Load resource + subject 
       const { data: resourceData } = await supabase
         .from("resources")
         .select("*, subject:subjects(id, name)")
@@ -93,7 +93,7 @@ export default function ShareModal({
         setSubjectTeachers([]);
         setGroupChats([]);
       } else {
-        // ── SUBJECT TEACHERS ────────────────────────────────────────
+        // SUBJECT TEACHERS 
         // Find all memberships that contain this subject UUID.
         // subject_ids is a uuid[] column so we use the @> containment
         // operator via .filter("subject_ids", "cs", `{"uuid"}`)
@@ -138,7 +138,7 @@ export default function ShareModal({
           }
         }
 
-        // ── GROUP CHATS ─────────────────────────────────────────────
+        //  GROUP CHATS 
         // Access to group chats = having the subject in your membership.
         // Admin: sees ALL group chats for this subject.
         // Normal user: only group chats for subjects in their membership.
@@ -191,7 +191,7 @@ export default function ShareModal({
         }
       }
 
-      // ── MY NETWORK ──────────────────────────────────────────────
+      // MY NETWORK 
       // People I follow + people who follow me, merged and deduped
       const [{ data: followingData }, { data: followerData }] =
         await Promise.all([
@@ -550,7 +550,7 @@ export default function ShareModal({
         onRequestClose={onClose}
       >
         <SafeAreaView className={`flex-1 ${bg}`} edges={["top"]}>
-         {/* ── Header ──────────────────────────────────────────── */}
+         {/*  Header  */}
 <View className={`${bgCard} px-4 pb-3 border-b ${border}`} style={{ paddingTop: 16 }}>
   {/* Top row: icon + title + close */}
   <View className="flex-row items-center mb-3">
@@ -597,7 +597,7 @@ export default function ShareModal({
   </TouchableOpacity>
 </View>
 
-          {/* ── Tabs ────────────────────────────────────────────── */}
+          {/* Tabs  */}
           <View className={`flex-row ${bgCard} border-b ${border}`}>
             {TABS.map((tab, i) => {
               const count =
@@ -639,7 +639,7 @@ export default function ShareModal({
             })}
           </View>
 
-          {/* ── List ────────────────────────────────────────────── */}
+          {/* List  */}
           {loading ? (
             <View className="flex-1 items-center justify-center">
               <ActivityIndicator size="large" color="#22d3ee" />

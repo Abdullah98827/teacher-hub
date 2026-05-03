@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import LogoHeader from "../../components/logoHeader";
@@ -225,7 +225,7 @@ export default function CommunityScreen() {
             let isResourceShare = false;
             let resourceTitle = "";
             
-            // Try to parse as resource share message (new JSON format)
+            // Tries to parse as resource share message (new JSON format)
             try {
               const parsed = JSON.parse(item.lastMessage.message);
               if (parsed.type === "resource_share" && parsed.title) {
@@ -233,7 +233,6 @@ export default function CommunityScreen() {
                 isResourceShare = true;
               }
             } catch (_) {
-              // Not JSON, check if it's old format resource message
               if (item.lastMessage.message && item.lastMessage.message.includes("teacherhub://resource/")) {
                 const titleMatch = item.lastMessage.message.match(/Check out:?\s*"?([^"]+)"?/i);
                 if (titleMatch) {

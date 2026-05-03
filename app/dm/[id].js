@@ -5,13 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ScreenWrapper from "../../components/ScreenWrapper";
@@ -52,7 +52,7 @@ export default function DMChatScreen() {
   const { notifyDirectMessage } = useMessageNotifications();
   const flatListRef = useRef(null);
 
-  // ── Fetch partner name ────────────────────────────────────────────────────
+  // Fetch partner name 
   const fetchPartnerInfo = useCallback(async () => {
     if (!partnerId) return;
     
@@ -86,7 +86,7 @@ export default function DMChatScreen() {
     }
   }, [partnerId]);
 
-  // ── Fetch current user profile picture ─────────────────────────────────────
+  // Fetch current user profile picture 
   const fetchUserProfilePic = useCallback(async () => {
     if (!user?.id) return;
 
@@ -112,7 +112,7 @@ export default function DMChatScreen() {
     }
   }, [user?.id]);
 
-  // ── Fetch messages (only once user is ready) ─────────────────────────────
+  // Fetch messages (only once user is ready)
   const fetchMessages = useCallback(async () => {
     if (!partnerId || !user?.id) return;
 
@@ -142,7 +142,7 @@ export default function DMChatScreen() {
       .eq("read", false);
   }, [partnerId, user?.id]);
 
-  // ── Run fetches once auth is resolved ────────────────────────────────────
+  //  Run fetches once auth is resolved 
   useEffect(() => {
     if (authLoading) return; // wait for auth to resolve
     fetchPartnerInfo();
@@ -150,7 +150,7 @@ export default function DMChatScreen() {
     fetchMessages();
   }, [authLoading, fetchPartnerInfo, fetchUserProfilePic, fetchMessages]);
 
-  // ── Realtime subscription (only subscribe once user.id is known) ─────────
+  // Realtime subscription (only subscribe once user.id is known) 
   useEffect(() => {
     if (!user?.id || !partnerId) return;
 
@@ -184,7 +184,7 @@ export default function DMChatScreen() {
     };
   }, [user?.id, partnerId]);
 
-  // ── Send message ──────────────────────────────────────────────────────────
+  //  Send message 
   const sendMessage = async () => {
     if (!newMessage.trim() || !user?.id || !partnerId) return;
 
@@ -255,7 +255,7 @@ export default function DMChatScreen() {
     setSending(false);
   };
 
-  // ── Delete message ────────────────────────────────────────────────────────
+  // Delete message 
   const deleteMessage = async (messageId) => {
     setDeletingMessageId(messageId);
     try {
@@ -295,7 +295,7 @@ export default function DMChatScreen() {
     }
   };
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  //  Helpers
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -315,8 +315,6 @@ export default function DMChatScreen() {
         resourceData = parsed;
       }
     } catch (_) {
-      // Not JSON, check if it's old format resource message
-      // Old format: "📚 Check out: RESOURCE_NAME\n\nteacherhub://resource/..."
       if (item.message && item.message.includes("teacherhub://resource/")) {
         isResourceShare = true;
         // Extract title from old format
@@ -467,7 +465,7 @@ export default function DMChatScreen() {
     );
   };
 
-  // ── Loading state ─────────────────────────────────────────────────────────
+  // Loading state 
   if (authLoading || loading) {
     return (
       <ScreenWrapper>
@@ -478,7 +476,7 @@ export default function DMChatScreen() {
     );
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  //  Render 
   return (
     <ScreenWrapper>
       <LogoHeader position="left" />

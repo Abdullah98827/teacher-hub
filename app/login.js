@@ -224,37 +224,6 @@ export default function Login() {
             </Text>
           </TouchableOpacity>
 
-          {/* <Text className="text-center text-gray-500 text-sm mb-4">or continue with</Text> */}
-
-          {/* Google
-          <TouchableOpacity
-            className={`bg-white border border-gray-200 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-50 ${loading ? "opacity-50" : ""}`}
-            onPress={() => handleOAuthSignIn('google')}
-            disabled={loading}
-          >
-            <FontAwesome name="google" size={20} color="#4285F4" />
-            <Text className="text-gray-800 font-semibold text-center flex-1">Continue with Google</Text>
-          </TouchableOpacity>
-
-          {/* Discord */}
-          {/* <TouchableOpacity
-            className={`bg-indigo-600 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-indigo-700 ${loading ? "opacity-50" : ""}`}
-            onPress={() => handleOAuthSignIn('discord')}
-            disabled={loading}
-          >
-            <FontAwesome5 name="discord" size={20} color="#ffffff" />
-            <Text className="text-white font-semibold text-center flex-1">Continue with Discord</Text>
-          </TouchableOpacity> */}
-
-          {/* GitHub
-          <TouchableOpacity
-            className={`bg-gray-900 p-3 rounded-xl mb-3 flex-row items-center justify-center gap-3 active:bg-gray-800 ${loading ? "opacity-50" : ""}`}
-            onPress={() => handleOAuthSignIn('github')}
-            disabled={loading}
-          >
-            <FontAwesome name="github" size={20} color="#ffffff" />
-            <Text className="text-white font-semibold text-center flex-1">Continue with GitHub</Text>
-          </TouchableOpacity>  */}
 
           <Link href="/signup" asChild>
             <TouchableOpacity className="p-3 mt-2" disabled={loading}>

@@ -4,12 +4,7 @@ import { supabase } from "../supabase";
 import { logEvent } from "../utils/logging";
 import { useFollowNotifications } from "../utils/notificationIntegrations";
 
-/**
- * Hook to manage following/unfollowing users
- *
- * Usage:
- * const { isFollowing, followersCount, followingCount, toggleFollow, loading } = useFollow(userId);
- */
+
 export function useFollow(targetUserId) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);

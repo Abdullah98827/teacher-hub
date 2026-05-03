@@ -2,11 +2,7 @@ import { useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { createNotification, sendLocalNotification } from '../utils/notificationService';
 
-/**
- * Custom hook to easily send notifications from anywhere in the app
- * Usage: const { sendNotif } = useSendNotification();
- *        sendNotif('user-id', 'follow', 'New Follower', 'John followed you', { followerId: 'john-id' });
- */
+
 export const useSendNotification = () => {
   const { user } = useAuth();
 
@@ -164,11 +160,7 @@ export const notificationTemplates = {
   }),
 };
 
-/**
- * Hook for sending report resolution notifications
- * Usage: const { notifyCommentReportResolved } = useReportNotifications();
- *        await notifyCommentReportResolved(reporterId, resourceTitle, resolution);
- */
+
 export const useReportNotifications = () => {
   const { sendNotif } = useSendNotification();
 

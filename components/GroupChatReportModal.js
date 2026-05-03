@@ -1,21 +1,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
 import {
-    GROUP_MESSAGE_REPORT_REASONS,
-    getReportReasonColor,
+  GROUP_MESSAGE_REPORT_REASONS,
+  getReportReasonColor,
 } from "../utils/commentReportReasons";
 import { logEvent } from "../utils/logging";
 import { ThemedTextInput } from "./themed-textinput";
@@ -554,7 +554,7 @@ export default function GroupChatReportModal({
 
 
 
-          {/* Report Option - Hidden if own message */}
+          {/* Report Option: Hidden if own message */}
           {!isOwnMessage && (
             <TouchableOpacity
               onPress={() => setReportMode(true)}

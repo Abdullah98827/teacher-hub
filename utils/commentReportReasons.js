@@ -1,7 +1,3 @@
-/**
- * Comment Report Reasons
- * Structured reasons for reporting comments - same pattern as user reports
- */
 
 export const COMMENT_REPORT_REASONS = [
   { 

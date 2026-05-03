@@ -1,16 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Clipboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    Share,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Clipboard,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  Share,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useAppTheme } from "../hooks/useAppTheme";
 import { supabase } from "../supabase";
@@ -217,7 +217,7 @@ export default function TranslationModal({ visible, onClose, resourceId }) {
           <View style={{ minWidth: 60 }} />
         </View>
 
-        {/* ── Result view ── */}
+        {/* Result view  */}
         {translated ? (
           <View style={{ flex: 1 }}>
             {/* Result header */}

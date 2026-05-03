@@ -1,9 +1,5 @@
 import { useTheme } from "../contexts/ThemeContext";
 
-/**
- * Returns a set of common theme-aware class strings for NativeWind.
- * Use these instead of hardcoded "bg-black" / "bg-white" etc.
- */
 export function useAppTheme() {
   const { isDark, themePreference, resolvedTheme, setThemePreference } =
     useTheme();

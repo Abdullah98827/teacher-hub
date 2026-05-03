@@ -138,7 +138,7 @@ export default function RootLayout() {
               </View>
             )}
 
-            {/* Global toast renderer — must be last so it renders on top */}
+            {/* Global toast renderer: must be last so it renders on top */}
             <Toast />
           </SafeAreaProvider>
         </DyslexiaProvider>

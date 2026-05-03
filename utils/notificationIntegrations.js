@@ -1,9 +1,6 @@
 import { NOTIFICATION_TYPES, notificationTemplates, useSendNotification } from '../hooks/useNotifications';
 
-/**
- * Integration helpers to send notifications when specific actions occur
- * These can be called from anywhere in the app
- */
+
 
 export const useFollowNotifications = () => {
   const { sendNotif } = useSendNotification();

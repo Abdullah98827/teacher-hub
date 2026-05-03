@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    RefreshControl,
-    ScrollView,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import AdminHeader from "../../components/AdminHeader";
@@ -538,7 +538,7 @@ export default function ManageUsersScreen() {
         )}
       </View>
 
-      {/* ── User Detail Modal ──────────────────────────────────────── */}
+      {/*  User Detail Modal */}
       <Modal
         visible={showDetailModal}
         transparent={true}
@@ -752,7 +752,7 @@ export default function ManageUsersScreen() {
                   </View>
                 </View>
 
-                {/* ── Actions ─────────────────────────────────────── */}
+                {/* Actions  */}
                 <View className="gap-3 mb-8">
                   {/* Reset Password */}
                   <TouchableOpacity
@@ -982,7 +982,7 @@ export default function ManageUsersScreen() {
               </ScrollView>
             )}
 
-            {/* ── Confirmation Overlay (inside Detail Modal) ──────── */}
+            
             {confirmAction && (
               <View
                 style={{
@@ -1061,7 +1061,7 @@ export default function ManageUsersScreen() {
               </View>
             )}
 
-            {/* ConfirmModal placeholder - rendered as overlay */}
+           
           </View>
         </ScreenWrapper>
       </Modal>

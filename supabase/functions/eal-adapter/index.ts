@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
 
     console.log(`EAL Adapter (Groq): ${text.length} chars | ${language} | ${subject} | ${yearGroup}`);
 
-    // ── Build prompt ──────────────────────────────────────────────────────────
+    // Build prompt 
     const subjectContext = subject && subject !== 'general' ? `Subject: ${subject}` : '';
     const yearContext    = yearGroup && yearGroup !== 'any'  ? `Year Group: ${yearGroup}` : '';
     const context        = [subjectContext, yearContext].filter(Boolean).join(' | ');
@@ -62,7 +62,7 @@ List exactly 8 key terms from the content as a comma-separated list only. No def
 
 Return ONLY the four sections. No introduction, no conclusion, no extra commentary.`;
 
-    // ── Call Groq API ─────────────────────────────────────────────────────────
+    //  Call Groq API 
     // Using llama-3.3-70b — Groq's best free model, extremely fast
     const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -98,7 +98,7 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
 
     if (!rawResponse) throw new Error('Groq returned empty response');
 
-    // ── Parse sections ────────────────────────────────────────────────────────
+    // Parse sections 
     function extractSection(raw: string, tag: string): string {
       const regex = new RegExp(`##${tag}##([\\s\\S]*?)(?=##[A-Z_]+##|$)`);
       const match = raw.match(regex);
@@ -110,7 +110,7 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
     const teachingTipsRaw = extractSection(rawResponse, 'TEACHING_TIPS');
     const glossaryTerms   = extractSection(rawResponse, 'GLOSSARY_TERMS');
 
-    // ── Parse vocabulary blocks ───────────────────────────────────────────────
+    // Parse vocabulary blocks 
     const vocabEntries: { word: string; definition: string; example: string }[] = [];
     const vocabBlocks = vocabularyRaw.split('---').map((b: string) => b.trim()).filter(Boolean);
     for (const block of vocabBlocks) {
@@ -126,13 +126,13 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
       }
     }
 
-    // ── Parse teaching tips ───────────────────────────────────────────────────
+    // Parse teaching tips 
     const tips = teachingTipsRaw
       .split('\n')
       .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
       .filter((l: string) => l.length > 10);
 
-    // ── Translate glossary via Google Translate ───────────────────────────────
+    //  Translate glossary via Google Translate 
     let bilingualGlossary: { term: string; translation: string }[] = [];
     if (GOOGLE_KEY && glossaryTerms) {
       try {
@@ -169,7 +169,7 @@ Return ONLY the four sections. No introduction, no conclusion, no extra commenta
       }
     }
 
-    // ── Log to Supabase for analytics ─────────────────────────────────────────
+    // Log to Supabase for analytics 
     if (resourceId && userId && SUPABASE_URL && SUPABASE_KEY) {
       try {
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.0');

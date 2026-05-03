@@ -1,4 +1,4 @@
-// Logging utility for app-wide event logging to Supabase app_logs table
+
 import { supabase } from '../supabase';
 
 /**
