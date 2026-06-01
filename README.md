@@ -198,7 +198,7 @@ npx expo start
 
 Abdullah Abdullah
 BSc (Hons) Web Development & Cyber Security — University of Northampton (2023–2026)
-abdullahmbdin021@gmail.com
+https://www.linkedin.com/in/abdullah-a-362a3b212/
 GitHub: https://github.com/Abdullah98827
 
 ---
